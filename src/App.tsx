@@ -8,7 +8,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, theme, toggleTheme } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme } = useAppState();
   const isDark = theme === 'dark';
 
   return (
@@ -40,7 +40,9 @@ function AppInner() {
         <span>{insightMemories.length} 洞察记忆</span>
       </div>
 
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+      <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
+        detailOpen ? 'right-[436px]' : 'right-4'
+      }`}>
         <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${

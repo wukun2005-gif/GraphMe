@@ -21,7 +21,7 @@ const QA_PAIRS = [
 ];
 
 export default function ChatPanel() {
-  const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, theme } = useAppState();
+  const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme } = useAppState();
   const isDark = theme === 'dark';
   const [activeQA, setActiveQA] = useState<number | null>(null);
 
@@ -29,7 +29,9 @@ export default function ChatPanel() {
     <>
       <button
         onClick={toggleChat}
-        className="fixed right-6 bottom-6 w-12 h-12 bg-[#00f2ff]/15 border border-[#00f2ff]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#00f2ff]/25 transition-all z-20 shadow-[0_0_15px_rgba(0,242,255,0.1)]"
+        className={`fixed bottom-6 w-12 h-12 bg-[#00f2ff]/15 border border-[#00f2ff]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#00f2ff]/25 transition-all z-20 shadow-[0_0_15px_rgba(0,242,255,0.1)] ${
+          detailOpen ? 'right-[436px]' : 'right-6'
+        }`}
       >
         💬
       </button>
@@ -41,8 +43,10 @@ export default function ChatPanel() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 100, opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed right-6 bottom-20 w-[360px] max-h-[500px] backdrop-blur-xl border rounded-xl p-4 z-20 shadow-2xl overflow-hidden flex flex-col ${
+            className={`fixed bottom-20 w-[360px] max-h-[500px] backdrop-blur-xl border rounded-xl p-4 z-20 shadow-2xl overflow-hidden flex flex-col ${
               isDark ? 'bg-[#0d0d1a]/98 border-[#ffffff08]' : 'bg-white/98 border-gray-200'
+            } ${
+              detailOpen ? 'right-[436px]' : 'right-6'
             }`}
           >
             <div className="flex justify-between items-center mb-3">
