@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.local
+面试demo原始要求.txt
+PRD.md
+raw ideas.txt
+research-report.md
