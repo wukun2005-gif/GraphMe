@@ -1,43 +1,56 @@
 import { AppProvider, useAppState } from './store/AppContext';
 import MemCloud3D from './components/MemCloud3D';
-import DimensionSwitcher from './components/DimensionSwitcher';
 import NavigationSidebar from './components/Navigation';
 import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
-import CrudPanel from './components/CrudPanel';
-import DemoController from './components/DemoController';
+
+const DEFAULT_BG_DARK = '#0a101f';
+const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories } = useAppState();
+  const { rawMemories, insightMemories, theme, toggleTheme } = useAppState();
+  const isDark = theme === 'dark';
 
   return (
-    <div className="relative w-screen h-screen bg-[#0a0a0f] overflow-hidden font-sans">
-      <MemCloud3D />
+    <div
+      className="relative w-screen h-screen overflow-hidden font-sans"
+      data-theme={theme}
+      style={{ background: isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT }}
+    >
+      <MemCloud3D bgColor={isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT} theme={theme} />
 
-      <div className="absolute top-6 left-6 z-10">
-        <DimensionSwitcher />
-      </div>
-
-      <div className="absolute left-0 top-0 h-full w-[220px] bg-[#0d0d1a]/90 backdrop-blur-sm border-r border-[#ffffff08] z-10">
+      <div className={`absolute left-0 top-0 h-full z-10 backdrop-blur-sm border-r ${
+        isDark ? 'bg-[#0d1525]/90 border-[#ffffff08]' : 'bg-white/90 border-gray-200'
+      }`}>
         <NavigationSidebar />
       </div>
 
       <DetailPanel />
-      <CrudPanel />
       <ChatPanel />
-      <DemoController />
 
       <div className="absolute top-6 left-[240px] z-10">
-        <h1 className="text-lg font-light text-gray-300 tracking-wider">
-          <span className="text-[#00f2ff] font-normal">Graph</span>Me
-          <span className="text-gray-700 text-xs ml-2">内在图景</span>
+        <h1 className={`text-lg font-light tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+          <span className={`font-normal ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>Graph</span>Me
         </h1>
       </div>
 
-      <div className="absolute bottom-6 left-[240px] z-10 text-xs text-gray-700">
+      <div className={`absolute bottom-6 left-[240px] z-10 text-xs ${isDark ? 'text-gray-700' : 'text-gray-400'}`}>
         <span>{rawMemories.length} 记忆原子</span>
         <span className="mx-2">·</span>
         <span>{insightMemories.length} 洞察记忆</span>
+      </div>
+
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          {isDark ? '☀️ 亮色' : '🌙 暗色'}
+        </button>
       </div>
     </div>
   );

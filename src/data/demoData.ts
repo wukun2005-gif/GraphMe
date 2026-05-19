@@ -1,4 +1,4 @@
-// Auto-generated demo data - do not edit by hand
+// Auto-generated demo data with clustered semantic positions
 import type { RawMemory, InsightMemory } from '../types';
 
 export const rawMemories: RawMemory[] = [
@@ -73,46 +73,46 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 85,
         "firmwareVersion": "2.1.0"
       }
     },
     "position3D": [
-      2.1,
-      1.5,
-      -0.3
+      -4.74,
+      0.76,
+      2.23
     ],
     "color": "#ffb800",
     "size": 1.2,
     "positions": {
+      "全局视图": [
+        -3.57,
+        3.08,
+        2.29
+      ],
       "家庭视图": [
-        2.1,
-        1.5,
-        -0.3
+        -3.96,
+        2.15,
+        0.28
       ],
       "学习视图": [
-        8.2,
-        3.1,
-        -5.2
+        3.04,
+        1.54,
+        2.64
       ],
       "情绪视图": [
-        1.5,
-        0.8,
-        1
-      ],
-      "全局视图": [
-        2.1,
-        1.5,
-        -0.3
+        3.26,
+        -1.41,
+        -0.37
       ]
     }
   },
   {
     "type": "raw",
     "id": "mem_002",
-    "label": "Scratch 编程课——第一个动画",
-    "summary": "在 Scratch 上完成了第一个动画项目：一只小猫跳舞，妈妈在旁边辅导。",
+    "label": "图形编程工具 编程课——第一个动画",
+    "summary": "在 图形编程工具 上完成了第一个动画项目：一只小猫跳舞，妈妈在旁边辅导。",
     "dimensions": {
       "temporal": {
         "timestamp": 1780066800000,
@@ -143,7 +143,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "编程",
-        "detail": "Scratch 动画项目——跳舞的小猫"
+        "detail": "图形编程工具 动画项目——跳舞的小猫"
       },
       "sensory": {
         "images": [],
@@ -158,10 +158,10 @@ export const rawMemories: RawMemory[] = [
           "动画帧"
         ],
         "preferences": {
-          "编程工具": "Scratch"
+          "编程工具": "图形编程工具"
         },
         "skills": [
-          "Scratch基础操作",
+          "图形编程工具基础操作",
           "动画制作"
         ]
       },
@@ -181,38 +181,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 92,
         "firmwareVersion": "3.0.1"
       }
     },
     "position3D": [
-      3.8,
-      -0.5,
-      1.2
+      1.88,
+      2.81,
+      -1.72
     ],
     "color": "#cc44ff",
     "size": 1,
     "positions": {
+      "全局视图": [
+        3.91,
+        1.67,
+        -2.85
+      ],
       "家庭视图": [
-        3.8,
-        -0.5,
-        1.2
+        1.08,
+        3.11,
+        -1.75
       ],
       "学习视图": [
-        0.5,
-        1.2,
-        0.3
+        -4.49,
+        1.44,
+        0.89
       ],
       "情绪视图": [
-        2.5,
-        -0.2,
-        0.8
-      ],
-      "全局视图": [
-        3.8,
-        -0.5,
-        1.2
+        -3.08,
+        -1.2,
+        3.63
       ]
     }
   },
@@ -220,7 +220,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_003",
     "label": "和爸爸拼装大师套装",
-    "summary": "和爸爸一起拼装 ClicBot 大师套装，花了 2 小时完成机器人手臂部分。爸爸教我如何看图纸。",
+    "summary": "和爸爸一起拼装 编程机器人 大师套装，花了 2 小时完成机器人手臂部分。爸爸教我如何看图纸。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779703200000,
@@ -251,7 +251,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "拼装",
-        "detail": "ClicBot 大师套装——机器人手臂"
+        "detail": "编程机器人 大师套装——机器人手臂"
       },
       "sensory": {
         "images": [],
@@ -288,38 +288,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 88,
         "firmwareVersion": "3.0.1"
       }
     },
     "position3D": [
-      2.5,
-      0.8,
-      -0.5
+      -2.58,
+      -2.14,
+      3.03
     ],
     "color": "#ffb800",
     "size": 1,
     "positions": {
+      "全局视图": [
+        -3.15,
+        -1.77,
+        3.31
+      ],
       "家庭视图": [
-        2.5,
-        0.8,
-        -0.5
+        -2.41,
+        -0.03,
+        2.13
       ],
       "学习视图": [
-        1,
-        0.8,
-        0.5
+        0.78,
+        3.74,
+        -1.21
       ],
       "情绪视图": [
-        1.8,
-        0.5,
-        -0.2
-      ],
-      "全局视图": [
-        2.5,
-        0.8,
-        -0.5
+        -2.34,
+        1.35,
+        -3.03
       ]
     }
   },
@@ -327,7 +327,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_004",
     "label": "睡前故事——三体",
-    "summary": "晚上睡觉前，Loona 给我讲了《三体》的简化版故事，讲了黑暗森林法则，我觉得很酷。",
+    "summary": "晚上睡觉前，机器人助手 给我讲了《三体》的简化版故事，讲了黑暗森林法则，我觉得很酷。",
     "dimensions": {
       "temporal": {
         "timestamp": 1780174800000,
@@ -354,7 +354,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "阅读",
-        "detail": "Loona 讲《三体》故事"
+        "detail": "机器人助手 讲《三体》故事"
       },
       "sensory": {
         "images": [],
@@ -389,38 +389,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 30,
         "firmwareVersion": "2.1.0"
       }
     },
     "position3D": [
-      4.2,
-      -1,
-      0.5
+      -2.55,
+      -0.91,
+      2.29
     ],
     "color": "#00f2ff",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -2.4,
+        -1.08,
+        2.26
+      ],
       "家庭视图": [
-        4.2,
-        -1,
-        0.5
+        -2.72,
+        0.6,
+        3.16
       ],
       "学习视图": [
-        2.5,
-        -0.5,
-        1
+        1.31,
+        2.2,
+        -1.36
       ],
       "情绪视图": [
-        3,
-        -0.8,
-        0.3
-      ],
-      "全局视图": [
-        4.2,
-        -1,
-        0.5
+        -1.88,
+        2.01,
+        -1.64
       ]
     }
   },
@@ -500,38 +500,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 75,
         "firmwareVersion": "2.1.0"
       }
     },
     "position3D": [
-      1.8,
-      2,
-      0.2
+      -4.57,
+      2.19,
+      2.56
     ],
     "color": "#ffb800",
     "size": 1,
     "positions": {
+      "全局视图": [
+        -5.35,
+        1.52,
+        1.88
+      ],
       "家庭视图": [
-        1.8,
-        2,
-        0.2
+        -2.77,
+        1.41,
+        1.44
       ],
       "学习视图": [
-        7.5,
         2.5,
-        -4
+        0.9,
+        2.26
       ],
       "情绪视图": [
-        1.2,
-        1.2,
-        0.8
-      ],
-      "全局视图": [
-        1.8,
-        2,
-        0.2
+        1.66,
+        -1.87,
+        -0.65
       ]
     }
   },
@@ -600,38 +600,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 60,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      5.5,
-      -0.2,
-      2
+      5.32,
+      -1.16,
+      1.56
     ],
     "color": "#4466aa",
     "size": 0.8,
     "positions": {
+      "全局视图": [
+        4.23,
+        -0.79,
+        0.59
+      ],
       "家庭视图": [
-        5.5,
-        -0.2,
-        2
+        2.72,
+        -0.73,
+        0.71
       ],
       "学习视图": [
-        -0.5,
-        -0.5,
-        0.8
+        -3.65,
+        -0.82,
+        -2.21
       ],
       "情绪视图": [
-        4,
-        0.2,
-        1.5
-      ],
-      "全局视图": [
-        5.5,
-        -0.2,
-        2
+        0.58,
+        3.6,
+        1.34
       ]
     }
   },
@@ -706,46 +706,46 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 90,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -1.5,
-      1,
-      2.5
+      -3.53,
+      2.75,
+      2.27
     ],
     "color": "#ffb800",
     "size": 1,
     "positions": {
+      "全局视图": [
+        -4.67,
+        0.94,
+        1.2
+      ],
       "家庭视图": [
-        -1.5,
-        1,
-        2.5
+        -4.19,
+        1.53,
+        0.82
       ],
       "学习视图": [
-        10,
-        4,
-        -3
+        2.84,
+        1.43,
+        3.98
       ],
       "情绪视图": [
-        -1,
-        0.5,
-        1.8
-      ],
-      "全局视图": [
-        -1.5,
-        1,
-        2.5
+        2.37,
+        -1.42,
+        -1.22
       ]
     }
   },
   {
     "type": "raw",
     "id": "mem_008",
-    "label": "Loona 学小狗叫",
-    "summary": "Loona 模仿小狗叫，把我逗得哈哈大笑，我觉得 Loona 太有趣了。",
+    "label": "机器人助手 学小狗叫",
+    "summary": "机器人助手 模仿小狗叫，把我逗得哈哈大笑，我觉得 机器人助手 太有趣了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1780254000000,
@@ -768,11 +768,11 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "快乐",
         "intensity": 0.92,
-        "trigger": "Loona 模仿小狗"
+        "trigger": "机器人助手 模仿小狗"
       },
       "activity": {
         "type": "娱乐",
-        "detail": "和 Loona 互动"
+        "detail": "和 机器人助手 互动"
       },
       "sensory": {
         "images": [],
@@ -785,7 +785,7 @@ export const rawMemories: RawMemory[] = [
       "semantic": {
         "knowledge": [],
         "preferences": {
-          "Loona行为": "模仿动物"
+          "机器人助手行为": "模仿动物"
         },
         "skills": []
       },
@@ -796,44 +796,44 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 Loona 的日常",
+        "storyline": "和 机器人助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 45,
         "firmwareVersion": "2.1.0"
       }
     },
     "position3D": [
-      0.5,
-      -1.2,
-      2.8
+      0.65,
+      3.55,
+      1.06
     ],
     "color": "#ffb800",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        1.61,
+        3.44,
+        0.46
+      ],
       "家庭视图": [
-        0.5,
-        -1.2,
-        2.8
+        0.41,
+        3.25,
+        0.08
       ],
       "学习视图": [
-        9.5,
-        1,
-        -6
+        3,
+        -1.83,
+        2.03
       ],
       "情绪视图": [
-        0.3,
-        -0.8,
-        2
-      ],
-      "全局视图": [
-        0.5,
-        -1.2,
-        2.8
+        0.43,
+        -1.97,
+        -1.71
       ]
     }
   },
@@ -904,38 +904,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 82,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      3,
-      2.5,
-      1.5
+      -3.77,
+      3.17,
+      2.79
     ],
     "color": "#cc44ff",
     "size": 1,
     "positions": {
+      "全局视图": [
+        -3.23,
+        1.84,
+        2.85
+      ],
       "家庭视图": [
-        3,
-        2.5,
-        1.5
+        -3.79,
+        2,
+        1.29
       ],
       "学习视图": [
-        5,
-        3.5,
-        -2
+        1.22,
+        -0.03,
+        2.77
       ],
       "情绪视图": [
-        2,
-        1.5,
-        1
-      ],
-      "全局视图": [
-        3,
-        2.5,
-        1.5
+        4.02,
+        -2.73,
+        -1.15
       ]
     }
   },
@@ -943,7 +943,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_010",
     "label": "完成第一个手掰编程项目",
-    "summary": "用 ClicBot 的手掰编程模式完成了让机器人画正方形的程序，完全没让爸爸妈妈帮忙。",
+    "summary": "用 编程机器人 的手掰编程模式完成了让机器人画正方形的程序，完全没让爸爸妈妈帮忙。",
     "dimensions": {
       "temporal": {
         "timestamp": 1778162400000,
@@ -970,7 +970,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "编程",
-        "detail": "ClicBot 手掰编程——画正方形"
+        "detail": "编程机器人 手掰编程——画正方形"
       },
       "sensory": {
         "images": [],
@@ -1008,38 +1008,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 78,
         "firmwareVersion": "3.0.0"
       }
     },
     "position3D": [
-      3.5,
-      -1.2,
-      1.8
+      3.28,
+      1.59,
+      -1.34
     ],
     "color": "#cc44ff",
     "size": 1.1,
     "positions": {
+      "全局视图": [
+        2.05,
+        1.42,
+        -2.51
+      ],
       "家庭视图": [
-        3.5,
-        -1.2,
-        1.8
+        1.28,
+        3.08,
+        -1.41
       ],
       "学习视图": [
-        0.3,
-        -0.5,
-        0.2
+        -4.78,
+        2.71,
+        1.03
       ],
       "情绪视图": [
-        2.5,
-        -0.5,
-        1.2
-      ],
-      "全局视图": [
-        3.5,
-        -1.2,
-        1.8
+        -4.17,
+        -0.96,
+        3.65
       ]
     }
   },
@@ -1108,38 +1108,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 90,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2.5,
-      -0.5,
-      3
+      3.65,
+      0.13,
+      2.25
     ],
     "color": "#ffb800",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        3.54,
+        -1.88,
+        2.81
+      ],
       "家庭视图": [
-        -2.5,
-        -0.5,
-        3
+        3.63,
+        0.11,
+        2.43
       ],
       "学习视图": [
-        6,
-        2,
-        -3.5
+        -2.19,
+        -1.15,
+        -1.23
       ],
       "情绪视图": [
-        -1.8,
-        -0.2,
-        2.2
-      ],
-      "全局视图": [
-        -2.5,
-        -0.5,
-        3
+        1.03,
+        2.32,
+        1.16
       ]
     }
   },
@@ -1147,7 +1147,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_012",
     "label": "睡前故事——哈利波特",
-    "summary": "Loona 给我讲哈利波特与魔法石的故事，讲到魔法学校的时候我特别兴奋，睡不着了。",
+    "summary": "机器人助手 给我讲哈利波特与魔法石的故事，讲到魔法学校的时候我特别兴奋，睡不着了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779570000000,
@@ -1174,7 +1174,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "阅读",
-        "detail": "Loona 讲哈利波特故事"
+        "detail": "机器人助手 讲哈利波特故事"
       },
       "sensory": {
         "images": [],
@@ -1211,38 +1211,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 35,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      4.5,
-      -1.5,
-      0.2
+      -2.43,
+      -1.08,
+      2.83
     ],
     "color": "#00f2ff",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -1.01,
+        -1.32,
+        3.13
+      ],
       "家庭视图": [
-        4.5,
-        -1.5,
-        0.2
+        -1.88,
+        -0.72,
+        3.29
       ],
       "学习视图": [
-        3,
-        -0.2,
-        1.5
+        -0.03,
+        3.06,
+        -1.89
       ],
       "情绪视图": [
-        3.2,
-        -1,
-        0
-      ],
-      "全局视图": [
-        4.5,
-        -1.5,
-        0.2
+        -1.81,
+        2.98,
+        -3.66
       ]
     }
   },
@@ -1307,46 +1307,46 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 55,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      1,
-      2.8,
-      -1
+      -3.33,
+      -0.82,
+      -2.74
     ],
     "color": "#cc88ff",
     "size": 0.8,
     "positions": {
+      "全局视图": [
+        -3.83,
+        -1.86,
+        -3.58
+      ],
       "家庭视图": [
-        1,
-        2.8,
-        -1
+        -1.83,
+        -1.5,
+        -3.97
       ],
       "学习视图": [
-        4.5,
-        5,
-        -1.5
+        -0.07,
+        -2.29,
+        2.58
       ],
       "情绪视图": [
-        0.8,
-        1.5,
-        -0.8
-      ],
-      "全局视图": [
-        1,
-        2.8,
-        -1
+        3.38,
+        1.33,
+        -1.04
       ]
     }
   },
   {
     "type": "raw",
     "id": "mem_014",
-    "label": "和 Loona 捉迷藏",
-    "summary": "把 Loona 藏在衣柜里，让它用传感器找到我，玩了一下午捉迷藏游戏。",
+    "label": "和 机器人助手 捉迷藏",
+    "summary": "把 机器人助手 藏在衣柜里，让它用传感器找到我，玩了一下午捉迷藏游戏。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779991200000,
@@ -1369,7 +1369,7 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "快乐",
         "intensity": 0.78,
-        "trigger": "Loona找到我时很好笑"
+        "trigger": "机器人助手找到我时很好笑"
       },
       "activity": {
         "type": "游戏",
@@ -1397,44 +1397,44 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 Loona 的日常",
+        "storyline": "和 机器人助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 40,
         "firmwareVersion": "2.1.0"
       }
     },
     "position3D": [
-      0.8,
-      -1.8,
-      2.5
+      0.27,
+      3.72,
+      0.95
     ],
     "color": "#ffb800",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        1.35,
+        3.5,
+        0.09
+      ],
       "家庭视图": [
-        0.8,
-        -1.8,
-        2.5
+        0.85,
+        2.6,
+        0.72
       ],
       "学习视图": [
-        10.5,
-        0.5,
-        -5
+        2.56,
+        -2.51,
+        1.9
       ],
       "情绪视图": [
-        0.5,
-        -1.2,
-        1.8
-      ],
-      "全局视图": [
-        0.8,
-        -1.8,
-        2.5
+        0.69,
+        -3.49,
+        -1.62
       ]
     }
   },
@@ -1442,7 +1442,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_015",
     "label": "和爸爸拼装甲壳虫小车",
-    "summary": "爸爸和我一起用 ClicBot 拼装了一只甲壳虫形状的小车，还能用手机App遥控它走动。",
+    "summary": "爸爸和我一起用 编程机器人 拼装了一只甲壳虫形状的小车，还能用手机App遥控它走动。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779271200000,
@@ -1473,7 +1473,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "拼装",
-        "detail": "ClicBot 甲壳虫遥控小车"
+        "detail": "编程机器人 甲壳虫遥控小车"
       },
       "sensory": {
         "images": [],
@@ -1511,38 +1511,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "3.0.0"
       }
     },
     "position3D": [
-      2.8,
-      0.5,
-      -1
+      -0.86,
+      -0.93,
+      2.87
     ],
     "color": "#ffb800",
     "size": 0.9,
     "positions": {
+      "全局视图": [
+        -3.11,
+        -1.24,
+        2.97
+      ],
       "家庭视图": [
-        2.8,
-        0.5,
-        -1
+        -2.56,
+        -0.27,
+        2.23
       ],
       "学习视图": [
-        1.5,
-        0.5,
-        0.8
+        1.17,
+        3.21,
+        -1.47
       ],
       "情绪视图": [
-        2,
-        0.3,
-        -0.5
-      ],
-      "全局视图": [
-        2.8,
-        0.5,
-        -1
+        -1.18,
+        1.25,
+        -2.78
       ]
     }
   },
@@ -1550,7 +1550,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_016",
     "label": "美术课画了机器猫",
-    "summary": "美术课上老师让我们画自己最喜欢的玩具，我画了 Loona，老师表扬说画得很像。",
+    "summary": "美术课上老师让我们画自己最喜欢的玩具，我画了 机器人助手，老师表扬说画得很像。",
     "dimensions": {
       "temporal": {
         "timestamp": 1778839200000,
@@ -1581,7 +1581,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "艺术",
-        "detail": "画 Loona"
+        "detail": "画 机器人助手"
       },
       "sensory": {
         "images": [],
@@ -1613,38 +1613,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 85,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -3,
-      0.5,
-      -2
+      2.88,
+      -0.83,
+      2.4
     ],
     "color": "#cc44ff",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        4.56,
+        -1.12,
+        1.1
+      ],
       "家庭视图": [
-        -3,
-        0.5,
-        -2
+        3.34,
+        -0.75,
+        3.21
       ],
       "学习视图": [
-        4,
-        1.5,
-        1
+        -2.64,
+        -0.7,
+        -2.49
       ],
       "情绪视图": [
-        -2,
-        0.2,
-        -1.5
-      ],
-      "全局视图": [
-        -3,
-        0.5,
-        -2
+        1.83,
+        3.93,
+        2.83
       ]
     }
   },
@@ -1715,38 +1715,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 100,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4,
-      2,
-      1.5
+      -3.25,
+      1.53,
+      1.86
     ],
     "color": "#00f2ff",
     "size": 0.9,
     "positions": {
+      "全局视图": [
+        -3.4,
+        1.63,
+        1.55
+      ],
       "家庭视图": [
-        -4,
-        2,
-        1.5
+        -3.96,
+        3.08,
+        0.99
       ],
       "学习视图": [
-        2.8,
-        0,
-        2.5
+        1.53,
+        0.7,
+        2.55
       ],
       "情绪视图": [
-        -3,
-        1.2,
-        1
-      ],
-      "全局视图": [
-        -4,
-        2,
-        1.5
+        3.15,
+        -0.62,
+        -1.41
       ]
     }
   },
@@ -1811,38 +1811,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      1.5,
-      3.2,
-      -1.5
+      -2.96,
+      -2.62,
+      -2.63
     ],
     "color": "#ff4444",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -3.32,
+        -2,
+        -4.06
+      ],
       "家庭视图": [
-        1.5,
-        3.2,
-        -1.5
+        -1.67,
+        -2.28,
+        -2.68
       ],
       "学习视图": [
-        3.5,
-        5.5,
-        -0.8
+        -1.29,
+        -1.25,
+        3.12
       ],
       "情绪视图": [
-        4.5,
-        1,
-        -1
-      ],
-      "全局视图": [
-        1.5,
-        3.2,
-        -1.5
+        3.23,
+        1.25,
+        1.24
       ]
     }
   },
@@ -1911,46 +1911,46 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 88,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2,
-      0.8,
-      4
+      -2.32,
+      -3.12,
+      -2.42
     ],
     "color": "#ffb800",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -4.11,
+        -1.33,
+        -3.12
+      ],
       "家庭视图": [
-        -2,
-        0.8,
-        4
+        -3.12,
+        -2.51,
+        -2.28
       ],
       "学习视图": [
-        8,
-        3,
-        -4.5
+        0.11,
+        -1.85,
+        3.34
       ],
       "情绪视图": [
-        -1.5,
-        0.5,
-        2.8
-      ],
-      "全局视图": [
-        -2,
-        0.8,
-        4
+        4.12,
+        -0.17,
+        -0.15
       ]
     }
   },
   {
     "type": "raw",
     "id": "mem_020",
-    "label": "ClicBot 没电了",
-    "summary": "正在编程的时候 ClicBot 突然没电了，我很难过，刚写好程序还没运行就关机了。",
+    "label": "编程机器人 没电了",
+    "summary": "正在编程的时候 编程机器人 突然没电了，我很难过，刚写好程序还没运行就关机了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1777320000000,
@@ -1973,7 +1973,7 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "沮丧",
         "intensity": 0.6,
-        "trigger": "ClicBot突然没电"
+        "trigger": "编程机器人突然没电"
       },
       "activity": {
         "type": "编程",
@@ -2005,38 +2005,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 0,
         "firmwareVersion": "3.0.0"
       }
     },
     "position3D": [
-      3.8,
-      -2,
-      -1.5
+      1.34,
+      3.81,
+      0.96
     ],
     "color": "#4466aa",
     "size": 0.4,
     "positions": {
+      "全局视图": [
+        1.75,
+        2.9,
+        1.07
+      ],
       "家庭视图": [
-        3.8,
-        -2,
-        -1.5
+        0.61,
+        3.57,
+        1
       ],
       "学习视图": [
-        0.8,
-        -1.2,
-        -0.5
+        2.98,
+        -2.33,
+        1.68
       ],
       "情绪视图": [
-        5,
-        0.5,
-        -0.8
-      ],
-      "全局视图": [
-        3.8,
-        -2,
-        -1.5
+        -0.83,
+        -3.56,
+        -1.71
       ]
     }
   },
@@ -2103,38 +2103,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      4.2,
-      3,
-      -1.8
+      -3.91,
+      2.1,
+      3.03
     ],
     "color": "#00f2ff",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        -4.13,
+        2.2,
+        2
+      ],
       "家庭视图": [
-        4.2,
-        3,
-        -1.8
+        -2.29,
+        1.96,
+        1.08
       ],
       "学习视图": [
-        2.2,
-        2,
-        -2.8
+        1.85,
+        0.68,
+        3.72
       ],
       "情绪视图": [
-        2.94,
-        1.7999999999999998,
-        -1.26
-      ],
-      "全局视图": [
-        4.2,
-        3,
-        -1.8
+        2.51,
+        -1.3,
+        -1.16
       ]
     }
   },
@@ -2201,38 +2201,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      1.5,
-      2.4,
-      1.3
+      -4.47,
+      2.29,
+      1.77
     ],
     "color": "#88cc88",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        -3.29,
+        1.25,
+        1.36
+      ],
       "家庭视图": [
-        1.5,
-        2.4,
-        1.3
+        -3.27,
+        1.49,
+        0.07
       ],
       "学习视图": [
-        -0.5,
-        1.4000000000000004,
-        0.2999999999999998
+        3.15,
+        1.02,
+        2.42
       ],
       "情绪视图": [
-        1.0499999999999998,
-        1.44,
-        0.9099999999999999
-      ],
-      "全局视图": [
-        1.5,
-        2.4,
-        1.3
+        3.62,
+        -0.72,
+        -0.7
       ]
     }
   },
@@ -2299,38 +2299,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -1.9,
-      1,
-      3.6
+      -3.07,
+      1.85,
+      3.03
     ],
     "color": "#ffb800",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -4.51,
+        2.15,
+        1.46
+      ],
       "家庭视图": [
-        -1.9,
-        1,
-        3.6
+        -2.95,
+        1.66,
+        1.03
       ],
       "学习视图": [
-        -3.9,
-        0,
-        2.5999999999999996
+        0.99,
+        0.62,
+        3.74
       ],
       "情绪视图": [
-        -1.3299999999999998,
-        0.6,
-        2.52
-      ],
-      "全局视图": [
-        -1.9,
-        1,
-        3.6
+        2.46,
+        -2.13,
+        0.34
       ]
     }
   },
@@ -2397,38 +2397,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 85,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.4,
-      -0.8,
-      3.8
+      -4.74,
+      2.39,
+      2.35
     ],
     "color": "#cc44ff",
     "size": 0.8,
     "positions": {
+      "全局视图": [
+        -4.52,
+        1.15,
+        2.18
+      ],
       "家庭视图": [
-        -4.4,
-        -0.8,
-        3.8
+        -2.39,
+        1.34,
+        1.21
       ],
       "学习视图": [
-        -6.4,
-        -1.8,
-        2.8
+        1,
+        0.39,
+        3.8
       ],
       "情绪视图": [
-        -3.08,
-        -0.48,
-        2.6599999999999997
-      ],
-      "全局视图": [
-        -4.4,
-        -0.8,
-        3.8
+        4.3,
+        -1.5,
+        -0.97
       ]
     }
   },
@@ -2495,38 +2495,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 90,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.9,
-      -2.3,
-      1.6
+      -3.76,
+      1.96,
+      2.66
     ],
     "color": "#88cc88",
     "size": 0.9,
     "positions": {
+      "全局视图": [
+        -3.9,
+        3.45,
+        2.17
+      ],
       "家庭视图": [
-        -4.9,
-        -2.3,
-        1.6
+        -2.9,
+        1.84,
+        0.36
       ],
       "学习视图": [
-        -6.9,
-        -3.3,
-        0.5999999999999996
+        2.17,
+        1.8,
+        2.76
       ],
       "情绪视图": [
-        -3.43,
-        -1.38,
-        1.1199999999999999
-      ],
-      "全局视图": [
-        -4.9,
-        -2.3,
-        1.6
+        2.23,
+        -2.16,
+        -2.07
       ]
     }
   },
@@ -2587,38 +2587,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -3,
-      -3,
+      3.6,
+      2.8,
       -1.5
     ],
     "color": "#00f2ff",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        2.26,
+        2.86,
+        -2.89
+      ],
       "家庭视图": [
-        -3,
-        -3,
-        -1.5
+        1.7,
+        2.88,
+        -2.36
       ],
       "学习视图": [
-        -5,
-        -4,
-        -2.5
+        -4.63,
+        1.38,
+        1.64
       ],
       "情绪视图": [
-        -2.0999999999999996,
-        -1.7999999999999998,
-        -1.0499999999999998
-      ],
-      "全局视图": [
-        -3,
-        -3,
-        -1.5
+        -3.99,
+        -0.7,
+        3.53
       ]
     }
   },
@@ -2679,38 +2679,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      0.3,
-      -2.6,
-      -3.7
+      2.46,
+      2.24,
+      -3.08
     ],
     "color": "#88cc88",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        3.25,
+        3.06,
+        -1.43
+      ],
       "家庭视图": [
-        0.3,
-        -2.6,
-        -3.7
+        1.22,
+        2,
+        -3.08
       ],
       "学习视图": [
-        -1.7000000000000002,
-        -3.6,
-        -4.7
+        -4.8,
+        1.6,
+        2.34
       ],
       "情绪视图": [
-        0.21,
-        -1.56,
-        -2.59
-      ],
-      "全局视图": [
-        0.3,
-        -2.6,
-        -3.7
+        -4.03,
+        -0.58,
+        1.81
       ]
     }
   },
@@ -2771,38 +2771,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      3.4,
-      -1.4,
-      -3.7
+      3.74,
+      1.42,
+      -1.27
     ],
     "color": "#ffb800",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        2.26,
+        0.91,
+        -2.31
+      ],
       "家庭视图": [
-        3.4,
-        -1.4,
-        -3.7
+        1.13,
+        2.89,
+        -1.81
       ],
       "学习视图": [
-        1.4000000000000004,
-        -2.4,
-        -4.7
+        -4.86,
+        2.03,
+        2.7
       ],
       "情绪视图": [
-        2.38,
-        -0.84,
-        -2.59
-      ],
-      "全局视图": [
-        3.4,
-        -1.4,
-        -3.7
+        -5.2,
+        -1,
+        3.9
       ]
     }
   },
@@ -2863,38 +2863,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 85,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      5,
-      0.4,
-      -1.4
+      3.15,
+      1.77,
+      -2.04
     ],
     "color": "#cc44ff",
     "size": 0.8,
     "positions": {
+      "全局视图": [
+        2.96,
+        2.29,
+        -2.92
+      ],
       "家庭视图": [
-        5,
-        0.4,
-        -1.4
+        1.73,
+        1.17,
+        -2.62
       ],
       "学习视图": [
-        3,
-        -0.6000000000000001,
-        -2.4
+        -3.25,
+        1.52,
+        1.95
       ],
       "情绪视图": [
-        3.5,
-        0.24,
-        -0.9799999999999999
-      ],
-      "全局视图": [
-        5,
-        0.4,
-        -1.4
+        -3.86,
+        -0.59,
+        2.46
       ]
     }
   },
@@ -2955,38 +2955,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      4.2,
-      2,
-      1.7
+      -3.15,
+      -1.28,
+      2.32
     ],
     "color": "#ffb800",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        -1.99,
+        -1.21,
+        4.33
+      ],
       "家庭视图": [
-        4.2,
-        2,
-        1.7
+        -2.75,
+        1.13,
+        2.58
       ],
       "学习视图": [
-        2.2,
-        1,
-        0.7000000000000002
+        0.69,
+        2.87,
+        -0.95
       ],
       "情绪视图": [
-        2.94,
-        1.2,
-        1.19
-      ],
-      "全局视图": [
-        4.2,
-        2,
-        1.7
+        -0.71,
+        2.14,
+        -2.69
       ]
     }
   },
@@ -3047,38 +3047,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      1.4,
-      2.9,
-      3.8
+      -2.47,
+      -0.77,
+      2.86
     ],
     "color": "#cc44ff",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        -2.21,
+        -0.38,
+        2.7
+      ],
       "家庭视图": [
-        1.4,
-        2.9,
-        3.8
+        -1.89,
+        -0.21,
+        2.33
       ],
       "学习视图": [
-        -0.5999999999999996,
-        1.9000000000000004,
-        2.8
+        1.34,
+        1.87,
+        -1.27
       ],
       "情绪视图": [
-        0.9799999999999999,
-        1.74,
-        2.6599999999999997
-      ],
-      "全局视图": [
-        1.4,
-        2.9,
-        3.8
+        -1.82,
+        1.76,
+        -3.58
       ]
     }
   },
@@ -3139,38 +3139,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2,
-      2.8,
-      3.6
+      -2.34,
+      -0.9,
+      2.88
     ],
     "color": "#88cc88",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        -1.79,
+        0.21,
+        3.25
+      ],
       "家庭视图": [
-        -2,
-        2.8,
-        3.6
+        -4.12,
+        0.51,
+        2.16
       ],
       "学习视图": [
-        -4,
-        1.7999999999999998,
-        2.5999999999999996
+        1.32,
+        3.15,
+        -1.24
       ],
       "情绪视图": [
-        -1.4,
-        1.68,
-        2.52
-      ],
-      "全局视图": [
-        -2,
-        2.8,
-        3.6
+        -1.62,
+        1.38,
+        -2.67
       ]
     }
   },
@@ -3231,38 +3231,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.5,
-      1.7,
-      1.2
+      4.55,
+      -1.29,
+      1.32
     ],
     "color": "#88cc88",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        3.12,
+        -1.82,
+        2.68
+      ],
       "家庭视图": [
-        -4.5,
-        1.7,
-        1.2
+        2.75,
+        -1.43,
+        1.52
       ],
       "学习视图": [
-        -6.5,
-        0.7000000000000002,
-        0.20000000000000018
+        -2.43,
+        -1.41,
+        -2.71
       ],
       "情绪视图": [
-        -3.15,
-        1.02,
-        0.84
-      ],
-      "全局视图": [
-        -4.5,
-        1.7,
-        1.2
+        1.39,
+        2.84,
+        1.92
       ]
     }
   },
@@ -3323,38 +3323,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.9,
-      0.1,
-      -1.9
+      3.98,
+      -1.95,
+      1.38
     ],
     "color": "#ffb800",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        3.19,
+        -0.89,
+        1.42
+      ],
       "家庭视图": [
-        -4.9,
-        0.1,
-        -1.9
+        4.2,
+        -0.65,
+        2.4
       ],
       "学习视图": [
-        -6.9,
-        -0.8999999999999999,
-        -2.9
+        -3.37,
+        -0.89,
+        -0.8
       ],
       "情绪视图": [
-        -3.43,
-        0.06,
-        -1.3299999999999998
-      ],
-      "全局视图": [
-        -4.9,
-        0.1,
-        -1.9
+        1.01,
+        2.95,
+        2.75
       ]
     }
   },
@@ -3415,38 +3415,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -3,
-      -1.6,
-      -3.9
+      3.05,
+      -1.09,
+      2.82
     ],
     "color": "#cc44ff",
     "size": 0.7,
     "positions": {
+      "全局视图": [
+        5.2,
+        -1.55,
+        2.2
+      ],
       "家庭视图": [
-        -3,
-        -1.6,
-        -3.9
+        3.11,
+        0.17,
+        2.64
       ],
       "学习视图": [
-        -5,
-        -2.6,
-        -4.9
+        -3.53,
+        -1.07,
+        -3.02
       ],
       "情绪视图": [
-        -2.0999999999999996,
-        -0.96,
-        -2.73
-      ],
-      "全局视图": [
-        -3,
-        -1.6,
-        -3.9
+        0.37,
+        1.85,
+        1.59
       ]
     }
   },
@@ -3507,38 +3507,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      0.3,
-      -2.8,
-      -3.5
+      -2.58,
+      -3.16,
+      -2.41
     ],
     "color": "#00f2ff",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        -2.95,
+        -2.5,
+        -3.01
+      ],
       "家庭视图": [
-        0.3,
-        -2.8,
-        -3.5
+        -2.65,
+        -2.29,
+        -3.88
       ],
       "学习视图": [
-        -1.7000000000000002,
-        -3.8,
-        -4.5
+        -0.55,
+        -0.87,
+        3.11
       ],
       "情绪视图": [
-        0.21,
-        -1.68,
-        -2.4499999999999997
-      ],
-      "全局视图": [
-        0.3,
-        -2.8,
-        -3.5
+        4.19,
+        1.37,
+        0.09
       ]
     }
   },
@@ -3599,38 +3599,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      3.5,
-      -2.9,
-      -1
+      -2.33,
+      -1.07,
+      -2.45
     ],
     "color": "#88cc88",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        -3.18,
+        -2.86,
+        -3.91
+      ],
       "家庭视图": [
-        3.5,
-        -2.9,
-        -1
+        -1.58,
+        -0.63,
+        -2.85
       ],
       "学习视图": [
-        1.5,
-        -3.9,
-        -2
+        -1.96,
+        -2.12,
+        3.06
       ],
       "情绪视图": [
-        2.4499999999999997,
-        -1.74,
-        -0.7
-      ],
-      "全局视图": [
-        3.5,
-        -2.9,
-        -1
+        4.19,
+        0.97,
+        0.46
       ]
     }
   },
@@ -3691,38 +3691,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      5,
-      -2.1,
-      2.1
+      3.89,
+      -0.31,
+      2.74
     ],
     "color": "#88cc88",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        3.44,
+        0.17,
+        1.75
+      ],
       "家庭视图": [
-        5,
-        -2.1,
-        2.1
+        2.46,
+        -1.18,
+        1.13
       ],
       "学习视图": [
-        3,
-        -3.1,
-        1.0999999999999996
+        -3.4,
+        -0.55,
+        -1.05
       ],
       "情绪视图": [
-        3.5,
-        -1.26,
-        1.47
-      ],
-      "全局视图": [
-        5,
-        -2.1,
-        2.1
+        0.65,
+        2.81,
+        2.26
       ]
     }
   },
@@ -3783,38 +3783,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      4.1,
-      -0.5,
-      3.9
+      3.97,
+      -1.41,
+      3.26
     ],
     "color": "#ffb800",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        5.16,
+        -1.26,
+        2.79
+      ],
       "家庭视图": [
-        4.1,
-        -0.5,
-        3.9
+        3.6,
+        -1.7,
+        1.81
       ],
       "学习视图": [
-        2.0999999999999996,
-        -1.5,
-        2.9000000000000004
+        -3.06,
+        -0.17,
+        -1.25
       ],
       "情绪视图": [
-        2.8699999999999997,
-        -0.3,
-        2.73
-      ],
-      "全局视图": [
-        4.1,
-        -0.5,
-        3.9
+        1.35,
+        3.79,
+        1.8
       ]
     }
   },
@@ -3875,38 +3875,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      1.4,
-      1.3,
-      3.3
+      -2.12,
+      0.36,
+      2.85
     ],
     "color": "#ffb800",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        -0.79,
+        -0.38,
+        3.39
+      ],
       "家庭视图": [
-        1.4,
-        1.3,
-        3.3
+        -2.83,
+        -0.69,
+        2.52
       ],
       "学习视图": [
-        -0.5999999999999996,
-        0.2999999999999998,
-        2.3
+        0.53,
+        3.02,
+        -2.17
       ],
       "情绪视图": [
-        0.9799999999999999,
-        0.78,
-        2.3099999999999996
-      ],
-      "全局视图": [
-        1.4,
-        1.3,
-        3.3
+        -2.62,
+        1.06,
+        -2.09
       ]
     }
   },
@@ -3967,46 +3967,46 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2.1,
-      2.6,
-      0.7
+      -1.69,
+      -0.78,
+      3.02
     ],
     "color": "#cc44ff",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        -0.85,
+        -0.69,
+        2.53
+      ],
       "家庭视图": [
-        -2.1,
-        2.6,
-        0.7
+        -1.86,
+        -0.17,
+        2.76
       ],
       "学习视图": [
-        -4.1,
-        1.5999999999999996,
-        -0.2999999999999998
+        1.67,
+        3.02,
+        -0.34
       ],
       "情绪视图": [
-        -1.47,
+        -3.18,
         1.56,
-        0.48999999999999994
-      ],
-      "全局视图": [
-        -2.1,
-        2.6,
-        0.7
+        -2.83
       ]
     }
   },
   {
     "type": "raw",
     "id": "mem_042",
-    "label": "和 Loona 的日常 - 片段1",
-    "summary": "这是和 Loona 的日常系列的第1个记忆片段。",
+    "label": "和 机器人助手 的日常 - 片段1",
+    "summary": "这是和 机器人助手 的日常系列的第1个记忆片段。",
     "dimensions": {
       "temporal": {
         "timestamp": 1777471200000,
@@ -4029,11 +4029,11 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "骄傲",
         "intensity": 0.6,
-        "trigger": "触发和 Loona 的日常的记忆"
+        "trigger": "触发和 机器人助手 的日常的记忆"
       },
       "activity": {
         "type": "活动",
-        "detail": "和 Loona 的日常活动"
+        "detail": "和 机器人助手 的日常活动"
       },
       "sensory": {
         "images": [],
@@ -4053,44 +4053,44 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 Loona 的日常",
+        "storyline": "和 机器人助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": true
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.5,
-      3,
-      -2.3
+      0.78,
+      3.16,
+      1.1
     ],
     "color": "#cc44ff",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        1.16,
+        2.98,
+        0.25
+      ],
       "家庭视图": [
-        -4.5,
-        3,
-        -2.3
+        -0.62,
+        3.68,
+        1.41
       ],
       "学习视图": [
-        -6.5,
-        2,
-        -3.3
+        3.26,
+        -2.38,
+        0.85
       ],
       "情绪视图": [
-        -3.15,
-        1.7999999999999998,
-        -1.6099999999999999
-      ],
-      "全局视图": [
-        -4.5,
-        3,
-        -2.3
+        0.87,
+        -2.81,
+        -2.7
       ]
     }
   },
@@ -4157,38 +4157,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": true
       },
       "robotState": {
-        "device": "ClicBot",
+        "device": "编程机器人",
         "batteryLevel": 70,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.8,
-      2.4,
-      -4
+      -3.76,
+      -2.95,
+      -3.04
     ],
     "color": "#88cc88",
     "size": 0.5,
     "positions": {
+      "全局视图": [
+        -3.19,
+        -1.24,
+        -2.99
+      ],
       "家庭视图": [
-        -4.8,
-        2.4,
-        -4
+        -2.92,
+        -1.4,
+        -2.14
       ],
       "学习视图": [
-        -6.8,
-        1.4000000000000004,
-        -5
+        -0.68,
+        -1.43,
+        1.69
       ],
       "情绪视图": [
-        -3.36,
-        1.44,
-        -2.8
-      ],
-      "全局视图": [
-        -4.8,
-        2.4,
-        -4
+        4.65,
+        1.11,
+        1.32
       ]
     }
   },
@@ -4255,38 +4255,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 75,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2.9,
-      0.9,
-      -3.2
+      -1.85,
+      -2.18,
+      -3.72
     ],
     "color": "#ffb800",
     "size": 0.6,
     "positions": {
+      "全局视图": [
+        -3.3,
+        -2.16,
+        -4.26
+      ],
       "家庭视图": [
-        -2.9,
-        0.9,
-        -3.2
+        -1.57,
+        -2.72,
+        -3.74
       ],
       "学习视图": [
-        -4.9,
-        -0.10000000000000009,
-        -4.2
+        -0.32,
+        -2.85,
+        3.45
       ],
       "情绪视图": [
-        -2.03,
-        0.54,
-        -2.2399999999999998
-      ],
-      "全局视图": [
-        -2.9,
-        0.9,
-        -3.2
+        3.53,
+        1.71,
+        -1.09
       ]
     }
   },
@@ -4347,38 +4347,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -2.4,
-      2,
-      -1.2
+      -1.13,
+      0.81,
+      -4.28
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        0.38,
+        0.51,
+        -4.48
+      ],
       "家庭视图": [
-        -2.4,
-        2,
-        -1.2
+        5.09,
+        -0.25,
+        -1.23
       ],
       "学习视图": [
-        -4.4,
-        1,
-        -2.2
+        0.32,
+        -0.15,
+        4.41
       ],
       "情绪视图": [
-        -1.68,
-        1.2,
-        -0.84
-      ],
-      "全局视图": [
-        -2.4,
-        2,
-        -1.2
+        -1.91,
+        1.02,
+        -3.49
       ]
     }
   },
@@ -4439,38 +4439,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.2,
-      2.7,
-      -3.1
+      0.4,
+      -0.74,
+      -4.11
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        -1,
+        -0.07,
+        -4.8
+      ],
       "家庭视图": [
-        -4.2,
-        2.7,
-        -3.1
+        3.93,
+        -0.52,
+        -2.27
       ],
       "学习视图": [
-        -6.2,
-        1.7000000000000002,
-        -4.1
+        0.59,
+        -1.23,
+        4.1
       ],
       "情绪视图": [
-        -2.94,
-        1.62,
-        -2.17
-      ],
-      "全局视图": [
-        -4.2,
-        2.7,
-        -3.1
+        0.18,
+        0.39,
+        -3.85
       ]
     }
   },
@@ -4531,38 +4531,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -5,
-      3,
-      -4
+      0.09,
+      0.08,
+      -3.99
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        -0.45,
+        -1.08,
+        -3.12
+      ],
       "家庭视图": [
-        -5,
-        3,
-        -4
+        4.17,
+        0.89,
+        -0.59
       ],
       "学习视图": [
-        -7,
-        2,
-        -5
+        0.02,
+        -0.52,
+        4.67
       ],
       "情绪视图": [
-        -3.5,
-        1.7999999999999998,
-        -2.8
-      ],
-      "全局视图": [
-        -5,
-        3,
-        -4
+        -0.4,
+        0.81,
+        -3.21
       ]
     }
   },
@@ -4623,38 +4623,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -4.5,
-      2.8,
-      -3.5
+      -0.7,
+      -0.69,
+      -4.59
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        0.65,
+        1.3,
+        -3.95
+      ],
       "家庭视图": [
-        -4.5,
-        2.8,
-        -3.5
+        2.96,
+        0.65,
+        -1.25
       ],
       "学习视图": [
-        -6.5,
-        1.7999999999999998,
-        -4.5
+        -0.44,
+        0.02,
+        2.69
       ],
       "情绪视图": [
-        -3.15,
-        1.68,
-        -2.4499999999999997
-      ],
-      "全局视图": [
-        -4.5,
-        2.8,
-        -3.5
+        -1.49,
+        0.37,
+        -4.17
       ]
     }
   },
@@ -4715,38 +4715,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -3,
-      2.2,
-      -1.7
+      0.69,
+      -0.61,
+      -4.61
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        -1.31,
+        -0.42,
+        -4.07
+      ],
       "家庭视图": [
-        -3,
-        2.2,
-        -1.7
+        3.62,
+        -0.58,
+        -1.07
       ],
       "学习视图": [
-        -5,
-        1.2000000000000002,
-        -2.7
+        -0.93,
+        -0.19,
+        5.06
       ],
       "情绪视图": [
-        -2.0999999999999996,
-        1.32,
-        -1.19
-      ],
-      "全局视图": [
-        -3,
-        2.2,
-        -1.7
+        -1.11,
+        -0.77,
+        -4.12
       ]
     }
   },
@@ -4807,38 +4807,38 @@ export const rawMemories: RawMemory[] = [
         "isMilestone": false
       },
       "robotState": {
-        "device": "Loona",
+        "device": "机器人助手",
         "batteryLevel": 80,
         "firmwareVersion": "2.0.8"
       }
     },
     "position3D": [
-      -0.7,
-      1.2,
-      0.6
+      0.4,
+      0.77,
+      -3.57
     ],
     "color": "#888888",
     "size": 0.3,
     "positions": {
+      "全局视图": [
+        -0.27,
+        0.25,
+        -3.59
+      ],
       "家庭视图": [
-        -0.7,
-        1.2,
-        0.6
+        3.67,
+        -0.64,
+        0.13
       ],
       "学习视图": [
-        -2.7,
-        0.20000000000000018,
-        -0.3999999999999999
+        -0.98,
+        -0.45,
+        3.5
       ],
       "情绪视图": [
-        -0.48999999999999994,
-        0.72,
-        0.42
-      ],
-      "全局视图": [
-        -0.7,
-        1.2,
-        0.6
+        -1.56,
+        0.11,
+        -4.42
       ]
     }
   }
@@ -4850,7 +4850,7 @@ export const insightMemories: InsightMemory[] = [
     "id": "insight_001",
     "category": "trend",
     "statement": "孩子对图形化编程的兴趣在上升",
-    "description": "从手掰编程到Scratch图形化编程的转变趋势明显",
+    "description": "从手掰编程到图形化编程的转变趋势明显",
     "confidence": 0.85,
     "sourceRawMemoryIds": [
       "mem_002",
@@ -4864,9 +4864,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1779616800000,
     "userConfirmed": true,
     "position3D": [
-      0.8,
-      -0.5,
-      0.5
+      0.69,
+      -0.19,
+      -4.22
     ],
     "color": "#ffb800",
     "size": 1
@@ -4888,9 +4888,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1776420000000,
     "userConfirmed": true,
     "position3D": [
-      3,
-      2,
-      -1
+      0.29,
+      0.52,
+      -4.06
     ],
     "color": "#ffb800",
     "size": 0.9
@@ -4914,9 +4914,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1779444000000,
     "userConfirmed": true,
     "position3D": [
-      5,
-      -0.8,
-      1
+      0.47,
+      -0.17,
+      -2.74
     ],
     "color": "#ffb800",
     "size": 1
@@ -4938,9 +4938,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1776852000000,
     "userConfirmed": true,
     "position3D": [
-      -0.5,
-      -1.5,
-      3
+      -0.94,
+      0.81,
+      -3.4
     ],
     "color": "#ffb800",
     "size": 0.9
@@ -4963,9 +4963,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1777284000000,
     "userConfirmed": true,
     "position3D": [
-      2,
-      0.5,
-      -1
+      -1.14,
+      -0.63,
+      -3.79
     ],
     "color": "#ffb800",
     "size": 1
@@ -4989,9 +4989,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1777716000000,
     "userConfirmed": true,
     "position3D": [
-      -1,
-      -1,
-      4
+      -0.05,
+      0.28,
+      -3.37
     ],
     "color": "#ffb800",
     "size": 1
@@ -5013,9 +5013,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1778148000000,
     "userConfirmed": true,
     "position3D": [
-      4.5,
-      -1.5,
-      0.5
+      0.93,
+      0.32,
+      -4.89
     ],
     "color": "#ffb800",
     "size": 0.9
@@ -5039,9 +5039,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1779271200000,
     "userConfirmed": true,
     "position3D": [
-      5.5,
-      0,
-      1.5
+      -0.64,
+      1.18,
+      -4.66
     ],
     "color": "#ffb800",
     "size": 1.1
@@ -5063,9 +5063,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1778580000000,
     "userConfirmed": false,
     "position3D": [
-      1.5,
-      3,
-      -1.5
+      0.21,
+      0.44,
+      -4.67
     ],
     "color": "#ffb800",
     "size": 0.8
@@ -5089,9 +5089,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1779789600000,
     "userConfirmed": true,
     "position3D": [
-      3.5,
-      -2,
-      -0.5
+      -0.11,
+      -0.18,
+      -3.01
     ],
     "color": "#ffb800",
     "size": 1.1
@@ -5113,9 +5113,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1776420000000,
     "userConfirmed": true,
     "position3D": [
-      4,
-      -1,
-      0
+      -0.05,
+      -0.37,
+      -4.63
     ],
     "color": "#ffb800",
     "size": 0.9
@@ -5137,9 +5137,9 @@ export const insightMemories: InsightMemory[] = [
     "updatedAt": 1778752800000,
     "userConfirmed": true,
     "position3D": [
-      5,
-      -1.2,
-      0.2
+      1,
+      0.51,
+      -3.72
     ],
     "color": "#ffb800",
     "size": 0.9

@@ -24,7 +24,7 @@ function createTestMemory(overrides: Partial<RawMemory> = {}): RawMemory {
       semantic: { knowledge: [], preferences: {}, skills: [] },
       value: { importance: 0.5, cqi: 0.5, accessCount: 0, privacyLevel: '家庭可见' },
       narrative: { storyline: '测试故事线', previousRefs: [], nextRefs: [], isMilestone: false },
-      robotState: { device: 'Loona', batteryLevel: 80, firmwareVersion: '2.1.0' },
+      robotState: { device: '机器人助手', batteryLevel: 80, firmwareVersion: '2.1.0' },
     },
     position3D: [0, 0, 0],
     color: '#ffb800',

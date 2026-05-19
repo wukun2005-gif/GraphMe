@@ -139,15 +139,15 @@ describe('Business Logic — Dimension Cross-Validation', () => {
     });
   });
 
-  it('Loona device memories should not have ClicBot-specific fields mismatched', () => {
-    const loonaMems = rawMemories.filter(m => m.dimensions.robotState.device === 'Loona');
+  it('机器人助手 device memories should not have 编程机器人-specific fields mismatched', () => {
+    const loonaMems = rawMemories.filter(m => m.dimensions.robotState.device === '机器人助手');
     loonaMems.forEach(m => {
       expect(['2.0.8', '2.1.0']).toContain(m.dimensions.robotState.firmwareVersion);
     });
   });
 
-  it('ClicBot device memories should have valid firmware version string', () => {
-    const clicbotMems = rawMemories.filter(m => m.dimensions.robotState.device === 'ClicBot');
+  it('编程机器人 device memories should have valid firmware version string', () => {
+    const clicbotMems = rawMemories.filter(m => m.dimensions.robotState.device === '编程机器人');
     clicbotMems.forEach(m => {
       expect(typeof m.dimensions.robotState.firmwareVersion).toBe('string');
       expect(m.dimensions.robotState.firmwareVersion.length).toBeGreaterThan(0);
@@ -185,9 +185,9 @@ describe('Business Logic — Place Type Distribution', () => {
 });
 
 describe('Business Logic — Device Distribution', () => {
-  it('should include both Loona and ClicBot device memories', () => {
-    const loonaCount = rawMemories.filter(m => m.dimensions.robotState.device === 'Loona').length;
-    const clicbotCount = rawMemories.filter(m => m.dimensions.robotState.device === 'ClicBot').length;
+  it('should include both 机器人助手 and 编程机器人 device memories', () => {
+    const loonaCount = rawMemories.filter(m => m.dimensions.robotState.device === '机器人助手').length;
+    const clicbotCount = rawMemories.filter(m => m.dimensions.robotState.device === '编程机器人').length;
 
     expect(loonaCount).toBeGreaterThan(0);
     expect(clicbotCount).toBeGreaterThan(0);

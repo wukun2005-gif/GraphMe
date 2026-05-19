@@ -52,7 +52,7 @@ export interface RawMemoryDimensions {
     isMilestone: boolean;
   };
   robotState: {
-    device: 'Loona' | 'ClicBot';
+    device: '机器人助手' | '编程机器人';
     batteryLevel: number;
     firmwareVersion: string;
   };

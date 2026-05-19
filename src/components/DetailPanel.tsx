@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import type { RawMemory, InsightMemory } from '../types';
+import type { RawMemory, InsightMemory, EmotionType } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
 
 interface VersionEntry {
@@ -30,40 +31,57 @@ const MOCK_VERSIONS: Record<string, VersionEntry[]> = {
   ],
 };
 
+type EditData = {
+  label: string;
+  summary: string;
+  emotion: EmotionType;
+  placeType: string;
+  landmark: string;
+  activity: string;
+  storyline: string;
+  importance: number;
+  persons: string;
+  knowledge: string;
+};
+
 function RawDetail({ memory }: { memory: RawMemory }) {
+  const { theme } = useAppState();
+  const isDark = theme === 'dark';
   const d = memory.dimensions;
   return (
     <div className="space-y-3 text-sm">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">🧠</span>
-        <span className="text-[#00f2ff] font-medium">{memory.id}</span>
+        <span className={isDark ? 'text-[#00f2ff] font-medium' : 'text-[#0088cc] font-medium'}>{memory.id}</span>
       </div>
-      <p className="text-gray-300 leading-relaxed">{memory.summary}</p>
+      <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memory.summary}</p>
       {d.sensory.images.length > 0 && (
         <div className="flex gap-2 py-2">
           {d.sensory.images.map((img, i) => (
-            <div key={i} className="w-20 h-20 bg-[#1a1a2e] rounded flex items-center justify-center text-xs text-gray-500">
+            <div key={i} className={`w-20 h-20 rounded flex items-center justify-center text-xs ${
+              isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'
+            }`}>
               📷 照片
             </div>
           ))}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-400">
-        <div><span className="text-gray-600">⏰ 时间</span> {d.temporal.dateType}</div>
-        <div><span className="text-gray-600">📍 地点</span> {d.spatial.landmark}</div>
-        <div><span className="text-gray-600">👤 人物</span> {d.social.persons.join('、') || '无'}</div>
+      <div className={`grid grid-cols-2 gap-x-4 gap-y-1.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⏰ 时间</span> {d.temporal.dateType}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📍 地点</span> {d.spatial.landmark}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>👤 人物</span> {d.social.persons.join('、') || '无'}</div>
         <div>
-          <span className="text-gray-600">😊 情绪</span>
-          <span style={{ color: EMOTION_COLORS[d.emotional.primary] }}> {d.emotional.primary} {d.emotional.intensity.toFixed(2)}</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>😊 情绪</span>
+          <span style={{ color: EMOTION_COLORS[d.emotional.primary] }}> {d.emotional.primary} ({d.emotional.intensity.toFixed(2)})</span>
         </div>
-        <div><span className="text-gray-600">🎮 活动</span> {d.activity.detail}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🎮 活动</span> {d.activity.detail}</div>
         {d.semantic.knowledge.length > 0 && (
-          <div className="col-span-2"><span className="text-gray-600">📝 知识</span> {d.semantic.knowledge.join('、')}</div>
+          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📝 知识</span> {d.semantic.knowledge.join('、')}</div>
         )}
-        <div><span className="text-gray-600">⭐ 重要性</span> {d.value.importance.toFixed(2)}</div>
-        <div><span className="text-gray-600">📊 CQI</span> {d.value.cqi.toFixed(2)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⭐ 重要性</span> {d.value.importance.toFixed(2)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 CQI</span> {d.value.cqi.toFixed(2)}</div>
         {d.narrative.storyline && (
-          <div className="col-span-2"><span className="text-gray-600">🔗 故事线</span> {d.narrative.storyline}</div>
+          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔗 故事线</span> {d.narrative.storyline}</div>
         )}
       </div>
     </div>
@@ -71,33 +89,45 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 }
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
+  const { rawMemories, theme } = useAppState();
+  const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
+
+  const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
+    const raw = rawMemories.find(m => m.id === id);
+    return { id, summary: raw?.summary || '未知记忆' };
+  });
 
   return (
     <div className="space-y-3 text-sm">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">💡</span>
-        <span className="text-[#ffb800] font-medium">{memory.id}</span>
+        <span className={`font-medium ${isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'}`}>{memory.id}</span>
       </div>
-      <div className="bg-[#1a1a2e] rounded-lg p-3 border border-[#ffb800]/20">
-        <p className="text-[#ffb800] font-medium text-sm">{CATEGORY_LABELS[memory.category]}：{memory.statement}</p>
-        <p className="text-gray-400 mt-1 text-xs leading-relaxed">{memory.description}</p>
-        <div className="mt-2 bg-[#0a0a0f] rounded h-2 overflow-hidden">
+      <div className={`rounded-lg p-3 border ${
+        isDark ? 'bg-[#1a1a2e] border-[#ffb800]/20' : 'bg-yellow-50 border-yellow-200'
+      }`}>
+        <p className={`font-medium text-sm ${isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'}`}>{CATEGORY_LABELS[memory.category]}：{memory.statement}</p>
+        <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{memory.description}</p>
+        <div className={`mt-2 rounded h-2 overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-gray-200'}`}>
           <div className="h-full bg-[#ffb800] rounded" style={{ width: `${memory.confidence * 100}%` }} />
         </div>
-        <p className="text-gray-500 text-xs mt-1">Confidence {Math.round(memory.confidence * 100)}%</p>
+        <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Confidence {Math.round(memory.confidence * 100)}%</p>
       </div>
       <div>
-        <p className="text-gray-600 text-xs mb-1">📊 依据（共 {memory.sourceRawMemoryIds.length} 条原始记忆）</p>
-        <div className="text-gray-500 text-xs space-y-0.5 max-h-32 overflow-y-auto">
-          {memory.sourceRawMemoryIds.map((id) => (
-            <div key={id} className="pl-2 border-l border-[#ffb800]/20">{id}</div>
+        <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 依据（共 {memory.sourceRawMemoryIds.length} 条原始记忆）</p>
+        <div className="text-xs space-y-1 max-h-32 overflow-y-auto ${isDark ? 'text-gray-500' : 'text-gray-600'}">
+          {sourceSummaries.map(({ id, summary }) => (
+            <div key={id} className="pl-2 border-l border-[#ffb800]/20">
+              <span className="text-[#ffb800]/80">{id}</span>
+              <span className="text-gray-600 ml-1">— {summary.length > 40 ? summary.slice(0, 40) + '...' : summary}</span>
+            </div>
           ))}
         </div>
       </div>
       {versions && versions.length > 1 && (
         <div>
-          <p className="text-gray-600 text-xs mb-1">📖 版本历史（认知演化）</p>
+          <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📖 版本历史（认知演化）</p>
           <div className="space-y-0">
             {versions.map((v, i) => {
               const isLatest = i === versions.length - 1;
@@ -110,20 +140,20 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                     isLatest ? 'bg-[#ffb800]/30 border-[#ffb800]' : 'bg-transparent border-[#ffb800]/30'
                   }`} />
                   <div className="text-xs">
-                    <span className="text-gray-500">v{v.version}</span>
-                    <span className="text-gray-700 mx-1">({v.date})</span>
-                    <span className={`text-xs ${isLatest ? 'text-[#ffb800]' : 'text-gray-500'}`}>
+                    <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v{v.version}</span>
+                    <span className="mx-1 ${isDark ? 'text-gray-700' : 'text-gray-300'}">({v.date})</span>
+                    <span className={`text-xs ${isLatest ? (isDark ? 'text-[#ffb800]' : 'text-[#b8860b]') : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
                       {isLatest ? ' ← 当前版本' : ''}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-xs mt-0.5">{v.statement}</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{v.statement}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex-1 h-1 bg-[#0a0a0f] rounded-full overflow-hidden">
+                    <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-gray-200'}`}>
                       <div className="h-full bg-[#ffb800]/40 rounded" style={{ width: `${v.confidence * 100}%` }} />
                     </div>
-                    <span className="text-gray-600 text-xs">{Math.round(v.confidence * 100)}%</span>
+                    <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round(v.confidence * 100)}%</span>
                   </div>
-                  <span className="text-gray-600 text-xs">{v.change}</span>
+                  <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{v.change}</span>
                 </div>
               );
             })}
@@ -140,7 +170,109 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme } = useAppState();
+  const isDark = theme === 'dark';
+  const [editMode, setEditMode] = useState(false);
+  const [edit, setEdit] = useState<EditData>({
+    label: '',
+    summary: '',
+    emotion: '快乐',
+    placeType: '家',
+    landmark: '',
+    activity: '',
+    storyline: '',
+    importance: 0.5,
+    persons: '',
+    knowledge: '',
+  });
+
+  useEffect(() => {
+    if (selectedMemory && selectedMemory.type === 'raw') {
+      const m = selectedMemory as RawMemory;
+      setEdit({
+        label: m.label,
+        summary: m.summary,
+        emotion: m.dimensions.emotional.primary,
+        placeType: m.dimensions.spatial.placeType,
+        landmark: m.dimensions.spatial.landmark,
+        activity: m.dimensions.activity.detail,
+        storyline: m.dimensions.narrative.storyline,
+        importance: m.dimensions.value.importance,
+        persons: m.dimensions.social.persons.join('、'),
+        knowledge: m.dimensions.semantic.knowledge.join('、'),
+      });
+      setEditMode(false);
+    }
+  }, [selectedMemory]);
+
+  const startEdit = () => {
+    if (!selectedMemory || selectedMemory.type !== 'raw') return;
+    const m = selectedMemory as RawMemory;
+    setEdit({
+      label: m.label,
+      summary: m.summary,
+      emotion: m.dimensions.emotional.primary,
+      placeType: m.dimensions.spatial.placeType,
+      landmark: m.dimensions.spatial.landmark,
+      activity: m.dimensions.activity.detail,
+      storyline: m.dimensions.narrative.storyline,
+      importance: m.dimensions.value.importance,
+      persons: m.dimensions.social.persons.join('、'),
+      knowledge: m.dimensions.semantic.knowledge.join('、'),
+    });
+    setEditMode(true);
+  };
+
+  const saveEdit = () => {
+    if (!selectedMemory || !edit.label || !edit.summary) return;
+    const memory = selectedMemory as RawMemory;
+    updateMemory(selectedMemory.id, {
+      label: edit.label,
+      summary: edit.summary,
+      color: EMOTION_COLORS[edit.emotion],
+      dimensions: {
+        ...memory.dimensions,
+        emotional: {
+          ...memory.dimensions.emotional,
+          primary: edit.emotion,
+        },
+        spatial: {
+          ...memory.dimensions.spatial,
+          placeType: edit.placeType as RawMemory['dimensions']['spatial']['placeType'],
+          landmark: edit.landmark,
+        },
+        activity: {
+          ...memory.dimensions.activity,
+          detail: edit.activity,
+        },
+        narrative: {
+          ...memory.dimensions.narrative,
+          storyline: edit.storyline,
+        },
+        value: {
+          ...memory.dimensions.value,
+          importance: edit.importance,
+        },
+        social: {
+          ...memory.dimensions.social,
+          persons: edit.persons ? edit.persons.split('、').map(s => s.trim()).filter(Boolean) : [],
+        },
+        semantic: {
+          ...memory.dimensions.semantic,
+          knowledge: edit.knowledge ? edit.knowledge.split('、').map(s => s.trim()).filter(Boolean) : [],
+        },
+      },
+    });
+    setEditMode(false);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+  };
+
+  const updateEdit = (field: keyof EditData, value: string | number) => {
+    setEdit(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <AnimatePresence>
@@ -150,28 +282,174 @@ export default function DetailPanel() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 400, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 h-full w-[380px] bg-[#0d0d1a]/95 backdrop-blur-xl border-l border-[#ffffff08] p-6 overflow-y-auto z-20 shadow-2xl"
+          className={`fixed right-0 top-0 h-full w-[420px] backdrop-blur-xl border-l p-6 overflow-y-auto z-20 shadow-2xl ${
+            isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff08]' : 'bg-white/95 border-gray-200'
+          }`}
         >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-300 font-medium">
-              {selectedMemory.type === 'raw' ? '记忆原子详情' : '小哥的发现'}
+            <h3 className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+              {selectedMemory.type === 'raw' ? '记忆原子详情' : 'GraphMe 的发现'}
             </h3>
-            <button onClick={toggleDetail} className="text-gray-600 hover:text-gray-300 transition-colors text-xl leading-none">
+            <button onClick={toggleDetail} className={`transition-colors text-xl leading-none cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>
               ✕
             </button>
           </div>
-          {selectedMemory.type === 'raw'
-            ? <RawDetail memory={selectedMemory} />
-            : <InsightDetail memory={selectedMemory} />}
-          <div className="mt-6 flex gap-2 border-t border-[#ffffff08] pt-4">
-            <button className="px-3 py-1.5 text-xs bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400 rounded transition-colors">✏️ 编辑</button>
-            <button
-              onClick={() => deleteMemory(selectedMemory.id)}
-              className="px-3 py-1.5 text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded transition-colors"
-            >
-              🗑️ 删除
-            </button>
-          </div>
+
+          {editMode && selectedMemory.type === 'raw' ? (
+            <div className="space-y-3 text-sm">
+              <div className="space-y-3">
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Label</label>
+                  <input
+                    type="text"
+                    value={edit.label}
+                    onChange={e => updateEdit('label', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-sm focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Summary</label>
+                  <textarea
+                    value={edit.summary}
+                    onChange={e => updateEdit('summary', e.target.value)}
+                    rows={3}
+                    className={`w-full border rounded px-3 py-1.5 text-sm resize-none focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>情绪</label>
+                    <select
+                      value={edit.emotion}
+                      onChange={e => updateEdit('emotion', e.target.value)}
+                      className={`w-full border rounded px-2 py-1.5 text-xs focus:outline-none ${
+                        isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                      }`}
+                    >
+                      {Object.keys(EMOTION_COLORS).map(key => (
+                        <option key={key} value={key}>{key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>地点类型</label>
+                    <select
+                      value={edit.placeType}
+                      onChange={e => updateEdit('placeType', e.target.value)}
+                      className={`w-full border rounded px-2 py-1.5 text-xs focus:outline-none ${
+                        isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                      }`}
+                    >
+                      <option value="家">🏠 家</option>
+                      <option value="学校">🏫 学校</option>
+                      <option value="公园">🌳 公园</option>
+                      <option value="游乐场">🎡 游乐场</option>
+                      <option value="商场">🛍️ 商场</option>
+                      <option value="其他">📍 其他</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>地标</label>
+                  <input
+                    type="text"
+                    value={edit.landmark}
+                    onChange={e => updateEdit('landmark', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>活动</label>
+                  <input
+                    type="text"
+                    value={edit.activity}
+                    onChange={e => updateEdit('activity', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>故事线</label>
+                  <input
+                    type="text"
+                    value={edit.storyline}
+                    onChange={e => updateEdit('storyline', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>人物（用、分隔）</label>
+                  <input
+                    type="text"
+                    value={edit.persons}
+                    onChange={e => updateEdit('persons', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>知识标签（用、分隔）</label>
+                  <input
+                    type="text"
+                    value={edit.knowledge}
+                    onChange={e => updateEdit('knowledge', e.target.value)}
+                    className={`w-full border rounded px-3 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>重要性 ({edit.importance.toFixed(2)})</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={edit.importance}
+                    onChange={e => updateEdit('importance', parseFloat(e.target.value))}
+                    className="w-full accent-[#00f2ff]"
+                  />
+                </div>
+              </div>
+              <div className={`flex gap-2 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+                <button onClick={saveEdit} className={`flex-1 px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                  isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'
+                }`}>💾 保存</button>
+                <button onClick={cancelEdit} className={`flex-1 px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                  isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff10]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}>取消</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {selectedMemory.type === 'raw'
+                ? <RawDetail memory={selectedMemory} />
+                : <InsightDetail memory={selectedMemory} />}
+              <div className={`mt-6 flex gap-2 border-t pt-4 ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+                {selectedMemory.type === 'raw' && (
+                  <button onClick={startEdit} className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                    isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                  }`}>✏️ 编辑</button>
+                )}
+                <button
+                  onClick={() => deleteMemory(selectedMemory.id)}
+                  className="px-3 py-1.5 text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded transition-colors cursor-pointer"
+                >
+                  🗑️ 删除
+                </button>
+              </div>
+            </>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

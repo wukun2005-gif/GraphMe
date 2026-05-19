@@ -232,7 +232,7 @@ describe('Demo Data — Raw Memory Integrity', () => {
   describe('Robot State dimension', () => {
     it('should have valid device type', () => {
       rawMemories.forEach(m => {
-        expect(['Loona', 'ClicBot']).toContain(m.dimensions.robotState.device);
+        expect(['机器人助手', '编程机器人']).toContain(m.dimensions.robotState.device);
       });
     });
 
@@ -254,10 +254,10 @@ describe('Demo Data — Raw Memory Integrity', () => {
       expect(emotions.size).toBeGreaterThanOrEqual(5);
     });
 
-    it('should contain both Loona and ClicBot device memories', () => {
+    it('should contain both 机器人助手 and 编程机器人 device memories', () => {
       const devices = new Set(rawMemories.map(m => m.dimensions.robotState.device));
-      expect(devices.has('Loona')).toBe(true);
-      expect(devices.has('ClicBot')).toBe(true);
+      expect(devices.has('机器人助手')).toBe(true);
+      expect(devices.has('编程机器人')).toBe(true);
     });
 
     it('should contain at least one milestone memory', () => {

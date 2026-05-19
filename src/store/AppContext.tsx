@@ -13,6 +13,7 @@ interface AppState {
   navCategory: string | null;
   navSubCategory: string | null;
   crudOpen: boolean;
+  theme: 'dark' | 'light';
 }
 
 interface AppContextType extends AppState {
@@ -24,13 +25,19 @@ interface AppContextType extends AppState {
   toggleChat: () => void;
   toggleDetail: () => void;
   toggleCrud: () => void;
+  toggleTheme: () => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
   insightMemories: InsightMemory[];
   addMemory: (mem: RawMemory) => void;
   deleteMemory: (id: string) => void;
+  updateMemory: (id: string, updates: Partial<RawMemory>) => void;
   getVisibleMemories: () => RawMemory[];
+  hideRawOnly: boolean;
+  hideInsightOnly: boolean;
+  toggleHideRaw: () => void;
+  toggleHideInsight: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -47,9 +54,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     navCategory: null,
     navSubCategory: null,
     crudOpen: false,
+    theme: 'dark',
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
+  const [hideRawOnly, setHideRawOnly] = useState(false);
+  const [hideInsightOnly, setHideInsightOnly] = useState(false);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -61,6 +71,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleChat = useCallback(() => setState(s => ({ ...s, chatOpen: !s.chatOpen })), []);
   const toggleDetail = useCallback(() => setState(s => ({ ...s, detailOpen: !s.detailOpen })), []);
   const toggleCrud = useCallback(() => setState(s => ({ ...s, crudOpen: !s.crudOpen })), []);
+  const toggleTheme = useCallback(() => setState(s => ({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' })), []);
   const setNavCategory = useCallback((cat: string | null) => setState(s => ({ ...s, navCategory: cat })), []);
   const setNavSubCategory = useCallback((sub: string | null) => setState(s => ({ ...s, navSubCategory: sub })), []);
 
@@ -73,15 +84,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => s.selectedMemory?.id === id ? { ...s, selectedMemory: null, detailOpen: false } : s);
   }, []);
 
-  const getVisibleMemories = useCallback(() => rawMems, [rawMems]);
+  const updateMemory = useCallback((id: string, updates: Partial<RawMemory>) => {
+    setRawMems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+  }, []);
+
+  const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
+  const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
+
+  const navCategory = state.navCategory;
+  const navSubCategory = state.navSubCategory;
+
+  const getVisibleMemories = useCallback(() => {
+    const navMap: Record<string, string[]> = {
+      '家庭生活': ['家', '客厅', '卧室', '厨房', '阳台', '花园'],
+      '学习与成长': ['学校', '书房', '教室', '图书馆'],
+      '社交与情感': ['公园', '商场', '游乐场'],
+      '兴趣与探索': ['公园', '游乐场', '其他'],
+    };
+    return rawMems.filter(m => {
+      if (navCategory) {
+        const places = navMap[navCategory];
+        if (places && !places.includes(m.dimensions.spatial.placeType)) return false;
+        if (navSubCategory) {
+          const subMap: Record<string, string[]> = {
+            '快乐时光': ['游乐场', '公园'],
+            '父子协作': ['家'],
+            '日常生活': ['家', '客厅', '卧室', '厨房', '阳台'],
+            '编程学习': ['学校', '家'],
+            '数学学习': ['学校'],
+            '阅读习惯': ['家', '学校'],
+            '朋友互动': ['公园', '商场', '游乐场'],
+            '情感表达': ['家', '公园'],
+            '户外活动': ['公园', '游乐场'],
+            '科幻兴趣': ['家', '其他'],
+          };
+          const subPlaces = subMap[navSubCategory];
+          if (subPlaces && !subPlaces.includes(m.dimensions.spatial.placeType)) return false;
+        }
+      }
+      return true;
+    });
+  }, [rawMems, navCategory, navSubCategory]);
 
   return (
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, setNavCategory, setNavSubCategory,
       rawMemories: rawMems, insightMemories: defaultInsightMemories,
-      addMemory, deleteMemory, getVisibleMemories,
+      addMemory, deleteMemory, updateMemory, getVisibleMemories,
+      hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     }}>
       {children}
     </AppContext.Provider>
