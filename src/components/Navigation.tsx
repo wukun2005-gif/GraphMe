@@ -193,7 +193,7 @@ export default function NavigationSidebar() {
     );
   }
 
-  return (
+  return (<>
     <div className="w-[220px] flex flex-col h-full">
       <div className={`p-4 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'} flex items-center justify-between`}>
         <h2 className={`font-medium text-sm tracking-wide ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>🧭 记忆导航</h2>
@@ -602,50 +602,6 @@ export default function NavigationSidebar() {
           <span>📖 小哥说我</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
         </button>
-        <AnimatePresence>
-          {showStoryBoard && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className={`px-3 pb-3 space-y-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {storyChapters.length === 0 ? (
-                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    暂无足够记忆来生成故事
-                  </p>
-                ) : (
-                  storyChapters.map((chapter, ci) => (
-                    <div key={ci}>
-                      <div className={`text-[10px] uppercase tracking-wider mb-1.5 ${
-                        chapter.type === 'past'
-                          ? isDark ? 'text-[#00f2ff]/60' : 'text-[#0088cc]/60'
-                          : isDark ? 'text-[#ffb800]/60' : 'text-[#cc8800]/60'
-                      }`}>
-                        {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} {chapter.title}
-                      </div>
-                      {chapter.imageUrl && (
-                        <div className="mb-2">
-                          <img
-                            src={chapter.imageUrl}
-                            alt="记忆配图"
-                            className="w-full h-24 object-cover rounded opacity-80"
-                          />
-                        </div>
-                      )}
-                      <p className={`text-[11px] leading-relaxed whitespace-pre-line ${
-                        isDark ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        {chapter.text}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       <div className={`p-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
@@ -665,5 +621,88 @@ export default function NavigationSidebar() {
         </div>
       </div>
     </div>
-  );
+
+    <AnimatePresence>
+      {showStoryBoard && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowStoryBoard(false)}
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className={`relative w-full max-w-2xl max-h-[85vh] mx-4 rounded-xl shadow-2xl overflow-hidden ${
+              isDark ? 'bg-[#0a0a0f]/95 border border-[#ffffff08]' : 'bg-white/95 border border-gray-200'
+            }`}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-inherit">
+              <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                📖 小哥说我
+              </h2>
+              <button
+                onClick={() => setShowStoryBoard(false)}
+                className={`p-1 rounded transition-colors cursor-pointer ${
+                  isDark ? 'text-gray-400 hover:text-white hover:bg-[#ffffff10]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className={`px-6 py-5 space-y-6 overflow-y-auto max-h-[calc(85vh-70px)] ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              {storyChapters.length === 0 ? (
+                <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  暂无足够记忆来生成故事
+                </p>
+              ) : (
+                storyChapters.map((chapter, ci) => (
+                  <div key={ci}>
+                    <div className={`text-xs uppercase tracking-widest mb-3 ${
+                      chapter.type === 'past'
+                        ? isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'
+                        : isDark ? 'text-[#ffb800]/70' : 'text-[#cc8800]/70'
+                    }`}>
+                      {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} · {chapter.title}
+                    </div>
+                    {chapter.imageUrls.length > 0 && (
+                      <div className={`mb-4 p-2 rounded-lg ${
+                        isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'
+                      }`}>
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {chapter.imageUrls.map((url, imgIdx) => (
+                            <img
+                              key={imgIdx}
+                              src={url}
+                              alt={`记忆配图 ${imgIdx + 1}`}
+                              className="h-40 object-cover rounded flex-shrink-0 shadow-sm"
+                              style={{ minWidth: chapter.imageUrls.length === 1 ? '100%' : '200px' }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <p className={`text-sm leading-relaxed whitespace-pre-line ${
+                      isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {chapter.text}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </>);
 }

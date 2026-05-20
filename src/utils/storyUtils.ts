@@ -5,12 +5,8 @@ export interface StoryChapter {
   title: string;
   type: 'past' | 'future';
   text: string;
-  imageUrl?: string;
+  imageUrls: string[];
   memoryIds: string[];
-}
-
-function getSeasonEmoji(season: string): string {
-  return { '春': '🌸', '夏': '☀️', '秋': '🍂', '冬': '❄️' }[season] || '';
 }
 
 function getEmotionLabel(emotion: string): string {
@@ -36,26 +32,25 @@ export function generateStory(
 
   if (selectedRaw.length > 0) {
     const storyLines: string[] = selectedRaw.map((m, i) => {
-      const season = getSeasonEmoji(m.dimensions.temporal.season);
+      const season = m.dimensions.temporal.season;
       const emotion = getEmotionLabel(m.dimensions.emotional.primary);
       const place = m.dimensions.spatial.landmark;
       const dateType = m.dimensions.temporal.dateType;
       if (i === 0) {
-        return `故事从${season}${dateType}的${place}开始——${m.label}。那天的他${emotion}极了，${m.summary}`;
+        return `故事从${season ? season + ' ' : ''}${dateType}的${place}开始——${m.label}。那天的他${emotion}极了，${m.summary}`;
       }
-      return `后来到了${season}${dateType}，在${place}，${m.label}。这时的他${emotion}又满足，${m.summary}`;
+      return `后来到了${season ? season + ' ' : ''}${dateType}，在${place}，${m.label}。这时的他${emotion}又满足，${m.summary}`;
     });
 
     const images = selectedRaw
       .flatMap(m => m.dimensions.sensory.images)
       .filter(Boolean);
-    const firstImage = images[0];
 
     chapters.push({
       title: '过去的脚印',
       type: 'past',
       text: storyLines.join('\n\n'),
-      imageUrl: firstImage,
+      imageUrls: images,
       memoryIds: selectedRaw.map(m => m.id),
     });
   }
@@ -74,7 +69,7 @@ export function generateStory(
       title: '未来的投射',
       type: 'future',
       text: insightLines.join('\n\n'),
-      imageUrl: undefined,
+      imageUrls: [],
       memoryIds: topInsights.map(ins => ins.id),
     });
   }
