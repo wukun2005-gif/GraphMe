@@ -1,5 +1,5 @@
-import { useRef, useMemo, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useRef, useMemo, useCallback, useEffect, useState } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useAppState } from '../store/AppContext';
@@ -327,9 +327,6 @@ function SceneLights({ theme }: { theme: Theme }) {
   );
 }
 
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useState } from 'react';
-
 function DemoCameraController() {
   const { camera } = useThree();
   const [animating, setAnimating] = useState(false);
@@ -360,55 +357,189 @@ function DemoCameraController() {
   return null;
 }
 
-function ClusterTags({ theme }: { theme: Theme }) {
+function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: string | null }) {
   const { rawMemories, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
 
-  const tagMemories = useMemo(() => {
+  const allRawMems = useMemo(() => {
     let mems = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
     if (navCategory) {
       mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
     }
-    return mems
-      .filter(m => m.dimensions.narrative.isMilestone || m.dimensions.value.importance >= 7)
-      .slice(0, 5);
+    return mems;
   }, [rawMemories, navCategory, navSubCategory]);
+
+  const defaultTags = useMemo(() =>
+    allRawMems
+      .filter(m => m.dimensions.narrative.isMilestone || m.dimensions.value.importance >= 7)
+      .slice(0, 5),
+  [allRawMems]);
+
+  const heldMem = useMemo(() =>
+    heldMemoryId ? allRawMems.find(m => m.id === heldMemoryId) : null,
+  [heldMemoryId, allRawMems]);
+
+  const tagBg = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+  const tagColor = isLight ? '#555' : '#aaa';
+  const tagBorder = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
+  const heldBg = isLight ? 'rgba(0,0,0,0.85)' : 'rgba(10,16,31,0.92)';
+  const heldColor = isLight ? '#fff' : '#ddd';
+  const heldBorder = isLight ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)';
+
+  const renderTag = (mem: RawMemory, isHeld: boolean) => {
+    const position = navCategory
+      ? getNavPosition(mem, navCategory, navSubCategory)
+      : mem.position3D;
+    const imageUrl = mem.dimensions.sensory.images?.[0];
+    const isMilestone = mem.dimensions.narrative.isMilestone;
+
+    return (
+      <Html
+        key={mem.id}
+        position={position}
+        sprite={!isHeld}
+        center={!isHeld}
+        distanceFactor={isHeld ? 20 : 8}
+        occlude={false}
+      >
+        <div style={isHeld ? {
+          background: heldBg,
+          color: heldColor,
+          fontSize: '11px',
+          padding: '6px 8px',
+          borderRadius: '6px',
+          whiteSpace: 'nowrap',
+          border: `1px solid ${heldBorder}`,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          backdropFilter: 'blur(8px)',
+          maxWidth: '220px',
+        } : {
+          background: tagBg,
+          color: tagColor,
+          fontSize: '9px',
+          padding: '1px 6px',
+          borderRadius: '3px',
+          whiteSpace: 'nowrap',
+          border: `1px solid ${tagBorder}`,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px',
+        }}>
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt=""
+              style={{
+                width: isHeld ? '32px' : '12px',
+                height: isHeld ? '32px' : '12px',
+                borderRadius: isHeld ? '4px' : '2px',
+                objectFit: 'cover',
+                flexShrink: 0,
+              }}
+            />
+          )}
+          <span>{isMilestone && !isHeld ? '⭐ ' : ''}{mem.label.slice(0, isHeld ? 20 : 8)}</span>
+        </div>
+      </Html>
+    );
+  };
 
   return (
     <>
-      {tagMemories.map(mem => {
-        const position = navCategory
-          ? getNavPosition(mem, navCategory, navSubCategory)
-          : mem.position3D;
-        const tagBg = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
-        const tagColor = isLight ? '#555' : '#aaa';
-        const tagBorder = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
-        return (
-          <Html
-            key={mem.id}
-            position={position}
-            sprite
-            center
-            distanceFactor={8}
-            occlude={false}
-          >
-            <div style={{
-              background: tagBg,
-              color: tagColor,
-              fontSize: '9px',
-              padding: '1px 6px',
-              borderRadius: '3px',
-              whiteSpace: 'nowrap',
-              border: `1px solid ${tagBorder}`,
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}>
-              {mem.dimensions.narrative.isMilestone ? '⭐ ' : ''}{mem.label.slice(0, 8)}
-            </div>
-          </Html>
-        )})}
+      {defaultTags.map(mem => renderTag(mem, false))}
+      {heldMem && !defaultTags.find(t => t.id === heldMem.id) && renderTag(heldMem, true)}
     </>
   );
+}
+
+function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null) => void }) {
+  const { camera, gl } = useThree();
+  const { rawMemories, navCategory, navSubCategory } = useAppState();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pointerDown = useRef(false);
+  const onHoldChangeRef = useRef(onHoldChange);
+  onHoldChangeRef.current = onHoldChange;
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const getMemoryPositions = () => {
+      let raws = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
+      if (navCategory) {
+        raws = raws.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+      }
+      return raws.map(m => ({
+        id: m.id,
+        pos: new THREE.Vector3(...(navCategory
+          ? getNavPosition(m, navCategory, navSubCategory)
+          : m.position3D)),
+      }));
+    };
+
+    const findNearest = (clientX: number, clientY: number): string | null => {
+      const rect = canvas.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1
+      );
+      raycaster.setFromCamera(mouse, camera);
+
+      const memPositions = getMemoryPositions();
+      let nearestId: string | null = null;
+      let nearestDist = Infinity;
+
+      memPositions.forEach(({ id, pos }) => {
+        const dist = raycaster.ray.distanceToPoint(pos);
+        if (dist < nearestDist && dist < 1.8) {
+          nearestDist = dist;
+          nearestId = id;
+        }
+      });
+
+      return nearestId;
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerDown.current = true;
+      holdTimer.current = setTimeout(() => {
+        if (pointerDown.current) {
+          const nearest = findNearest(e.clientX, e.clientY);
+          onHoldChangeRef.current(nearest);
+        }
+      }, 400);
+    };
+
+    const handlePointerUp = () => {
+      pointerDown.current = false;
+      if (holdTimer.current !== null) {
+        clearTimeout(holdTimer.current);
+        holdTimer.current = null;
+      }
+      onHoldChangeRef.current(null);
+    };
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerleave', handlePointerUp);
+
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlePointerUp);
+      if (holdTimer.current !== null) {
+        clearTimeout(holdTimer.current);
+      }
+    };
+  }, [camera, gl, rawMemories, navCategory, navSubCategory]);
+
+  return null;
 }
 
 interface MemCloud3DProps {
@@ -418,6 +549,11 @@ interface MemCloud3DProps {
 
 export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
   const isLight = theme === 'light';
+  const [heldClusterId, setHeldClusterId] = useState<string | null>(null);
+
+  const handleHoldChange = useCallback((id: string | null) => {
+    setHeldClusterId(id);
+  }, []);
 
   return (
     <div className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing">
@@ -435,7 +571,8 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
-        <ClusterTags theme={theme} />
+        <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
+        <HoldTagController onHoldChange={handleHoldChange} />
         <DemoCameraController />
         <OrbitControls
           enableDamping
