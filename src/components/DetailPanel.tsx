@@ -56,13 +56,17 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       </div>
       <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memory.summary}</p>
       {d.sensory.images.length > 0 && (
-        <div className="flex gap-2 py-2">
+        <div className="flex gap-2 py-2 overflow-x-auto">
           {d.sensory.images.map((img, i) => (
-            <div key={i} className={`w-20 h-20 rounded flex items-center justify-center text-xs ${
-              isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'
-            }`}>
-              📷 照片
-            </div>
+            <img
+              key={i}
+              src={img}
+              alt={`记忆照片 ${i + 1}`}
+              className={`w-24 h-24 rounded-lg object-cover border-2 flex-shrink-0 ${
+                isDark ? 'border-[#ffffff10]' : 'border-gray-200'
+              }`}
+              loading="lazy"
+            />
           ))}
         </div>
       )}
