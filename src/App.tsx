@@ -85,19 +85,6 @@ function AppInner() {
         detailOpen ? 'right-[436px]' : 'right-4'
       }`}>
         <button
-          onClick={() => setIsDemoPlaying(true)}
-          disabled={isDemoPlaying}
-          className={`px-3 py-1.5 text-xs rounded-lg font-medium shadow-lg backdrop-blur-sm transition-all ${
-            isDemoPlaying ? 'opacity-50 cursor-not-allowed' : ''
-          } ${
-            isDark 
-              ? 'bg-[#00f2ff]/20 text-[#00f2ff] hover:bg-[#00f2ff]/30 border border-[#00f2ff]/30' 
-              : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 border border-[#0088cc]/30'
-          }`}
-        >
-          ▶ 一键演示
-        </button>
-        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
