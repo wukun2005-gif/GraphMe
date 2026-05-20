@@ -19,6 +19,7 @@ describe('Integration — Complete CRUD Flow', () => {
       id: 'integration_test_001',
       label: '集成测试记忆',
       summary: '这是一条集成测试创建的完整流程记忆',
+      source: 'graphme',
       dimensions: {
         temporal: { timestamp: Date.now(), dateType: '节日', timeOfDay: '上午', season: '春', duration: 60 },
         spatial: { placeType: '公园', room: '户外', landmark: '测试地标' },
@@ -323,6 +324,7 @@ describe('Integration — PRD Requirements Compliance', () => {
       id: 'prd_test',
       label: 'PRD测试',
       summary: 'PRD合规测试',
+      source: 'graphme',
       dimensions: {
         temporal: { timestamp: Date.now(), dateType: '普通日', timeOfDay: '上午', season: '夏', duration: 10 },
         spatial: { placeType: '家', room: '客厅', landmark: '.' },

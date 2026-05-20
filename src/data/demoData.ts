@@ -1,9 +1,11 @@
 // Auto-generated demo data with clustered semantic positions
 import type { RawMemory, InsightMemory } from '../types';
+import { chatgptRawMemories, chatgptInsightMemories } from './chatgptData';
 
 export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_001",
     "label": "六一儿童节游乐园",
     "summary": "爸爸妈妈带我去朝阳公园游乐场，坐了旋转木马，吃了棉花糖，非常开心的一天。",
@@ -110,6 +112,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_002",
     "label": "图形编程工具 编程课——第一个动画",
     "summary": "在 图形编程工具 上完成了第一个动画项目：一只小猫跳舞，妈妈在旁边辅导。",
@@ -218,6 +221,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_003",
     "label": "和爸爸拼装大师套装",
     "summary": "和爸爸一起拼装 编程助手 大师套装，花了 2 小时完成模型模块部分。爸爸教我如何看图纸。",
@@ -325,6 +329,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_004",
     "label": "睡前故事——三体",
     "summary": "晚上睡觉前，智能助手 给我讲了《三体》的简化版故事，讲了黑暗森林法则，我觉得很酷。",
@@ -426,6 +431,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_005",
     "label": "端午节包粽子",
     "summary": "端午节全家一起包粽子，我第一次学会包三角粽，虽然包得不太好但很开心。",
@@ -537,6 +543,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_006",
     "label": "数学题做不出来哭了",
     "summary": "做一道分数除法题，怎么也做不出来，急得哭了。妈妈过来教我画图理解。",
@@ -637,6 +644,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_007",
     "label": "小明的生日派对",
     "summary": "参加同学小明的生日派对，在必胜客，大家一起玩了很多游戏，认识了新朋友小红。",
@@ -743,6 +751,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_008",
     "label": "智能助手 学小狗叫",
     "summary": "智能助手 模仿小狗叫，把我逗得哈哈大笑，我觉得 智能助手 太有趣了。",
@@ -839,6 +848,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_009",
     "label": "爸爸教我骑自行车",
     "summary": "周六下午爸爸带我去小区空地学骑两轮自行车，摔了两次但最后能骑一小段了！",
@@ -941,6 +951,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_010",
     "label": "完成第一个手动编程项目",
     "summary": "用 编程助手 的手动编程模式完成了让 agent 画正方形的程序，完全没让爸爸妈妈帮忙。",
@@ -1045,6 +1056,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_011",
     "label": "学校运动会跑步比赛",
     "summary": "学校运动会参加 50 米短跑，跑了全班第三名，虽然没有跑第一但很开心。",
@@ -1145,6 +1157,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_012",
     "label": "睡前故事——哈利波特",
     "summary": "智能助手 给我讲哈利波特与魔法石的故事，讲到魔法学校的时候我特别兴奋，睡不着了。",
@@ -1248,6 +1261,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_013",
     "label": "妈妈出差三天",
     "summary": "妈妈去上海出差三天，我每天晚上给妈妈打视频电话，很想她。",
@@ -1344,6 +1358,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_014",
     "label": "和 智能助手 捉迷藏",
     "summary": "把 智能助手 藏在衣柜里，让它用识别系统找到我，玩了一下午捉迷藏游戏。",
@@ -1440,6 +1455,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_015",
     "label": "和爸爸拼装甲壳虫小车",
     "summary": "爸爸和我一起用 编程助手 拼装了一只甲壳虫形状的小车，还能用手机App远程控制它走动。",
@@ -1548,6 +1564,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_016",
     "label": "美术课画了机器猫",
     "summary": "美术课上老师让我们画自己最喜欢的玩具，我画了 智能助手，老师表扬说画得很像。",
@@ -1650,6 +1667,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_017",
     "label": "第一次去天文馆",
     "summary": "学校组织去北京天文馆，看到了巨大的地球模型和星空投影，太阳系太震撼了。",
@@ -1752,6 +1770,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_018",
     "label": "爸爸批评我玩太多游戏",
     "summary": "爸爸发现我玩了 3 小时 iPad，很生气地批评了我，我很委屈，因为我在完成编程任务。",
@@ -1848,6 +1867,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_019",
     "label": "在公园认识新朋友",
     "summary": "周末去小区公园玩滑梯，认识了一个同龄的小朋友叫小华，一起玩了很久。",
@@ -1948,6 +1968,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_020",
     "label": "编程助手 离线了",
     "summary": "正在编程的时候 编程助手 突然离线了，我很难过，刚写好程序还没运行就关机了。",
@@ -2042,6 +2063,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_021",
     "label": "家庭快乐时光 - 片段1",
     "summary": "这是家庭快乐时光系列的第1个记忆片段。",
@@ -2140,6 +2162,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_022",
     "label": "家庭快乐时光 - 片段2",
     "summary": "这是家庭快乐时光系列的第2个记忆片段。",
@@ -2238,6 +2261,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_023",
     "label": "家庭快乐时光 - 片段3",
     "summary": "这是家庭快乐时光系列的第3个记忆片段。",
@@ -2336,6 +2360,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_024",
     "label": "家庭快乐时光 - 片段4",
     "summary": "这是家庭快乐时光系列的第4个记忆片段。",
@@ -2434,6 +2459,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_025",
     "label": "家庭快乐时光 - 片段5",
     "summary": "这是家庭快乐时光系列的第5个记忆片段。",
@@ -2532,6 +2558,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_026",
     "label": "编程学习之路 - 片段1",
     "summary": "这是编程学习之路系列的第1个记忆片段。",
@@ -2624,6 +2651,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_027",
     "label": "编程学习之路 - 片段2",
     "summary": "这是编程学习之路系列的第2个记忆片段。",
@@ -2716,6 +2744,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_028",
     "label": "编程学习之路 - 片段3",
     "summary": "这是编程学习之路系列的第3个记忆片段。",
@@ -2808,6 +2837,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_029",
     "label": "编程学习之路 - 片段4",
     "summary": "这是编程学习之路系列的第4个记忆片段。",
@@ -2900,6 +2930,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_030",
     "label": "父子协作时光 - 片段1",
     "summary": "这是父子协作时光系列的第1个记忆片段。",
@@ -2992,6 +3023,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_031",
     "label": "父子协作时光 - 片段2",
     "summary": "这是父子协作时光系列的第2个记忆片段。",
@@ -3084,6 +3116,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_032",
     "label": "父子协作时光 - 片段3",
     "summary": "这是父子协作时光系列的第3个记忆片段。",
@@ -3176,6 +3209,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_033",
     "label": "学校生活 - 片段1",
     "summary": "这是学校生活系列的第1个记忆片段。",
@@ -3268,6 +3302,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_034",
     "label": "学校生活 - 片段2",
     "summary": "这是学校生活系列的第2个记忆片段。",
@@ -3360,6 +3395,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_035",
     "label": "学校生活 - 片段3",
     "summary": "这是学校生活系列的第3个记忆片段。",
@@ -3452,6 +3488,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_036",
     "label": "社交成长 - 片段1",
     "summary": "这是社交成长系列的第1个记忆片段。",
@@ -3544,6 +3581,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_037",
     "label": "社交成长 - 片段2",
     "summary": "这是社交成长系列的第2个记忆片段。",
@@ -3636,6 +3674,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_038",
     "label": "数学学习历程 - 片段1",
     "summary": "这是数学学习历程系列的第1个记忆片段。",
@@ -3728,6 +3767,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_039",
     "label": "数学学习历程 - 片段2",
     "summary": "这是数学学习历程系列的第2个记忆片段。",
@@ -3820,6 +3860,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_040",
     "label": "睡前阅读习惯 - 片段1",
     "summary": "这是睡前阅读习惯系列的第1个记忆片段。",
@@ -3912,6 +3953,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_041",
     "label": "睡前阅读习惯 - 片段2",
     "summary": "这是睡前阅读习惯系列的第2个记忆片段。",
@@ -4004,6 +4046,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_042",
     "label": "和 智能助手 的日常 - 片段1",
     "summary": "这是和 智能助手 的日常系列的第1个记忆片段。",
@@ -4096,6 +4139,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_043",
     "label": "家庭情感 - 片段1",
     "summary": "这是家庭情感系列的第1个记忆片段。",
@@ -4194,6 +4238,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_044",
     "label": "家庭情感 - 片段2",
     "summary": "这是家庭情感系列的第2个记忆片段。",
@@ -4292,6 +4337,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_045",
     "label": "日常记忆片段",
     "summary": "这是第25条补充记忆。",
@@ -4384,6 +4430,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_046",
     "label": "日常记忆片段",
     "summary": "这是第26条补充记忆。",
@@ -4476,6 +4523,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_047",
     "label": "日常记忆片段",
     "summary": "这是第27条补充记忆。",
@@ -4568,6 +4616,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_048",
     "label": "日常记忆片段",
     "summary": "这是第28条补充记忆。",
@@ -4660,6 +4709,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_049",
     "label": "日常记忆片段",
     "summary": "这是第29条补充记忆。",
@@ -4752,6 +4802,7 @@ export const rawMemories: RawMemory[] = [
   },
   {
     "type": "raw",
+    "source": "graphme",
     "id": "mem_050",
     "label": "日常记忆片段",
     "summary": "这是第30条补充记忆。",
@@ -4847,6 +4898,7 @@ export const rawMemories: RawMemory[] = [
 export const insightMemories: InsightMemory[] = [
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_001",
     "category": "trend",
     "statement": "孩子对图形化编程的兴趣在上升",
@@ -4873,6 +4925,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_002",
     "category": "trend",
     "statement": "户外活动频率在周末显著增加",
@@ -4897,6 +4950,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_003",
     "category": "belief",
     "statement": "孩子相信通过努力可以解决难题",
@@ -4923,6 +4977,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_004",
     "category": "preference",
     "statement": "比起竞争性活动，孩子更享受协作",
@@ -4947,6 +5002,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_005",
     "category": "relationship",
     "statement": "和爸爸互动最多的场景是拼装/搭建类游戏",
@@ -4972,6 +5028,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_006",
     "category": "relationship",
     "statement": "社交圈以2-3名核心朋友为主",
@@ -4998,6 +5055,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_007",
     "category": "habit",
     "statement": "每晚睡前有固定的阅读习惯",
@@ -5022,6 +5080,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_008",
     "category": "growth",
     "statement": "数学直觉从具象操作向抽象符号过渡",
@@ -5048,6 +5107,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_009",
     "category": "growth",
     "statement": "情绪表达方式从身体动作转向语言表达",
@@ -5072,6 +5132,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_010",
     "category": "growth",
     "statement": "处理挫折的策略从求助到尝试独立解决",
@@ -5098,6 +5159,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_011",
     "category": "belief",
     "statement": "独立完成任务带来的满足感最高",
@@ -5122,6 +5184,7 @@ export const insightMemories: InsightMemory[] = [
   },
   {
     "type": "insight",
+    "source": "graphme",
     "id": "insight_012",
     "category": "preference",
     "statement": "倾向于选择科幻和奇幻类故事",
@@ -5146,4 +5209,4 @@ export const insightMemories: InsightMemory[] = [
   }
 ];
 
-export const allMemories = [...rawMemories, ...insightMemories];
+export const allMemories = [...rawMemories, ...insightMemories, ...chatgptRawMemories, ...chatgptInsightMemories];

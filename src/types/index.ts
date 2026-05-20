@@ -63,6 +63,7 @@ export interface RawMemory {
   id: string;
   label: string;
   summary: string;
+  source: 'graphme' | 'chatgpt';
   dimensions: RawMemoryDimensions;
   position3D: [number, number, number];
   positions: Record<string, [number, number, number]>;
@@ -73,6 +74,7 @@ export interface RawMemory {
 export interface InsightMemory {
   type: 'insight';
   id: string;
+  source: 'graphme' | 'chatgpt';
   category: 'trend' | 'belief' | 'relationship' | 'preference' | 'habit' | 'growth';
   statement: string;
   description: string;

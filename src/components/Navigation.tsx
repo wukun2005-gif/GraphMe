@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, EmotionType } from '../types';
 import { EMOTION_COLORS } from '../types';
+import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 
 const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: string }[] }> = {
   '家庭生活': { icon: '🏠', sub: [
@@ -49,8 +50,10 @@ export default function NavigationSidebar() {
     rawMemories, addMemory, deleteMemory, updateMemory,
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     insightMemories, theme,
+    showChatGPT, toggleShowChatGPT,
   } = useAppState();
   const isDark = theme === 'dark';
+  const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
   const [collapsed, setCollapsed] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
@@ -96,6 +99,7 @@ export default function NavigationSidebar() {
       id,
       label,
       summary,
+      source: 'graphme',
       dimensions: {
         temporal: { timestamp: Date.now(), dateType: '普通日', timeOfDay: '下午', season: '夏', duration: 30 },
         spatial: { placeType, room: '客厅', landmark: '手动添加' },
@@ -303,6 +307,20 @@ export default function NavigationSidebar() {
                     }`}
                   >
                     🟡 洞察记忆 {hideInsightOnly ? '(隐藏)' : insightMemories.length}
+                  </button>
+                </div>
+
+                <div className={`pt-2 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+                  <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>外部 Agent 记忆</div>
+                  <button
+                    onClick={toggleShowChatGPT}
+                    className={`px-2 py-1 rounded text-xs transition-all cursor-pointer w-full text-left ${
+                      showChatGPT
+                        ? `${isDark ? 'bg-[#10a37f]/10 text-[#10a37f]' : 'bg-[#10a37f]/10 text-[#10a37f]'}`
+                        : `${isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'}`
+                    }`}
+                  >
+                    🤖 ChatGPT {showChatGPT ? '已导入' : `未导入 (${chatgptCount})`}
                   </button>
                 </div>
 

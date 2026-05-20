@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { RawMemory, InsightMemory, DimensionView } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
+import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 
 interface AppState {
   currentView: DimensionView;
@@ -38,6 +39,8 @@ interface AppContextType extends AppState {
   hideInsightOnly: boolean;
   toggleHideRaw: () => void;
   toggleHideInsight: () => void;
+  showChatGPT: boolean;
+  toggleShowChatGPT: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -60,6 +63,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
   const [hideRawOnly, setHideRawOnly] = useState(false);
   const [hideInsightOnly, setHideInsightOnly] = useState(false);
+  const [showChatGPT, setShowChatGPT] = useState(true);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -90,9 +94,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
+  const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
 
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
+
+  const mergedRawMemories = useMemo(() =>
+    showChatGPT ? [...rawMems, ...chatgptRawMemories] : rawMems,
+  [rawMems, showChatGPT]);
+
+  const mergedInsightMemories = useMemo(() =>
+    showChatGPT ? [...defaultInsightMemories, ...chatgptInsightMemories] : defaultInsightMemories,
+  [showChatGPT]);
 
   const getVisibleMemories = useCallback(() => {
     const navMap: Record<string, string[]> = {
@@ -101,7 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       '社交与情感': ['公园', '商场', '游乐场'],
       '兴趣与探索': ['公园', '游乐场', '其他'],
     };
-    return rawMems.filter(m => {
+    return mergedRawMemories.filter(m => {
       if (navCategory) {
         const places = navMap[navCategory];
         if (places && !places.includes(m.dimensions.spatial.placeType)) return false;
@@ -124,16 +137,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return true;
     });
-  }, [rawMems, navCategory, navSubCategory]);
+  }, [mergedRawMemories, navCategory, navSubCategory]);
 
   return (
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, setNavCategory, setNavSubCategory,
-      rawMemories: rawMems, insightMemories: defaultInsightMemories,
+      rawMemories: mergedRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
+      showChatGPT, toggleShowChatGPT,
     }}>
       {children}
     </AppContext.Provider>

@@ -14,6 +14,7 @@ function createTestMemory(overrides: Partial<RawMemory> = {}): RawMemory {
     id: `test_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     label: '测试记忆',
     summary: '这是一条测试记忆',
+    source: 'graphme',
     dimensions: {
       temporal: { timestamp: Date.now(), dateType: '普通日', timeOfDay: '下午', season: '夏', duration: 30 },
       spatial: { placeType: '家', room: '客厅', landmark: '测试' },
