@@ -5,15 +5,51 @@ import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
 import ValueDashboard from './components/ValueDashboard';
 import FakeCursor from './components/AutoDemo/FakeCursor';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+
+  // Bridge FakeCursor custom events → React context
+  useEffect(() => {
+    if (!isDemoPlaying) return;
+
+    const onSelectMemory = (e: Event) => {
+      const id = (e as CustomEvent).detail?.id;
+      if (!id) return;
+      const mem = rawMemories.find(m => m.id === id) || insightMemories.find(m => m.id === id);
+      if (mem) selectMemory(mem);
+    };
+    const onCloseDetail = () => selectMemory(null);
+    const onDetailEdit = () => {
+      window.dispatchEvent(new CustomEvent('demo-detail-edit-internal'));
+    };
+    const onDetailCancelEdit = () => {
+      window.dispatchEvent(new CustomEvent('demo-detail-cancel-edit-internal'));
+    };
+    const onChatExpand = (e: Event) => {
+      window.dispatchEvent(new CustomEvent('demo-chat-expand-internal', { detail: (e as CustomEvent).detail }));
+    };
+
+    window.addEventListener('demo-select-memory', onSelectMemory);
+    window.addEventListener('demo-close-detail', onCloseDetail);
+    window.addEventListener('demo-detail-edit', onDetailEdit);
+    window.addEventListener('demo-detail-cancel-edit', onDetailCancelEdit);
+    window.addEventListener('demo-chat-expand', onChatExpand);
+
+    return () => {
+      window.removeEventListener('demo-select-memory', onSelectMemory);
+      window.removeEventListener('demo-close-detail', onCloseDetail);
+      window.removeEventListener('demo-detail-edit', onDetailEdit);
+      window.removeEventListener('demo-detail-cancel-edit', onDetailCancelEdit);
+      window.removeEventListener('demo-chat-expand', onChatExpand);
+    };
+  }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
 
   return (
     <div

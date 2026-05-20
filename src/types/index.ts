@@ -32,7 +32,7 @@ export interface RawMemoryDimensions {
     images: string[];
     audio: string[];
     videos: string[];
-    gesture?: string | null;
+    interactions?: string[];
   };
   semantic: {
     knowledge: string[];
@@ -51,10 +51,10 @@ export interface RawMemoryDimensions {
     nextRefs: string[];
     isMilestone: boolean;
   };
-  robotState: {
-    device: '机器人助手' | '编程机器人';
-    batteryLevel: number;
-    firmwareVersion: string;
+  agentState: {
+    agentType: '陪伴型' | '构建型';
+    version: string;
+    status: string;
   };
 }
 

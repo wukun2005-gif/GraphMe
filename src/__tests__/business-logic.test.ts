@@ -140,18 +140,18 @@ describe('Business Logic — Dimension Cross-Validation', () => {
     });
   });
 
-  it('机器人助手 device memories should not have 编程机器人-specific fields mismatched', () => {
-    const loonaMems = rawMemories.filter(m => m.dimensions.robotState.device === '机器人助手');
-    loonaMems.forEach(m => {
-      expect(['2.0.8', '2.1.0']).toContain(m.dimensions.robotState.firmwareVersion);
+  it('陪伴型 agent memories should not have 构建型-specific fields mismatched', () => {
+    const companionMems = rawMemories.filter(m => m.dimensions.agentState.agentType === '陪伴型');
+    companionMems.forEach(m => {
+      expect(['2.0.8', '2.1.0']).toContain(m.dimensions.agentState.version);
     });
   });
 
-  it('编程机器人 device memories should have valid firmware version string', () => {
-    const clicbotMems = rawMemories.filter(m => m.dimensions.robotState.device === '编程机器人');
-    clicbotMems.forEach(m => {
-      expect(typeof m.dimensions.robotState.firmwareVersion).toBe('string');
-      expect(m.dimensions.robotState.firmwareVersion.length).toBeGreaterThan(0);
+  it('构建型 agent memories should have valid version string', () => {
+    const builderMems = rawMemories.filter(m => m.dimensions.agentState.agentType === '构建型');
+    builderMems.forEach(m => {
+      expect(typeof m.dimensions.agentState.version).toBe('string');
+      expect(m.dimensions.agentState.version.length).toBeGreaterThan(0);
     });
   });
 });
@@ -186,13 +186,13 @@ describe('Business Logic — Place Type Distribution', () => {
 });
 
 describe('Business Logic — Device Distribution', () => {
-  it('should include both 机器人助手 and 编程机器人 device memories', () => {
-    const loonaCount = rawMemories.filter(m => m.dimensions.robotState.device === '机器人助手').length;
-    const clicbotCount = rawMemories.filter(m => m.dimensions.robotState.device === '编程机器人').length;
+  it('should include both 陪伴型 and 构建型 agent memories', () => {
+    const companionCount = rawMemories.filter(m => m.dimensions.agentState.agentType === '陪伴型').length;
+    const builderCount = rawMemories.filter(m => m.dimensions.agentState.agentType === '构建型').length;
 
-    expect(loonaCount).toBeGreaterThan(0);
-    expect(clicbotCount).toBeGreaterThan(0);
-    expect(loonaCount + clicbotCount).toBe(rawMemories.length);
+    expect(companionCount).toBeGreaterThan(0);
+    expect(builderCount).toBeGreaterThan(0);
+    expect(companionCount + builderCount).toBe(rawMemories.length);
   });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 
@@ -24,6 +24,16 @@ export default function ChatPanel() {
   const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme } = useAppState();
   const isDark = theme === 'dark';
   const [activeQA, setActiveQA] = useState<number | null>(null);
+
+  // Listen for demo event to programmatically expand a QA pair
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const index = (e as CustomEvent).detail?.index;
+      if (typeof index === 'number') setActiveQA(index);
+    };
+    window.addEventListener('demo-chat-expand-internal', handler);
+    return () => window.removeEventListener('demo-chat-expand-internal', handler);
+  }, []);
 
   return (
     <>

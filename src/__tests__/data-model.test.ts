@@ -229,17 +229,17 @@ describe('Demo Data — Raw Memory Integrity', () => {
     });
   });
 
-  describe('Robot State dimension', () => {
-    it('should have valid device type', () => {
+  describe('Agent State dimension', () => {
+    it('should have valid agent type', () => {
       rawMemories.forEach(m => {
-        expect(['机器人助手', '编程机器人']).toContain(m.dimensions.robotState.device);
+        expect(['陪伴型', '构建型']).toContain(m.dimensions.agentState.agentType);
       });
     });
 
-    it('should have battery level between 0 and 100', () => {
+    it('should have valid status string', () => {
       rawMemories.forEach(m => {
-        expect(m.dimensions.robotState.batteryLevel).toBeGreaterThanOrEqual(0);
-        expect(m.dimensions.robotState.batteryLevel).toBeLessThanOrEqual(100);
+        expect(typeof m.dimensions.agentState.status).toBe('string');
+        expect(m.dimensions.agentState.status.length).toBeGreaterThan(0);
       });
     });
   });
@@ -254,10 +254,10 @@ describe('Demo Data — Raw Memory Integrity', () => {
       expect(emotions.size).toBeGreaterThanOrEqual(5);
     });
 
-    it('should contain both 机器人助手 and 编程机器人 device memories', () => {
-      const devices = new Set(rawMemories.map(m => m.dimensions.robotState.device));
-      expect(devices.has('机器人助手')).toBe(true);
-      expect(devices.has('编程机器人')).toBe(true);
+    it('should contain both 陪伴型 and 构建型 agent memories', () => {
+      const types = new Set(rawMemories.map(m => m.dimensions.agentState.agentType));
+      expect(types.has('陪伴型')).toBe(true);
+      expect(types.has('构建型')).toBe(true);
     });
 
     it('should contain at least one milestone memory', () => {

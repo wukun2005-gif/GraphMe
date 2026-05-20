@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType } from '../types';
@@ -269,6 +269,21 @@ export default function DetailPanel() {
   const cancelEdit = () => {
     setEditMode(false);
   };
+
+  // Listen for demo events to programmatically enter/exit edit mode
+  useEffect(() => {
+    const onDemoEdit = () => {
+      if (selectedMemory && selectedMemory.type === 'raw') startEdit();
+    };
+    const onDemoCancelEdit = () => cancelEdit();
+
+    window.addEventListener('demo-detail-edit-internal', onDemoEdit);
+    window.addEventListener('demo-detail-cancel-edit-internal', onDemoCancelEdit);
+    return () => {
+      window.removeEventListener('demo-detail-edit-internal', onDemoEdit);
+      window.removeEventListener('demo-detail-cancel-edit-internal', onDemoCancelEdit);
+    };
+  });
 
   const updateEdit = (field: keyof EditData, value: string | number) => {
     setEdit(prev => ({ ...prev, [field]: value }));

@@ -102,11 +102,11 @@ export default function NavigationSidebar() {
         social: { persons: [], relationship: [], groupInteraction: false, intimacy: 0.3 },
         emotional: { primary: emotion, intensity: 0.7, trigger: '用户手动添加' },
         activity: { type: '活动', detail: summary },
-        sensory: { images: [], audio: [], videos: [], gesture: null },
+        sensory: { images: [], audio: [], videos: [], interactions: [] },
         semantic: { knowledge: [], preferences: {}, skills: [] },
         value: { importance: 0.3, cqi: 0.2, accessCount: 0, privacyLevel: '家庭可见' },
         narrative: { storyline, previousRefs: [], nextRefs: [], isMilestone: false },
-        robotState: { device: '机器人助手', batteryLevel: 80, firmwareVersion: '2.1.0' },
+        agentState: { agentType: '陪伴型', version: '2.1.0', status: 'active' },
       },
       position3D: [px, py, pz],
       color: EMOTION_COLORS[emotion],
@@ -452,6 +452,7 @@ export default function NavigationSidebar() {
                             isDark ? 'bg-[#1a1a2e]/50 border-[#ffffff08]' : 'bg-gray-100 border-gray-200'
                           }`}>
                             <input
+                              id={`mem-item-edit-label-${i}`}
                               type="text"
                               value={editLabel}
                               onChange={e => setEditLabel(e.target.value)}
@@ -469,6 +470,7 @@ export default function NavigationSidebar() {
                             />
                             <div className="flex gap-1">
                               <button
+                                id={`mem-item-save-${i}`}
                                 onClick={() => saveEdit(mem.id)}
                                 className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${
                                   isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
@@ -499,7 +501,7 @@ export default function NavigationSidebar() {
                               </div>
                             </div>
                             <button
-                              id={`mem-item-edit-${i}`}
+                              id={`mem-item-edit-trigger-${i}`}
                               onClick={() => startEdit(mem)}
                               className={`text-xs cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
                             >

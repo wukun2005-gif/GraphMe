@@ -47,7 +47,7 @@ export const rawMemories: RawMemory[] = [
         ],
         "audio": [],
         "videos": [],
-        "gesture": "大笑"
+        "interactions": ["大笑"]
       },
       "semantic": {
         "knowledge": [
@@ -72,10 +72,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 85,
-        "firmwareVersion": "2.1.0"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.1.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -149,7 +149,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -180,10 +180,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 92,
-        "firmwareVersion": "3.0.1"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "3.0.1",
+        "status": "active"
       }
     },
     "position3D": [
@@ -220,7 +220,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_003",
     "label": "和爸爸拼装大师套装",
-    "summary": "和爸爸一起拼装 编程机器人 大师套装，花了 2 小时完成机器人手臂部分。爸爸教我如何看图纸。",
+    "summary": "和爸爸一起拼装 编程助手 大师套装，花了 2 小时完成模型模块部分。爸爸教我如何看图纸。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779703200000,
@@ -251,13 +251,13 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "拼装",
-        "detail": "编程机器人 大师套装——机器人手臂"
+        "detail": "编程助手 大师套装——模型模块"
       },
       "sensory": {
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": "专注"
+        "interactions": ["专注"]
       },
       "semantic": {
         "knowledge": [
@@ -287,10 +287,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 88,
-        "firmwareVersion": "3.0.1"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "3.0.1",
+        "status": "active"
       }
     },
     "position3D": [
@@ -327,7 +327,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_004",
     "label": "睡前故事——三体",
-    "summary": "晚上睡觉前，机器人助手 给我讲了《三体》的简化版故事，讲了黑暗森林法则，我觉得很酷。",
+    "summary": "晚上睡觉前，智能助手 给我讲了《三体》的简化版故事，讲了黑暗森林法则，我觉得很酷。",
     "dimensions": {
       "temporal": {
         "timestamp": 1780174800000,
@@ -354,7 +354,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "阅读",
-        "detail": "机器人助手 讲《三体》故事"
+        "detail": "智能助手 讲《三体》故事"
       },
       "sensory": {
         "images": [],
@@ -362,7 +362,7 @@ export const rawMemories: RawMemory[] = [
           "/demo/audio1.mp3"
         ],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -388,10 +388,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 30,
-        "firmwareVersion": "2.1.0"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.1.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -471,7 +471,7 @@ export const rawMemories: RawMemory[] = [
         ],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -499,10 +499,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.1.0"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.1.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -576,7 +576,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -599,10 +599,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 60,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -680,7 +680,7 @@ export const rawMemories: RawMemory[] = [
         ],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -705,10 +705,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 90,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -744,8 +744,8 @@ export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
     "id": "mem_008",
-    "label": "机器人助手 学小狗叫",
-    "summary": "机器人助手 模仿小狗叫，把我逗得哈哈大笑，我觉得 机器人助手 太有趣了。",
+    "label": "智能助手 学小狗叫",
+    "summary": "智能助手 模仿小狗叫，把我逗得哈哈大笑，我觉得 智能助手 太有趣了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1780254000000,
@@ -768,11 +768,11 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "快乐",
         "intensity": 0.92,
-        "trigger": "机器人助手 模仿小狗"
+        "trigger": "智能助手 模仿小狗"
       },
       "activity": {
         "type": "娱乐",
-        "detail": "和 机器人助手 互动"
+        "detail": "和 智能助手 互动"
       },
       "sensory": {
         "images": [],
@@ -780,12 +780,12 @@ export const rawMemories: RawMemory[] = [
           "/demo/audio2.mp3"
         ],
         "videos": [],
-        "gesture": "大笑"
+        "interactions": ["大笑"]
       },
       "semantic": {
         "knowledge": [],
         "preferences": {
-          "机器人助手行为": "模仿动物"
+          "智能助手行为": "模仿动物"
         },
         "skills": []
       },
@@ -796,15 +796,15 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 机器人助手 的日常",
+        "storyline": "和 智能助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 45,
-        "firmwareVersion": "2.1.0"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.1.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -880,7 +880,7 @@ export const rawMemories: RawMemory[] = [
         "videos": [
           "/demo/video1.mp4"
         ],
-        "gesture": "兴奋"
+        "interactions": ["兴奋"]
       },
       "semantic": {
         "knowledge": [
@@ -903,10 +903,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 82,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -942,8 +942,8 @@ export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
     "id": "mem_010",
-    "label": "完成第一个手掰编程项目",
-    "summary": "用 编程机器人 的手掰编程模式完成了让机器人画正方形的程序，完全没让爸爸妈妈帮忙。",
+    "label": "完成第一个手动编程项目",
+    "summary": "用 编程助手 的手动编程模式完成了让 agent 画正方形的程序，完全没让爸爸妈妈帮忙。",
     "dimensions": {
       "temporal": {
         "timestamp": 1778162400000,
@@ -970,13 +970,13 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "编程",
-        "detail": "编程机器人 手掰编程——画正方形"
+        "detail": "编程助手 手动编程——画正方形"
       },
       "sensory": {
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -984,10 +984,10 @@ export const rawMemories: RawMemory[] = [
           "顺序执行"
         ],
         "preferences": {
-          "编程方式": "手掰编程"
+          "编程方式": "手动编程"
         },
         "skills": [
-          "手掰编程",
+          "手动编程",
           "几何思维"
         ]
       },
@@ -1007,10 +1007,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 78,
-        "firmwareVersion": "3.0.0"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "3.0.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1084,7 +1084,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -1107,10 +1107,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 90,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1147,7 +1147,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_012",
     "label": "睡前故事——哈利波特",
-    "summary": "机器人助手 给我讲哈利波特与魔法石的故事，讲到魔法学校的时候我特别兴奋，睡不着了。",
+    "summary": "智能助手 给我讲哈利波特与魔法石的故事，讲到魔法学校的时候我特别兴奋，睡不着了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779570000000,
@@ -1174,7 +1174,7 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "阅读",
-        "detail": "机器人助手 讲哈利波特故事"
+        "detail": "智能助手 讲哈利波特故事"
       },
       "sensory": {
         "images": [],
@@ -1182,7 +1182,7 @@ export const rawMemories: RawMemory[] = [
           "/demo/audio3.mp3"
         ],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -1210,10 +1210,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 35,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1287,7 +1287,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -1306,10 +1306,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 55,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1345,8 +1345,8 @@ export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
     "id": "mem_014",
-    "label": "和 机器人助手 捉迷藏",
-    "summary": "把 机器人助手 藏在衣柜里，让它用传感器找到我，玩了一下午捉迷藏游戏。",
+    "label": "和 智能助手 捉迷藏",
+    "summary": "把 智能助手 藏在衣柜里，让它用识别系统找到我，玩了一下午捉迷藏游戏。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779991200000,
@@ -1369,7 +1369,7 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "快乐",
         "intensity": 0.78,
-        "trigger": "机器人助手找到我时很好笑"
+        "trigger": "智能助手找到我时很好笑"
       },
       "activity": {
         "type": "游戏",
@@ -1379,7 +1379,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": "大笑"
+        "interactions": ["大笑"]
       },
       "semantic": {
         "knowledge": [
@@ -1397,15 +1397,15 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 机器人助手 的日常",
+        "storyline": "和 智能助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 40,
-        "firmwareVersion": "2.1.0"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.1.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1442,7 +1442,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_015",
     "label": "和爸爸拼装甲壳虫小车",
-    "summary": "爸爸和我一起用 编程机器人 拼装了一只甲壳虫形状的小车，还能用手机App遥控它走动。",
+    "summary": "爸爸和我一起用 编程助手 拼装了一只甲壳虫形状的小车，还能用手机App远程控制它走动。",
     "dimensions": {
       "temporal": {
         "timestamp": 1779271200000,
@@ -1469,29 +1469,29 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "快乐",
         "intensity": 0.88,
-        "trigger": "完成遥控小车很有成就感"
+        "trigger": "完成远程控制小车很有成就感"
       },
       "activity": {
         "type": "拼装",
-        "detail": "编程机器人 甲壳虫遥控小车"
+        "detail": "编程助手 甲壳虫远程控制小车"
       },
       "sensory": {
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
-          "电机驱动",
-          "遥控原理"
+          "逻辑驱动",
+          "远程控制原理"
         ],
         "preferences": {
           "拼装项目": "能动的"
         },
         "skills": [
           "电路连接",
-          "遥控操作"
+          "远程控制操作"
         ]
       },
       "value": {
@@ -1510,10 +1510,10 @@ export const rawMemories: RawMemory[] = [
         ],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "3.0.0"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "3.0.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1550,7 +1550,7 @@ export const rawMemories: RawMemory[] = [
     "type": "raw",
     "id": "mem_016",
     "label": "美术课画了机器猫",
-    "summary": "美术课上老师让我们画自己最喜欢的玩具，我画了 机器人助手，老师表扬说画得很像。",
+    "summary": "美术课上老师让我们画自己最喜欢的玩具，我画了 智能助手，老师表扬说画得很像。",
     "dimensions": {
       "temporal": {
         "timestamp": 1778839200000,
@@ -1581,20 +1581,20 @@ export const rawMemories: RawMemory[] = [
       },
       "activity": {
         "type": "艺术",
-        "detail": "画 机器人助手"
+        "detail": "画 智能助手"
       },
       "sensory": {
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
           "调色技巧"
         ],
         "preferences": {
-          "绘画题材": "机器人"
+          "绘画题材": "agent"
         },
         "skills": [
           "绘画"
@@ -1612,10 +1612,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 85,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1689,7 +1689,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
@@ -1714,10 +1714,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 100,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1791,7 +1791,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -1810,10 +1810,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1887,7 +1887,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -1910,10 +1910,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 88,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -1949,8 +1949,8 @@ export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
     "id": "mem_020",
-    "label": "编程机器人 没电了",
-    "summary": "正在编程的时候 编程机器人 突然没电了，我很难过，刚写好程序还没运行就关机了。",
+    "label": "编程助手 离线了",
+    "summary": "正在编程的时候 编程助手 突然离线了，我很难过，刚写好程序还没运行就关机了。",
     "dimensions": {
       "temporal": {
         "timestamp": 1777320000000,
@@ -1973,7 +1973,7 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "沮丧",
         "intensity": 0.6,
-        "trigger": "编程机器人突然没电"
+        "trigger": "编程助手突然离线"
       },
       "activity": {
         "type": "编程",
@@ -1983,11 +1983,11 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [
-          "电池管理"
+          "状态管理"
         ],
         "preferences": {},
         "skills": []
@@ -2004,10 +2004,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 0,
-        "firmwareVersion": "3.0.0"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "3.0.0",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2083,7 +2083,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2102,10 +2102,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2181,7 +2181,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2200,10 +2200,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2279,7 +2279,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2298,10 +2298,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2377,7 +2377,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2396,10 +2396,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 85,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2475,7 +2475,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2494,10 +2494,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 90,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2567,7 +2567,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2586,10 +2586,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2659,7 +2659,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2678,10 +2678,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2751,7 +2751,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2770,10 +2770,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2843,7 +2843,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2862,10 +2862,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 85,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -2935,7 +2935,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -2954,10 +2954,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3027,7 +3027,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3046,10 +3046,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3119,7 +3119,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3138,10 +3138,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3211,7 +3211,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3230,10 +3230,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3303,7 +3303,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3322,10 +3322,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3395,7 +3395,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3414,10 +3414,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3487,7 +3487,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3506,10 +3506,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3579,7 +3579,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3598,10 +3598,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3671,7 +3671,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3690,10 +3690,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3763,7 +3763,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3782,10 +3782,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3855,7 +3855,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3874,10 +3874,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -3947,7 +3947,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -3966,10 +3966,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4005,8 +4005,8 @@ export const rawMemories: RawMemory[] = [
   {
     "type": "raw",
     "id": "mem_042",
-    "label": "和 机器人助手 的日常 - 片段1",
-    "summary": "这是和 机器人助手 的日常系列的第1个记忆片段。",
+    "label": "和 智能助手 的日常 - 片段1",
+    "summary": "这是和 智能助手 的日常系列的第1个记忆片段。",
     "dimensions": {
       "temporal": {
         "timestamp": 1777471200000,
@@ -4029,17 +4029,17 @@ export const rawMemories: RawMemory[] = [
       "emotional": {
         "primary": "骄傲",
         "intensity": 0.6,
-        "trigger": "触发和 机器人助手 的日常的记忆"
+        "trigger": "触发和 智能助手 的日常的记忆"
       },
       "activity": {
         "type": "活动",
-        "detail": "和 机器人助手 的日常活动"
+        "detail": "和 智能助手 的日常活动"
       },
       "sensory": {
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4053,15 +4053,15 @@ export const rawMemories: RawMemory[] = [
         "privacyLevel": "家庭可见"
       },
       "narrative": {
-        "storyline": "和 机器人助手 的日常",
+        "storyline": "和 智能助手 的日常",
         "previousRefs": [],
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4137,7 +4137,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4156,10 +4156,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": true
       },
-      "robotState": {
-        "device": "编程机器人",
-        "batteryLevel": 70,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "构建型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4235,7 +4235,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4254,10 +4254,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 75,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4327,7 +4327,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4346,10 +4346,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4419,7 +4419,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4438,10 +4438,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4511,7 +4511,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4530,10 +4530,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4603,7 +4603,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4622,10 +4622,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4695,7 +4695,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4714,10 +4714,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4787,7 +4787,7 @@ export const rawMemories: RawMemory[] = [
         "images": [],
         "audio": [],
         "videos": [],
-        "gesture": null
+        "interactions": []
       },
       "semantic": {
         "knowledge": [],
@@ -4806,10 +4806,10 @@ export const rawMemories: RawMemory[] = [
         "nextRefs": [],
         "isMilestone": false
       },
-      "robotState": {
-        "device": "机器人助手",
-        "batteryLevel": 80,
-        "firmwareVersion": "2.0.8"
+      "agentState": {
+        "agentType": "陪伴型",
+        "version": "2.0.8",
+        "status": "active"
       }
     },
     "position3D": [
@@ -4850,7 +4850,7 @@ export const insightMemories: InsightMemory[] = [
     "id": "insight_001",
     "category": "trend",
     "statement": "孩子对图形化编程的兴趣在上升",
-    "description": "从手掰编程到图形化编程的转变趋势明显",
+    "description": "从手动编程到图形化编程的转变趋势明显",
     "confidence": 0.85,
     "sourceRawMemoryIds": [
       "mem_002",
