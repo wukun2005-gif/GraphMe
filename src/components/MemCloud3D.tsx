@@ -327,6 +327,39 @@ function SceneLights({ theme }: { theme: Theme }) {
   );
 }
 
+import { useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useState } from 'react';
+
+function DemoCameraController() {
+  const { camera } = useThree();
+  const [animating, setAnimating] = useState(false);
+  const [angle, setAngle] = useState(0);
+
+  useEffect(() => {
+    const handleMove = (e: any) => {
+      if (e.detail?.action === 'rotate') {
+        setAnimating(true);
+        // Turn off after some time
+        setTimeout(() => setAnimating(false), 5000);
+      }
+    };
+    window.addEventListener('demo-camera-move', handleMove);
+    return () => window.removeEventListener('demo-camera-move', handleMove);
+  }, []);
+
+  useFrame((_, delta) => {
+    if (animating) {
+      setAngle(a => a + delta * 0.5);
+      const radius = 8;
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, Math.sin(angle) * radius, 0.05);
+      camera.position.z = THREE.MathUtils.lerp(camera.position.z, Math.cos(angle) * radius, 0.05);
+      camera.lookAt(0, 0, 0);
+    }
+  });
+
+  return null;
+}
+
 interface MemCloud3DProps {
   bgColor: string;
   theme: Theme;
@@ -351,6 +384,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
+        <DemoCameraController />
         <OrbitControls
           enableDamping
           dampingFactor={0.08}

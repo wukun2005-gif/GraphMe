@@ -28,6 +28,7 @@ export default function ChatPanel() {
   return (
     <>
       <button
+        id="chat-trigger"
         onClick={toggleChat}
         className={`fixed bottom-6 w-12 h-12 bg-[#00f2ff]/15 border border-[#00f2ff]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#00f2ff]/25 transition-all z-20 shadow-[0_0_15px_rgba(0,242,255,0.1)] ${
           detailOpen ? 'right-[436px]' : 'right-6'
@@ -84,6 +85,7 @@ export default function ChatPanel() {
                           <div className="px-3 py-1.5 flex gap-2 flex-wrap">
                             {qa.refs.map(ref => (
                               <button
+                                id={i === 0 && ref === qa.refs[0] ? 'chat-link-0' : undefined}
                                 key={ref}
                                 onClick={() => {
                                   const isInsight = ref.startsWith('insight_');

@@ -35,6 +35,7 @@ export default function ValueDashboard() {
   return (
     <>
       <button
+        id="val-dash-trigger"
         onClick={() => setOpen(!open)}
         className={`fixed bottom-20 w-12 h-12 bg-[#ffb800]/15 border border-[#ffb800]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#ffb800]/25 transition-all z-20 shadow-[0_0_15px_rgba(255,184,0,0.1)] ${
           detailOpen ? 'right-[436px]' : 'right-6'

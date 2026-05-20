@@ -4,6 +4,8 @@ import NavigationSidebar from './components/Navigation';
 import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
 import ValueDashboard from './components/ValueDashboard';
+import FakeCursor from './components/AutoDemo/FakeCursor';
+import { useState } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
@@ -11,6 +13,7 @@ const DEFAULT_BG_LIGHT = '#f5f6f8';
 function AppInner() {
   const { rawMemories, insightMemories, detailOpen, theme, toggleTheme } = useAppState();
   const isDark = theme === 'dark';
+  const [isDemoPlaying, setIsDemoPlaying] = useState(false);
 
   return (
     <div
@@ -46,6 +49,19 @@ function AppInner() {
         detailOpen ? 'right-[436px]' : 'right-4'
       }`}>
         <button
+          onClick={() => setIsDemoPlaying(true)}
+          disabled={isDemoPlaying}
+          className={`px-3 py-1.5 text-xs rounded-lg font-medium shadow-lg backdrop-blur-sm transition-all ${
+            isDemoPlaying ? 'opacity-50 cursor-not-allowed' : ''
+          } ${
+            isDark 
+              ? 'bg-[#00f2ff]/20 text-[#00f2ff] hover:bg-[#00f2ff]/30 border border-[#00f2ff]/30' 
+              : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 border border-[#0088cc]/30'
+          }`}
+        >
+          ▶ 一键演示
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -56,6 +72,8 @@ function AppInner() {
           {isDark ? '☀️ 亮色' : '🌙 暗色'}
         </button>
       </div>
+
+      <FakeCursor isPlaying={isDemoPlaying} onStop={() => setIsDemoPlaying(false)} />
     </div>
   );
 }

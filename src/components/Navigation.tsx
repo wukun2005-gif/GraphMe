@@ -197,6 +197,7 @@ export default function NavigationSidebar() {
         {Object.entries(NAV_STRUCTURE).map(([category, { icon, sub }]) => (
           <div key={category}>
             <button
+              id={`nav-cat-${category}`}
               onClick={() => {
                 setNavCategory(navCategory === category ? null : category);
                 setNavSubCategory(null);
@@ -220,6 +221,7 @@ export default function NavigationSidebar() {
                 {sub.map((s) => (
                   <button
                     key={s.id}
+                    id={`nav-sub-${s.id}`}
                     onClick={() => setNavSubCategory(navSubCategory === s.id ? null : s.id)}
                     className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-2 cursor-pointer ${
                       navSubCategory === s.id
@@ -238,6 +240,7 @@ export default function NavigationSidebar() {
 
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
+          id="nav-legend"
           onClick={() => setShowLegend(!showLegend)}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
@@ -285,6 +288,7 @@ export default function NavigationSidebar() {
 
                 <div className="flex items-center gap-2">
                   <button
+                    id="btn-toggle-raw"
                     onClick={toggleHideRaw}
                     className={`px-2 py-1 rounded text-xs transition-all cursor-pointer ${
                       hideRawOnly ? `${isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'}` : `${isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'}`
@@ -321,6 +325,7 @@ export default function NavigationSidebar() {
 
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
+          id="nav-memory-mgr"
           onClick={() => setShowMemoryMgr(!showMemoryMgr)}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
@@ -440,7 +445,7 @@ export default function NavigationSidebar() {
                     共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
                   </p>
                   <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
-                    {filtered.slice(-30).reverse().map(mem => (
+                    {filtered.slice(-30).reverse().map((mem, i) => (
                       <div key={mem.id}>
                         {editingId === mem.id ? (
                           <div className={`rounded p-2 border space-y-1.5 ${
@@ -472,6 +477,7 @@ export default function NavigationSidebar() {
                                 保存
                               </button>
                               <button
+                                id={`mem-item-cancel-${i}`}
                                 onClick={cancelEdit}
                                 className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${
                                   isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff10]' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
@@ -493,6 +499,7 @@ export default function NavigationSidebar() {
                               </div>
                             </div>
                             <button
+                              id={`mem-item-edit-${i}`}
                               onClick={() => startEdit(mem)}
                               className={`text-xs cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
                             >
