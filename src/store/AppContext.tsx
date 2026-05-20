@@ -41,6 +41,9 @@ interface AppContextType extends AppState {
   toggleHideInsight: () => void;
   showChatGPT: boolean;
   toggleShowChatGPT: () => void;
+  chatgptImportStatus: 'idle' | 'importing' | 'done';
+  chatgptImportProgress: number;
+  startChatGPTImport: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -63,7 +66,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
   const [hideRawOnly, setHideRawOnly] = useState(false);
   const [hideInsightOnly, setHideInsightOnly] = useState(false);
-  const [showChatGPT, setShowChatGPT] = useState(true);
+  const [showChatGPT, setShowChatGPT] = useState(false);
+  const [chatgptImportStatus, setChatgptImportStatus] = useState<'idle' | 'importing' | 'done'>('idle');
+  const [chatgptImportProgress, setChatgptImportProgress] = useState(0);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -95,6 +100,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
+
+  const startChatGPTImport = useCallback(() => {
+    if (chatgptImportStatus !== 'idle') return;
+    setChatgptImportStatus('importing');
+    setChatgptImportProgress(0);
+    const interval = setInterval(() => {
+      setChatgptImportProgress(prev => {
+        const next = prev + 4;
+        if (next >= 100) {
+          clearInterval(interval);
+          setChatgptImportStatus('done');
+          setShowChatGPT(true);
+          return 100;
+        }
+        return next;
+      });
+    }, 80);
+  }, [chatgptImportStatus]);
 
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
@@ -148,6 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addMemory, deleteMemory, updateMemory, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
+      chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     }}>
       {children}
     </AppContext.Provider>
