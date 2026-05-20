@@ -62,12 +62,13 @@ const SUB_MAP: Record<string, string[]> = {
 };
 
 function isMemoryInCategory(mem: RawMemory, category: string, subCategory: string | null): boolean {
-  const places = NAV_MAP[category];
-  if (!places || !places.includes(mem.dimensions.spatial.placeType)) return false;
   if (subCategory) {
     const subPlaces = SUB_MAP[subCategory];
-    if (subPlaces && !subPlaces.includes(mem.dimensions.spatial.placeType)) return false;
+    if (!subPlaces) return false;
+    return subPlaces.includes(mem.dimensions.spatial.placeType);
   }
+  const places = NAV_MAP[category];
+  if (!places || !places.includes(mem.dimensions.spatial.placeType)) return false;
   return true;
 }
 
