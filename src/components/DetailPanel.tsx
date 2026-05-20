@@ -93,13 +93,13 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 }
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
-  const { rawMemories, theme } = useAppState();
+  const { rawMemories, theme, selectMemory } = useAppState();
   const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
 
   const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
     const raw = rawMemories.find(m => m.id === id);
-    return { id, summary: raw?.summary || '未知记忆' };
+    return { id, summary: raw?.summary || '未知记忆', rawMem: raw };
   });
 
   return (
@@ -120,12 +120,20 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
       </div>
       <div>
         <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 依据（共 {memory.sourceRawMemoryIds.length} 条原始记忆）</p>
-        <div className="text-xs space-y-1 max-h-32 overflow-y-auto ${isDark ? 'text-gray-500' : 'text-gray-600'}">
-          {sourceSummaries.map(({ id, summary }) => (
-            <div key={id} className="pl-2 border-l border-[#ffb800]/20">
-              <span className="text-[#ffb800]/80">{id}</span>
-              <span className="text-gray-600 ml-1">— {summary.length > 40 ? summary.slice(0, 40) + '...' : summary}</span>
-            </div>
+        <div className={`text-xs space-y-1 max-h-32 overflow-y-auto ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+          {sourceSummaries.map(({ id, summary, rawMem }) => (
+            <button
+              key={id}
+              onClick={() => rawMem && selectMemory(rawMem)}
+              className={`pl-2 pr-2 py-0.5 border-l text-left w-full transition-colors rounded-r cursor-pointer ${
+                isDark
+                  ? 'border-[#ffb800]/20 hover:border-[#ffb800]/60 hover:bg-[#ffb800]/5'
+                  : 'border-yellow-300 hover:border-yellow-500 hover:bg-yellow-50'
+              }`}
+            >
+              <span className={isDark ? 'text-[#ffb800]/80' : 'text-[#b8860b]'}>{id}</span>
+              <span className={`ml-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>— {summary.length > 40 ? summary.slice(0, 40) + '...' : summary}</span>
+            </button>
           ))}
         </div>
       </div>
