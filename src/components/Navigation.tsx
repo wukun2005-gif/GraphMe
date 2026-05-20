@@ -336,42 +336,6 @@ export default function NavigationSidebar() {
         </AnimatePresence>
       </div>
 
-      <div className={`px-4 py-2 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
-        <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>外部 Agent 记忆</div>
-        <button
-          onClick={chatgptImportStatus === 'idle' ? startChatGPTImport : toggleShowChatGPT}
-          disabled={chatgptImportStatus === 'importing'}
-          className={`px-2 py-1 rounded text-xs transition-all cursor-pointer w-full text-left ${
-            chatgptImportStatus === 'importing'
-              ? isDark ? 'bg-[#1a1a2e] text-gray-500 cursor-wait' : 'bg-gray-100 text-gray-400 cursor-wait'
-              : showChatGPT
-                ? `${isDark ? 'bg-[#10a37f]/10 text-[#10a37f]' : 'bg-[#10a37f]/10 text-[#10a37f]'}`
-                : `${isDark ? 'bg-[#1a1a2e] text-gray-500 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span>🤖 ChatGPT {
-              chatgptImportStatus === 'importing'
-                ? `导入中 ${chatgptImportProgress}%`
-                : chatgptImportStatus === 'done'
-                  ? '已导入'
-                  : `未导入 (${chatgptCount})`
-            }</span>
-            {chatgptImportStatus === 'idle' && (
-              <span className="text-[10px] opacity-50">导入</span>
-            )}
-          </div>
-          {chatgptImportStatus === 'importing' && (
-            <div className={`mt-1 h-1 rounded-full overflow-hidden ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-300'}`}>
-              <div
-                className="h-full rounded-full bg-[#10a37f] transition-all duration-100 ease-linear"
-                style={{ width: `${chatgptImportProgress}%` }}
-              />
-            </div>
-          )}
-        </button>
-      </div>
-
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
           id="nav-memory-mgr"
@@ -401,6 +365,44 @@ export default function NavigationSidebar() {
                     isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-700'
                   }`}
                 />
+
+                <div className={`rounded border p-2 text-xs ${
+                  isDark ? 'bg-[#1a1a2e]/50 border-[#ffffff08]' : 'bg-gray-100 border-gray-200'
+                }`}>
+                  <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>🤖 外部 Agent 记忆</div>
+                  <button
+                    onClick={chatgptImportStatus === 'idle' ? startChatGPTImport : toggleShowChatGPT}
+                    disabled={chatgptImportStatus === 'importing'}
+                    className={`px-2 py-1 rounded text-xs transition-all cursor-pointer w-full text-left ${
+                      chatgptImportStatus === 'importing'
+                        ? isDark ? 'bg-[#1a1a2e] text-gray-500 cursor-wait' : 'bg-gray-100 text-gray-400 cursor-wait'
+                        : showChatGPT
+                          ? `${isDark ? 'bg-[#10a37f]/10 text-[#10a37f]' : 'bg-[#10a37f]/10 text-[#10a37f]'}`
+                          : `${isDark ? 'bg-[#1a1a2e] text-gray-500 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>ChatGPT {
+                        chatgptImportStatus === 'importing'
+                          ? `导入中 ${chatgptImportProgress}%`
+                          : chatgptImportStatus === 'done'
+                            ? '已导入'
+                            : `未导入 (${chatgptCount})`
+                      }</span>
+                      {chatgptImportStatus === 'idle' && (
+                        <span className="text-[10px] opacity-50">导入</span>
+                      )}
+                    </div>
+                    {chatgptImportStatus === 'importing' && (
+                      <div className={`mt-1 h-1 rounded-full overflow-hidden ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-300'}`}>
+                        <div
+                          className="h-full rounded-full bg-[#10a37f] transition-all duration-100 ease-linear"
+                          style={{ width: `${chatgptImportProgress}%` }}
+                        />
+                      </div>
+                    )}
+                  </button>
+                </div>
 
                 <button
                   onClick={() => setFormOpen(!formOpen)}

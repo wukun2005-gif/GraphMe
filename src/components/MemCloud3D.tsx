@@ -62,6 +62,7 @@ const SUB_MAP: Record<string, string[]> = {
 };
 
 function isMemoryInCategory(mem: RawMemory, category: string, subCategory: string | null): boolean {
+  if (mem.source === 'chatgpt') return true;
   if (subCategory) {
     const subPlaces = SUB_MAP[subCategory];
     if (!subPlaces) return false;
@@ -126,18 +127,15 @@ function ParticleCloud({ theme }: { theme: Theme }) {
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
     const index = event.index;
-    if (index !== undefined && index >= 0) {
-      const mems = visibleRef.current;
-      if (index < mems.length) {
-        selectMemory(mems[index]);
-      }
+    if (index !== undefined && index >= 0 && index < visibleRef.current.length) {
+      selectMemory(visibleRef.current[index]);
     }
   }, [selectMemory]);
 
   if (hideRawOnly) return null;
 
   return (
-    <points key={`raw-${navCategory || 'all'}-${navSubCategory || 'none'}-${theme}`} onClick={handleClick}>
+    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${theme}`} onClick={handleClick}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
