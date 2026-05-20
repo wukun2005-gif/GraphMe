@@ -1,6 +1,6 @@
 import { useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls, Stars, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
@@ -360,6 +360,57 @@ function DemoCameraController() {
   return null;
 }
 
+function ClusterTags({ theme }: { theme: Theme }) {
+  const { rawMemories, navCategory, navSubCategory } = useAppState();
+  const isLight = theme === 'light';
+
+  const tagMemories = useMemo(() => {
+    let mems = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
+    if (navCategory) {
+      mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+    }
+    return mems
+      .filter(m => m.dimensions.narrative.isMilestone || m.dimensions.value.importance >= 7)
+      .slice(0, 5);
+  }, [rawMemories, navCategory, navSubCategory]);
+
+  return (
+    <>
+      {tagMemories.map(mem => {
+        const position = navCategory
+          ? getNavPosition(mem, navCategory, navSubCategory)
+          : mem.position3D;
+        const tagBg = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+        const tagColor = isLight ? '#555' : '#aaa';
+        const tagBorder = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
+        return (
+          <Html
+            key={mem.id}
+            position={position}
+            sprite
+            center
+            distanceFactor={8}
+            occlude={false}
+          >
+            <div style={{
+              background: tagBg,
+              color: tagColor,
+              fontSize: '9px',
+              padding: '1px 6px',
+              borderRadius: '3px',
+              whiteSpace: 'nowrap',
+              border: `1px solid ${tagBorder}`,
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}>
+              {mem.dimensions.narrative.isMilestone ? '⭐ ' : ''}{mem.label.slice(0, 8)}
+            </div>
+          </Html>
+        )})}
+    </>
+  );
+}
+
 interface MemCloud3DProps {
   bgColor: string;
   theme: Theme;
@@ -384,6 +435,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
+        <ClusterTags theme={theme} />
         <DemoCameraController />
         <OrbitControls
           enableDamping
