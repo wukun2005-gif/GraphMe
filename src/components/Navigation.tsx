@@ -53,6 +53,7 @@ export default function NavigationSidebar() {
     insightMemories, theme,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
+    hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -86,7 +87,7 @@ export default function NavigationSidebar() {
     return parts;
   }, [navCategory, navSubCategory]);
 
-  const filtered = rawMemories.filter(m => {
+  const filtered = allRawMemories.filter(m => {
     if (!searchText) return true;
     const q = searchText.toLowerCase();
     return m.id.toLowerCase().includes(q)
@@ -489,9 +490,20 @@ export default function NavigationSidebar() {
                 </AnimatePresence>
 
                 <div>
-                  <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
-                  </p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
+                    </p>
+                    <label className={`flex items-center gap-1 text-[10px] cursor-pointer ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <input
+                        type="checkbox"
+                        checked={hiddenMemoryIds.length === 0}
+                        onChange={toggleAllMemories}
+                        className="w-3 h-3 cursor-pointer"
+                      />
+                      全选
+                    </label>
+                  </div>
                   <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
                     {filtered.slice(-30).reverse().map((mem, i) => (
                       <div key={mem.id}>
@@ -541,6 +553,12 @@ export default function NavigationSidebar() {
                           <div className={`flex items-center gap-1 px-2 py-1 rounded ${
                             isDark ? 'hover:bg-[#ffffff05]' : 'hover:bg-black/5'
                           }`}>
+                            <input
+                              type="checkbox"
+                              checked={!hiddenMemoryIds.includes(mem.id)}
+                              onChange={() => toggleMemoryVisibility(mem.id)}
+                              className="w-3 h-3 flex-shrink-0 cursor-pointer"
+                            />
                             <div className="flex-1 min-w-0">
                               <div className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{mem.id}</span>

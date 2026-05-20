@@ -44,6 +44,10 @@ interface AppContextType extends AppState {
   chatgptImportStatus: 'idle' | 'importing' | 'done';
   chatgptImportProgress: number;
   startChatGPTImport: () => void;
+  hiddenMemoryIds: string[];
+  allRawMemories: RawMemory[];
+  toggleMemoryVisibility: (id: string) => void;
+  toggleAllMemories: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -69,6 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [showChatGPT, setShowChatGPT] = useState(false);
   const [chatgptImportStatus, setChatgptImportStatus] = useState<'idle' | 'importing' | 'done'>('idle');
   const [chatgptImportProgress, setChatgptImportProgress] = useState(0);
+  const [hiddenMemoryIds, setHiddenMemoryIds] = useState<string[]>([]);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -119,12 +124,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 80);
   }, [chatgptImportStatus]);
 
+  const toggleMemoryVisibility = useCallback((id: string) => {
+    setHiddenMemoryIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const toggleAllMemories = useCallback(() => {
+    setHiddenMemoryIds(prev => {
+      if (prev.length === 0) {
+        return defaultRawMemories.map(m => m.id);
+      }
+      return [];
+    });
+  }, []);
+
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
 
   const mergedRawMemories = useMemo(() =>
     showChatGPT ? [...rawMems, ...chatgptRawMemories] : rawMems,
   [rawMems, showChatGPT]);
+
+  const allRawMemories = mergedRawMemories;
+
+  const visibleRawMemories = useMemo(() =>
+    hiddenMemoryIds.length === 0
+      ? mergedRawMemories
+      : mergedRawMemories.filter(m => !hiddenMemoryIds.includes(m.id)),
+  [mergedRawMemories, hiddenMemoryIds]);
 
   const mergedInsightMemories = useMemo(() =>
     showChatGPT ? [...defaultInsightMemories, ...chatgptInsightMemories] : defaultInsightMemories,
@@ -137,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       '社交与情感': ['公园', '商场', '游乐场'],
       '兴趣与探索': ['公园', '游乐场', '其他'],
     };
-    return mergedRawMemories.filter(m => {
+    return visibleRawMemories.filter(m => {
       if (navCategory) {
         const places = navMap[navCategory];
         if (places && !places.includes(m.dimensions.spatial.placeType)) return false;
@@ -160,18 +188,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return true;
     });
-  }, [mergedRawMemories, navCategory, navSubCategory]);
+  }, [visibleRawMemories, navCategory, navSubCategory]);
 
   return (
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, setNavCategory, setNavSubCategory,
-      rawMemories: mergedRawMemories, insightMemories: mergedInsightMemories,
+      rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
+      hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
     }}>
       {children}
     </AppContext.Provider>
