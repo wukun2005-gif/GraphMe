@@ -4,6 +4,7 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, EmotionType } from '../types';
 import { EMOTION_COLORS } from '../types';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
+import { generateStory } from '../utils/storyUtils';
 
 const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: string }[] }> = {
   '家庭生活': { icon: '🏠', sub: [
@@ -57,6 +58,12 @@ export default function NavigationSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
+  const [showStoryBoard, setShowStoryBoard] = useState(false);
+
+  const storyChapters = useMemo(
+    () => generateStory(rawMemories, insightMemories),
+    [rawMemories, insightMemories]
+  );
 
   const [formOpen, setFormOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -537,6 +544,63 @@ export default function NavigationSidebar() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+        <button
+          id="nav-storyboard"
+          onClick={() => setShowStoryBoard(!showStoryBoard)}
+          className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
+            isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
+          }`}
+        >
+          <span>📖 小哥说我</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
+        </button>
+        <AnimatePresence>
+          {showStoryBoard && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className={`px-3 pb-3 space-y-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {storyChapters.length === 0 ? (
+                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    暂无足够记忆来生成故事
+                  </p>
+                ) : (
+                  storyChapters.map((chapter, ci) => (
+                    <div key={ci}>
+                      <div className={`text-[10px] uppercase tracking-wider mb-1.5 ${
+                        chapter.type === 'past'
+                          ? isDark ? 'text-[#00f2ff]/60' : 'text-[#0088cc]/60'
+                          : isDark ? 'text-[#ffb800]/60' : 'text-[#cc8800]/60'
+                      }`}>
+                        {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} {chapter.title}
+                      </div>
+                      {chapter.imageUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={chapter.imageUrl}
+                            alt="记忆配图"
+                            className="w-full h-24 object-cover rounded opacity-80"
+                          />
+                        </div>
+                      )}
+                      <p className={`text-[11px] leading-relaxed whitespace-pre-line ${
+                        isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        {chapter.text}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           )}

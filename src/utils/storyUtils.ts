@@ -1,0 +1,83 @@
+import type { RawMemory, InsightMemory } from '../types';
+import { CATEGORY_LABELS } from '../types';
+
+export interface StoryChapter {
+  title: string;
+  type: 'past' | 'future';
+  text: string;
+  imageUrl?: string;
+  memoryIds: string[];
+}
+
+function getSeasonEmoji(season: string): string {
+  return { '春': '🌸', '夏': '☀️', '秋': '🍂', '冬': '❄️' }[season] || '';
+}
+
+function getEmotionLabel(emotion: string): string {
+  const map: Record<string, string> = {
+    '快乐': '开心', '悲伤': '难过', '愤怒': '生气', '惊讶': '惊叹',
+    '好奇': '好奇', '骄傲': '自豪', '沮丧': '沮丧', '感激': '感恩', '思念': '想念',
+  };
+  return map[emotion] || emotion;
+}
+
+export function generateStory(
+  rawMemories: RawMemory[],
+  insightMemories: InsightMemory[]
+): StoryChapter[] {
+  const chapters: StoryChapter[] = [];
+
+  const sortedRaw = [...rawMemories]
+    .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
+
+  const milestones = sortedRaw.filter(m => m.dimensions.narrative.isMilestone);
+  const regular = sortedRaw.filter(m => !m.dimensions.narrative.isMilestone);
+  const selectedRaw = [...milestones, ...regular.slice(-3)].slice(0, 6);
+
+  if (selectedRaw.length > 0) {
+    const storyLines: string[] = selectedRaw.map((m, i) => {
+      const season = getSeasonEmoji(m.dimensions.temporal.season);
+      const emotion = getEmotionLabel(m.dimensions.emotional.primary);
+      const place = m.dimensions.spatial.landmark;
+      const dateType = m.dimensions.temporal.dateType;
+      if (i === 0) {
+        return `故事从${season}${dateType}的${place}开始——${m.label}。那天的他${emotion}极了，${m.summary}`;
+      }
+      return `后来到了${season}${dateType}，在${place}，${m.label}。这时的他${emotion}又满足，${m.summary}`;
+    });
+
+    const images = selectedRaw
+      .flatMap(m => m.dimensions.sensory.images)
+      .filter(Boolean);
+    const firstImage = images[0];
+
+    chapters.push({
+      title: '过去的脚印',
+      type: 'past',
+      text: storyLines.join('\n\n'),
+      imageUrl: firstImage,
+      memoryIds: selectedRaw.map(m => m.id),
+    });
+  }
+
+  if (insightMemories.length > 0) {
+    const topInsights = [...insightMemories]
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 3);
+
+    const insightLines = topInsights.map(ins => {
+      const cat = CATEGORY_LABELS[ins.category];
+      return `在${cat}方面，${ins.statement}。${ins.description}`;
+    });
+
+    chapters.push({
+      title: '未来的投射',
+      type: 'future',
+      text: insightLines.join('\n\n'),
+      imageUrl: undefined,
+      memoryIds: topInsights.map(ins => ins.id),
+    });
+  }
+
+  return chapters;
+}
