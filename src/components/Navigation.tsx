@@ -252,7 +252,7 @@ export default function NavigationSidebar() {
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
           id="nav-legend"
-          onClick={() => setShowLegend(!showLegend)}
+          onClick={() => { setShowLegend(!showLegend); setShowMemoryMgr(false); setShowStoryBoard(false); }}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
@@ -351,7 +351,7 @@ export default function NavigationSidebar() {
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
           id="nav-memory-mgr"
-          onClick={() => setShowMemoryMgr(!showMemoryMgr)}
+          onClick={() => { setShowMemoryMgr(!showMemoryMgr); setShowLegend(false); setShowStoryBoard(false); }}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
@@ -553,7 +553,7 @@ export default function NavigationSidebar() {
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
           id="nav-storyboard"
-          onClick={() => setShowStoryBoard(!showStoryBoard)}
+          onClick={() => { setShowStoryBoard(!showStoryBoard); setShowLegend(false); setShowMemoryMgr(false); }}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
