@@ -3,6 +3,7 @@ import MemCloud3D from './components/MemCloud3D';
 import NavigationSidebar from './components/Navigation';
 import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
+import ValueDashboard from './components/ValueDashboard';
 
 const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
@@ -27,6 +28,7 @@ function AppInner() {
 
       <DetailPanel />
       <ChatPanel />
+      <ValueDashboard />
 
       <div className="absolute top-6 left-[240px] z-10">
         <h1 className={`text-lg font-light tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
+import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings } from '../utils/valueUtils';
 import type { RawMemory, InsightMemory } from '../types';
 
 describe('Business Logic — Insight Memory Version Chains', () => {
@@ -201,5 +202,159 @@ describe('Business Logic — Privacy Level', () => {
       m => m.dimensions.value.privacyLevel !== '家庭可见'
     );
     expect(nonFamilyVisible.length).toBeLessThanOrEqual(rawMemories.length * 0.3);
+  });
+});
+
+describe('Business Logic — Value Dashboard Computation', () => {
+  describe('computeValueScore', () => {
+    it('should return score between 0 and 100', () => {
+      rawMemories.forEach(m => {
+        const result = computeValueScore(m);
+        expect(result.score).toBeGreaterThanOrEqual(0);
+        expect(result.score).toBeLessThanOrEqual(100);
+      });
+    });
+
+    it('should return breakdown with correct component ranges', () => {
+      rawMemories.forEach(m => {
+        const result = computeValueScore(m);
+        expect(result.breakdown.importance).toBeGreaterThanOrEqual(0);
+        expect(result.breakdown.importance).toBeLessThanOrEqual(40);
+        expect(result.breakdown.cqi).toBeGreaterThanOrEqual(0);
+        expect(result.breakdown.cqi).toBeLessThanOrEqual(30);
+        expect(result.breakdown.emotionalIntensity).toBeGreaterThanOrEqual(0);
+        expect(result.breakdown.emotionalIntensity).toBeLessThanOrEqual(20);
+        expect(result.breakdown.accessCount).toBeGreaterThanOrEqual(0);
+        expect(result.breakdown.accessCount).toBeLessThanOrEqual(10);
+      });
+    });
+
+    it('should give higher score to memories with higher importance', () => {
+      const highImp = rawMemories.filter(m => m.dimensions.value.importance >= 0.8);
+      const lowImp = rawMemories.filter(m => m.dimensions.value.importance <= 0.3);
+      if (highImp.length > 0 && lowImp.length > 0) {
+        const avgHigh = highImp.reduce((s, m) => s + computeValueScore(m).score, 0) / highImp.length;
+        const avgLow = lowImp.reduce((s, m) => s + computeValueScore(m).score, 0) / lowImp.length;
+        expect(avgHigh).toBeGreaterThan(avgLow);
+      }
+    });
+
+    it('should reference the correct memory in result', () => {
+      const mem = rawMemories[0];
+      const result = computeValueScore(mem);
+      expect(result.memory).toBe(mem);
+    });
+  });
+
+  describe('computeForgettingRisk', () => {
+    it('should return risk between 0 and 1', () => {
+      rawMemories.forEach(m => {
+        const result = computeForgettingRisk(m);
+        expect(result.risk).toBeGreaterThanOrEqual(0);
+        expect(result.risk).toBeLessThanOrEqual(1);
+      });
+    });
+
+    it('should return valid risk level', () => {
+      rawMemories.forEach(m => {
+        const result = computeForgettingRisk(m);
+        expect(['low', 'medium', 'high']).toContain(result.level);
+      });
+    });
+
+    it('should return daysSinceCreation as non-negative number', () => {
+      rawMemories.forEach(m => {
+        const result = computeForgettingRisk(m);
+        expect(result.daysSinceCreation).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    it('should give higher risk to older memories with same importance', () => {
+      const now = 1780400000000;
+      const recent: RawMemory = {
+        ...rawMemories[0],
+        dimensions: {
+          ...rawMemories[0].dimensions,
+          temporal: { ...rawMemories[0].dimensions.temporal, timestamp: now - 86400000 },
+          value: { ...rawMemories[0].dimensions.value, importance: 0.5 },
+        },
+      };
+      const old: RawMemory = {
+        ...rawMemories[0],
+        dimensions: {
+          ...rawMemories[0].dimensions,
+          temporal: { ...rawMemories[0].dimensions.temporal, timestamp: now - 30 * 86400000 },
+          value: { ...rawMemories[0].dimensions.value, importance: 0.5 },
+        },
+      };
+      const recentRisk = computeForgettingRisk(recent, now);
+      const oldRisk = computeForgettingRisk(old, now);
+      expect(oldRisk.risk).toBeGreaterThan(recentRisk.risk);
+    });
+
+    it('should give lower risk to more important memories at same age', () => {
+      const now = Date.now();
+      const ts = now - 15 * 86400000;
+      const important: RawMemory = {
+        ...rawMemories[0],
+        dimensions: {
+          ...rawMemories[0].dimensions,
+          temporal: { ...rawMemories[0].dimensions.temporal, timestamp: ts },
+          value: { ...rawMemories[0].dimensions.value, importance: 0.9 },
+        },
+      };
+      const unimportant: RawMemory = {
+        ...rawMemories[0],
+        dimensions: {
+          ...rawMemories[0].dimensions,
+          temporal: { ...rawMemories[0].dimensions.temporal, timestamp: ts },
+          value: { ...rawMemories[0].dimensions.value, importance: 0.1 },
+        },
+      };
+      const impRisk = computeForgettingRisk(important, now);
+      const unimpRisk = computeForgettingRisk(unimportant, now);
+      expect(unimpRisk.risk).toBeGreaterThan(impRisk.risk);
+    });
+  });
+
+  describe('getTop5HighValue', () => {
+    it('should return at most 5 items', () => {
+      const result = getTop5HighValue(rawMemories);
+      expect(result.length).toBeLessThanOrEqual(5);
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should be sorted descending by score', () => {
+      const result = getTop5HighValue(rawMemories);
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i].score).toBeLessThanOrEqual(result[i - 1].score);
+      }
+    });
+
+    it('should return empty array for empty input', () => {
+      const result = getTop5HighValue([]);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getForgettingRiskWarnings', () => {
+    it('should return only medium or high risk items', () => {
+      const result = getForgettingRiskWarnings(rawMemories, 10);
+      result.forEach(r => {
+        expect(['medium', 'high']).toContain(r.level);
+      });
+    });
+
+    it('should return at most topN items', () => {
+      const result = getForgettingRiskWarnings(rawMemories, 3);
+      expect(result.length).toBeLessThanOrEqual(3);
+    });
+
+    it('should be sorted descending by risk', () => {
+      const result = getForgettingRiskWarnings(rawMemories, 10);
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i].risk).toBeLessThanOrEqual(result[i - 1].risk);
+      }
+    });
   });
 });

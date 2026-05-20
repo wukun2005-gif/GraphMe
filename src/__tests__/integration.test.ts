@@ -3,6 +3,7 @@ import React from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { AppProvider, useAppState } from '../store/AppContext';
 import { rawMemories, insightMemories } from '../data/demoData';
+import { getTop5HighValue, getForgettingRiskWarnings, computeValueScore, computeForgettingRisk } from '../utils/valueUtils';
 import type { RawMemory } from '../types';
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -345,5 +346,62 @@ describe('Integration — PRD Requirements Compliance', () => {
 
     act(() => { result.current.deleteMemory('prd_test'); });
     expect(result.current.rawMemories.length).toBe(initialCount);
+  });
+});
+
+describe('Integration — Value Dashboard with Demo Data', () => {
+  it('should compute top 5 high-value memories from demo data', () => {
+    const top5 = getTop5HighValue(rawMemories);
+    expect(top5.length).toBe(5);
+    const allIds = new Set(rawMemories.map(m => m.id));
+    top5.forEach(item => {
+      expect(allIds.has(item.memory.id)).toBe(true);
+    });
+    for (let i = 1; i < top5.length; i++) {
+      expect(top5[i].score).toBeLessThanOrEqual(top5[i - 1].score);
+    }
+  });
+
+  it('should compute forgetting risk warnings with valid memory references', () => {
+    const warnings = getForgettingRiskWarnings(rawMemories, 5);
+    const allIds = new Set(rawMemories.map(m => m.id));
+    warnings.forEach(w => {
+      expect(allIds.has(w.memory.id)).toBe(true);
+      expect(['medium', 'high']).toContain(w.level);
+    });
+  });
+
+  it('should have at least some medium or high risk memories in demo data when using a future reference date', () => {
+    const futureNow = 1783000000000;
+    const allRisks = rawMemories.map(m => computeForgettingRisk(m, futureNow));
+    const riskyCount = allRisks.filter(r => r.level === 'medium' || r.level === 'high').length;
+    expect(riskyCount).toBeGreaterThan(0);
+  });
+
+  it('should integrate value scores with AppContext raw memories', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const mems = result.current.rawMemories;
+    expect(mems.length).toBeGreaterThanOrEqual(50);
+
+    const top5 = getTop5HighValue(mems);
+    expect(top5.length).toBe(5);
+
+    const warnings = getForgettingRiskWarnings(mems);
+    expect(warnings.length).toBeGreaterThanOrEqual(0);
+
+    top5.forEach(item => {
+      expect(item.memory.type).toBe('raw');
+    });
+  });
+
+  it('should compute meaningful value scores for milestone memories', () => {
+    const milestones = rawMemories.filter(m => m.dimensions.narrative.isMilestone);
+    const nonMilestones = rawMemories.filter(m => !m.dimensions.narrative.isMilestone);
+
+    if (milestones.length > 0 && nonMilestones.length > 0) {
+      const avgMilestone = milestones.reduce((s, m) => s + computeValueScore(m).score, 0) / milestones.length;
+      const avgNonMilestone = nonMilestones.reduce((s, m) => s + computeValueScore(m).score, 0) / nonMilestones.length;
+      expect(avgMilestone).toBeGreaterThan(avgNonMilestone);
+    }
   });
 });
