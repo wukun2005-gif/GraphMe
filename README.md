@@ -1,4 +1,4 @@
-# GraphMe — Agent 记忆星云可视化系统
+# GraphMe — Agent memory 可视化系统
 
 ![GraphMe Demo](assets/demo.gif)
 
