@@ -277,6 +277,89 @@ export default function MemoryBank() {
                   </div>
                 </div>
               </div>
+
+              <div className={`border-t pt-3 ${
+                isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+              }`}>
+                <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  🧬 心智模型气质画像
+                </h4>
+                <div className="flex items-center gap-3 mb-3">
+                  <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="28" fill="none"
+                      className={isDark ? 'stroke-[#ffffff08]' : 'stroke-gray-200'}
+                      strokeWidth="8" />
+                    <circle cx="32" cy="32" r="28" fill="none"
+                      stroke="#f59e0b" strokeWidth="8"
+                      strokeDasharray="78.4 175.9"
+                      strokeDashoffset="0"
+                      strokeLinecap="round"
+                      transform="rotate(-90 32 32)" />
+                    <circle cx="32" cy="32" r="28" fill="none"
+                      stroke="#8b5cf6" strokeWidth="8"
+                      strokeDasharray="52.3 175.9"
+                      strokeDashoffset="-78.4"
+                      strokeLinecap="round"
+                      transform="rotate(-90 32 32)" />
+                    <circle cx="32" cy="32" r="28" fill="none"
+                      stroke="#06b6d4" strokeWidth="8"
+                      strokeDasharray="45.2 175.9"
+                      strokeDashoffset="-130.7"
+                      strokeLinecap="round"
+                      transform="rotate(-90 32 32)" />
+                    <text x="32" y="36" textAnchor="middle" className={`text-xs font-bold ${isDark ? 'fill-gray-200' : 'fill-gray-800'}`}>
+                      78%
+                    </text>
+                  </svg>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        俄耳甫斯气质
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+                        情感驱动型学习者
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        isDark ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100 text-amber-700'
+                      }`}>🟡 情感驱动 45%</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        isDark ? 'bg-purple-500/15 text-purple-400' : 'bg-purple-100 text-purple-700'
+                      }`}>🟣 安全依赖 30%</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        isDark ? 'bg-cyan-500/15 text-cyan-400' : 'bg-cyan-100 text-cyan-700'
+                      }`}>🔵 创造力导向 25%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  代表性记忆片段：
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { emoji: '🎨', label: '第一次画出完整故事', date: '2026.03.15', type: '创意' },
+                    { emoji: '🤗', label: '主动拥抱久别重逢的家人', date: '2026.04.28', type: '情感' },
+                    { emoji: '📖', label: '睡前拉着妈妈读三本书', date: '2026.05.10', type: '安全' },
+                  ].map((mem, i) => (
+                    <button
+                      key={i}
+                      className={`w-full text-left text-[10px] px-2 py-1.5 rounded flex items-center gap-2 transition-colors ${
+                        isDark
+                          ? 'bg-[#ffffff04] hover:bg-[#ffffff08] text-gray-400 hover:text-gray-300'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <span>{mem.emoji}</span>
+                      <span className="flex-1">{mem.label}</span>
+                      <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{mem.date}</span>
+                      <span className={`text-[9px] px-1 py-0.5 rounded ${
+                        isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'
+                      }`}>{mem.type}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
