@@ -1234,6 +1234,17 @@ interface InsightMemory {
 
 ｜ BL-046: 把theme默认改为亮色。✅
 
+047:根据最新的PRD.md来更新Readme.md:
+1. demo
+2. 启动安装
+3. Why
+- 场景:面向什么场景和领域
+- Persona：目标用户是谁
+4. 从市场调研看到的差异化的机会。不用讲太细，粒度粗一些，限于Readme的篇幅，方向性的简洁介绍即可，详细的可以去看PRD。
+5. 基于这些差异化的机会，产品选择的设计方向，不用讲太细，粒度粗一些，限于Readme的篇幅，方向性的简洁介绍即可，详细的可以去看PRD。✅
+
+048: 在story board中，要给出story讲述的每一个论点所依据的记忆碎片citation short description and link. 让用户知道这个story的每个论点的依据是什么。
+
 
 ### 9.2 P1 — Demo 增强（加分项）
 
