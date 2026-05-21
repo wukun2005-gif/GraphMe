@@ -64,7 +64,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     navCategory: null,
     navSubCategory: null,
     crudOpen: false,
-    theme: 'dark',
+    theme: 'light',
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
