@@ -153,22 +153,35 @@ export default function MemoryBank() {
               <h3 className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
                 📊 你的生命维度投资组合
               </h3>
-              <div className={`flex rounded-md p-0.5 text-xs ${
-                isDark ? 'bg-[#ffffff08]' : 'bg-gray-100'
-              }`}>
-                {(['周', '月', '季'] as TimeRange[]).map(range => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                      timeRange === range
-                        ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-cyan-100 text-cyan-700'
-                        : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    {range}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <div className={`flex rounded-md p-0.5 text-xs ${
+                  isDark ? 'bg-[#ffffff08]' : 'bg-gray-100'
+                }`}>
+                  {(['周', '月', '季'] as TimeRange[]).map(range => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                        timeRange === range
+                          ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-cyan-100 text-cyan-700'
+                          : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={toggleMemoryBank}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-colors ${
+                    isDark
+                      ? 'bg-[#ffffff10] hover:bg-[#ffffff20] text-gray-400 hover:text-gray-200'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-500 hover:text-gray-700'
+                  }`}
+                  title="关闭"
+                >
+                  ✕
+                </button>
               </div>
             </div>
 
