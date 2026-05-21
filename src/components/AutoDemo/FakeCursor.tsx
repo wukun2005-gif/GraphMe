@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
 
@@ -11,16 +11,19 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isClicking, setIsClicking] = useState(false);
   const [tooltipText, setTooltipText] = useState('');
-  const [progress, setProgress] = useState(0); // 0-100
+  const [progress, setProgress] = useState(0);
 
-  const stopDemo = useCallback(() => {
+  const stopDemoRef = useRef<() => void>(() => {});
+
+  stopDemoRef.current = () => {
     setTooltipText('');
     setPosition({ x: -100, y: -100 });
     setProgress(0);
     onStop();
-  }, [onStop]);
+  };
 
-  // ESC key exit
+  const stopDemo = useCallback(() => stopDemoRef.current(), []);
+
   useEffect(() => {
     if (!isPlaying) return;
     const handler = (e: KeyboardEvent) => {
@@ -186,6 +189,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
 
       window.dispatchEvent(new CustomEvent('demo-detail-edit'));
+      await wait(300);
+      if (isCancelled) return;
       await moveTo(window.innerWidth - 210, window.innerHeight / 3,
         '✏️ 进入编辑模式，修改记忆卡片');
       await wait(2000);
@@ -204,6 +209,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
 
       window.dispatchEvent(new CustomEvent('demo-detail-cancel-edit'));
+      await wait(300);
+      if (isCancelled) return;
       await moveTo(window.innerWidth - 210, window.innerHeight * 0.6,
         '↩️ 取消编辑返回阅读模式');
       await wait(1500);
@@ -250,7 +257,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
 
       window.dispatchEvent(new CustomEvent('demo-chat-expand', { detail: { index: 0 } }));
-      await wait(500);
+      await wait(800);
       if (isCancelled) return;
 
       const chatPanel = document.querySelector('.fixed.bottom-20.w-\\[360px\\]');
@@ -306,7 +313,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       clearInterval(progressInterval);
       timeoutIds.forEach(clearTimeout);
     };
-  }, [isPlaying, stopDemo]);
+  }, [isPlaying]);
 
   if (!isPlaying) return null;
 

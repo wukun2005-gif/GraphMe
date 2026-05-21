@@ -15,6 +15,8 @@ function AppInner() {
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
 
+  const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
+
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
     if (!isDemoPlaying) return;
@@ -109,7 +111,7 @@ function AppInner() {
         </button>
       </div>
 
-      <FakeCursor isPlaying={isDemoPlaying} onStop={() => setIsDemoPlaying(false)} />
+      <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
   );
 }

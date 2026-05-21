@@ -407,3 +407,69 @@ describe('Integration — Value Dashboard with Demo Data', () => {
     }
   });
 });
+
+describe('Integration — FakeCursor Demo Flow', () => {
+  it('should start and stop demo without infinite loop', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => { result.current.setDemoMode(true); });
+    expect(result.current.demoMode).toBe(true);
+    expect(result.current.demoStep).toBe(1);
+
+    act(() => { result.current.setDemoStep(3); });
+    expect(result.current.demoStep).toBe(3);
+
+    act(() => { result.current.setDemoMode(false); });
+    expect(result.current.demoMode).toBe(false);
+    expect(result.current.demoStep).toBe(0);
+  });
+
+  it('should maintain demo steps within valid range', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    const validSteps = [1, 2, 3, 4, 5, 6, 7, 8];
+    for (const step of validSteps) {
+      act(() => { result.current.setDemoStep(step); });
+      expect(result.current.demoStep).toBe(step);
+    }
+  });
+
+  it('should reset demo on re-entry', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => { result.current.setDemoMode(true); });
+    act(() => { result.current.setDemoStep(5); });
+    act(() => { result.current.setDemoMode(false); });
+    act(() => { result.current.setDemoMode(true); });
+    expect(result.current.demoStep).toBe(1);
+    expect(result.current.demoMode).toBe(true);
+  });
+
+  it('should not affect memory selection when demo mode toggles', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    const mem = result.current.rawMemories[0];
+    act(() => { result.current.selectMemory(mem); });
+    expect(result.current.selectedMemory?.id).toBe(mem.id);
+
+    act(() => { result.current.setDemoMode(true); });
+    expect(result.current.selectedMemory?.id).toBe(mem.id);
+
+    act(() => { result.current.setDemoMode(false); });
+    expect(result.current.selectedMemory?.id).toBe(mem.id);
+  });
+
+  it('should support all 8 demo steps in sequence', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => { result.current.setDemoMode(true); });
+    const expectedSteps = ['intro', 'nebula', 'navigation', 'cards', 'edit', 'dashboard', 'chatbot-import', 'storyboard'];
+    for (let i = 0; i < expectedSteps.length; i++) {
+      const step = i + 1;
+      act(() => { result.current.setDemoStep(step); });
+      expect(result.current.demoStep).toBe(step);
+    }
+    act(() => { result.current.setDemoMode(false); });
+    expect(result.current.demoStep).toBe(0);
+  });
+});
