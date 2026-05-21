@@ -1,12 +1,18 @@
 import type { RawMemory, InsightMemory } from '../types';
 import { CATEGORY_LABELS } from '../types';
 
+export interface StoryCitation {
+  memoryId: string;
+  shortDescription: string;
+}
+
 export interface StoryChapter {
   title: string;
   type: 'past' | 'future';
   text: string;
   imageUrls: string[];
   memoryIds: string[];
+  citations: StoryCitation[][];
 }
 
 function getEmotionLabel(emotion: string): string {
@@ -17,11 +23,16 @@ function getEmotionLabel(emotion: string): string {
   return map[emotion] || emotion;
 }
 
+function citationLabel(m: RawMemory): string {
+  return m.label || m.summary.slice(0, 30);
+}
+
 export function generateStory(
   rawMemories: RawMemory[],
   insightMemories: InsightMemory[]
 ): StoryChapter[] {
   const chapters: StoryChapter[] = [];
+  const rawMap = new Map(rawMemories.map(m => [m.id, m]));
 
   const sortedRaw = [...rawMemories]
     .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
@@ -42,6 +53,10 @@ export function generateStory(
       return `后来到了${season ? season + ' ' : ''}${dateType}，在${place}，${m.label}。这时的他${emotion}又满足，${m.summary}`;
     });
 
+    const citations: StoryCitation[][] = selectedRaw.map(m =>
+      [{ memoryId: m.id, shortDescription: citationLabel(m) }]
+    );
+
     const images = selectedRaw
       .flatMap(m => m.dimensions.sensory.images)
       .filter(Boolean);
@@ -52,6 +67,7 @@ export function generateStory(
       text: storyLines.join('\n\n'),
       imageUrls: images,
       memoryIds: selectedRaw.map(m => m.id),
+      citations,
     });
   }
 
@@ -65,12 +81,21 @@ export function generateStory(
       return `在${cat}方面，${ins.statement}。${ins.description}`;
     });
 
+    const citations: StoryCitation[][] = topInsights.map(ins =>
+      ins.sourceRawMemoryIds
+        .map(id => {
+          const raw = rawMap.get(id);
+          return { memoryId: id, shortDescription: raw ? citationLabel(raw) : id };
+        })
+    );
+
     chapters.push({
       title: '未来的投射',
       type: 'future',
       text: insightLines.join('\n\n'),
       imageUrls: [],
       memoryIds: topInsights.map(ins => ins.id),
+      citations,
     });
   }
 

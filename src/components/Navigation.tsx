@@ -50,7 +50,7 @@ export default function NavigationSidebar() {
     setNavCategory, setNavSubCategory,
     rawMemories, addMemory, deleteMemory, updateMemory,
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
-    insightMemories, theme,
+    insightMemories, theme, selectMemory,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
@@ -694,11 +694,42 @@ export default function NavigationSidebar() {
                         </div>
                       </div>
                     )}
-                    <p className={`text-sm leading-relaxed whitespace-pre-line ${
-                      isDark ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
-                      {chapter.text}
-                    </p>
+                    {chapter.text.split('\n\n').map((paragraph, pi) => {
+                      const paragraphCitations = chapter.citations[pi] || [];
+                      return (
+                        <div key={pi} className="mb-3">
+                          <p className={`text-sm leading-relaxed ${
+                            isDark ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            {paragraph}
+                          </p>
+                          {paragraphCitations.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                              <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>依据：</span>
+                              {paragraphCitations.map(cit => (
+                                <button
+                                  key={cit.memoryId}
+                                  onClick={() => {
+                                    const allMems = [...rawMemories, ...insightMemories];
+                                    const mem = allMems.find(m => m.id === cit.memoryId);
+                                    if (mem) selectMemory(mem);
+                                    setShowStoryBoard(false);
+                                  }}
+                                  className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+                                    isDark
+                                      ? 'bg-[#ffffff08] text-[#00f2ff]/70 hover:bg-[#ffffff12] hover:text-[#00f2ff]'
+                                      : 'bg-gray-100 text-[#0088cc]/70 hover:bg-gray-200 hover:text-[#0088cc]'
+                                  }`}
+                                  title={`查看记忆 ${cit.memoryId}`}
+                                >
+                                  {cit.memoryId} · {cit.shortDescription}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))
               )}

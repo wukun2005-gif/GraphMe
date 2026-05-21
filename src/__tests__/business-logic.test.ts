@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
 import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings } from '../utils/valueUtils';
+import { generateStory } from '../utils/storyUtils';
 import type { RawMemory, InsightMemory } from '../types';
 
 describe('Business Logic — Insight Memory Version Chains', () => {
@@ -355,6 +356,78 @@ describe('Business Logic — Value Dashboard Computation', () => {
       for (let i = 1; i < result.length; i++) {
         expect(result[i].risk).toBeLessThanOrEqual(result[i - 1].risk);
       }
+    });
+  });
+});
+
+describe('Business Logic — Story Generation Citations', () => {
+  const chapters = generateStory(rawMemories, insightMemories);
+  const past = chapters.find(c => c.type === 'past');
+  const future = chapters.find(c => c.type === 'future');
+
+  it('should generate a past chapter with citations', () => {
+    expect(past).toBeDefined();
+    expect(past!.citations).toBeDefined();
+    expect(past!.citations.length).toBeGreaterThan(0);
+  });
+
+  it('past chapter should have one citation per paragraph', () => {
+    const paragraphs = past!.text.split('\n\n');
+    expect(past!.citations.length).toBe(paragraphs.length);
+  });
+
+  it('each past citation should reference a valid raw memory', () => {
+    const rawIds = new Set(rawMemories.map(m => m.id));
+    past!.citations.forEach(paraCitations => {
+      paraCitations.forEach(cit => {
+        expect(rawIds.has(cit.memoryId)).toBe(true);
+        expect(cit.shortDescription).toBeTruthy();
+      });
+    });
+  });
+
+  it('should generate a future chapter with citations', () => {
+    expect(future).toBeDefined();
+    expect(future!.citations).toBeDefined();
+    expect(future!.citations.length).toBeGreaterThan(0);
+  });
+
+  it('future chapter should have one citation array per paragraph', () => {
+    const paragraphs = future!.text.split('\n\n');
+    expect(future!.citations.length).toBe(paragraphs.length);
+  });
+
+  it('future citations should reference raw memory IDs from insight sourceRawMemoryIds', () => {
+    const rawIds = new Set(rawMemories.map(m => m.id));
+    future!.citations.forEach(paraCitations => {
+      expect(paraCitations.length).toBeGreaterThan(0);
+      paraCitations.forEach(cit => {
+        expect(rawIds.has(cit.memoryId)).toBe(true);
+        expect(cit.shortDescription).toBeTruthy();
+      });
+    });
+  });
+
+  it('future citation IDs should all come from insight sourceRawMemoryIds', () => {
+    const topInsightIds = [...insightMemories]
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 3)
+      .flatMap(ins => ins.sourceRawMemoryIds);
+    const topIdSet = new Set(topInsightIds);
+
+    future!.citations.forEach(paraCitations => {
+      paraCitations.forEach(cit => {
+        expect(topIdSet.has(cit.memoryId)).toBe(true);
+      });
+    });
+  });
+
+  it('citations array should align with chapter memoryIds for past', () => {
+    const pastParagraphs = past!.text.split('\n\n');
+    pastParagraphs.forEach((_, i) => {
+      const paraCitations = past!.citations[i];
+      expect(paraCitations.length).toBe(1);
+      expect(paraCitations[0].memoryId).toBe(past!.memoryIds[i]);
     });
   });
 });
