@@ -206,6 +206,77 @@ export default function MemoryBank() {
                   </div>
                 );
               })}
+
+              <div className={`border-t pt-3 ${
+                isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+              }`}>
+                <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  🌟 正资产鼓励
+                </h4>
+                <div className="space-y-2">
+                  <div
+                    className={`rounded-lg p-3 border bg-gradient-to-r ${
+                      isDark
+                        ? 'from-amber-500/10 to-yellow-500/5 border-amber-500/20'
+                        : 'from-amber-50 to-yellow-50 border-amber-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-xs">👫</span>
+                      <span className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                        社交维度创新高
+                      </span>
+                      <span className="ml-auto text-[10px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                        ↗ +15%
+                      </span>
+                    </div>
+                    <p className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      最近一周社交互动频率显著提升，与朋友、同事的互动次数创近3月新高
+                    </p>
+                    <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      建议：保持当前社交节奏，可适当增加线下聚会频次
+                    </p>
+                    <button
+                      className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
+                        isDark ? 'text-amber-400/60 hover:text-amber-400' : 'text-amber-600/60 hover:text-amber-600'
+                      }`}
+                    >
+                      📎 追溯相关记忆
+                    </button>
+                  </div>
+
+                  <div
+                    className={`rounded-lg p-3 border bg-gradient-to-r ${
+                      isDark
+                        ? 'from-green-500/10 to-emerald-500/5 border-green-500/20'
+                        : 'from-green-50 to-emerald-50 border-green-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-xs">🎨</span>
+                      <span className={`text-xs font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                        创意维度持续上升
+                      </span>
+                      <span className="ml-auto text-[10px] px-1 py-0.5 rounded bg-green-500/20 text-green-400">
+                        ↗ +5%
+                      </span>
+                    </div>
+                    <p className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      创意活动（绘画、手工、写作）频次连续4周增长，创造力指数稳步提升
+                    </p>
+                    <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      建议：保持当前创意投入节奏，可尝试新媒介激发灵感
+                    </p>
+                    <button
+                      className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
+                        isDark ? 'text-green-400/60 hover:text-green-400' : 'text-green-600/60 hover:text-green-600'
+                      }`}
+                    >
+                      📎 追溯相关记忆
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
