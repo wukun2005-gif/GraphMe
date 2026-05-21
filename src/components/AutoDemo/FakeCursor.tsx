@@ -395,6 +395,16 @@ if (isCancelled) return;
       await moveToCenter('📖 图文并茂的叙事：原始记忆讲述过去，洞察记忆描绘未来', 3000);
       if (isCancelled) return;
 
+      {
+        const storyContent = document.querySelector('.max-h-\\[calc\\(85vh-70px\\)\\]');
+        if (storyContent) {
+          storyContent.scrollTo({ top: storyContent.scrollHeight, behavior: 'smooth' });
+          await wait(1500);
+        }
+      }
+      await moveToCenter('🔮 向下滚动——洞察记忆描绘未来的你', 3000);
+      if (isCancelled) return;
+
       await moveToCenter('点击遮罩或关闭按钮退出 Story Board', 2000);
       if (isCancelled) return;
 
