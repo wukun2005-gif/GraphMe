@@ -102,9 +102,26 @@ const PREDICTION_COLORS: Record<string, { bar: string; barLight: string; text: s
 };
 
 export default function MemoryBank() {
-  const { memoryBankOpen, toggleMemoryBank, detailOpen, theme } = useAppState();
+  const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories } = useAppState();
   const isDark = theme === 'dark';
   const [timeRange, setTimeRange] = useState<TimeRange>('月');
+  const [expandedDim, setExpandedDim] = useState<string | null>(null);
+
+  const handleTraceSocialMemory = () => {
+    const socialMem = rawMemories.find(m =>
+      m.dimensions.social.persons.length > 1 &&
+      m.dimensions.emotional.primary === '快乐'
+    );
+    if (socialMem) selectMemory(socialMem);
+  };
+
+  const handleTraceCreativeMemory = () => {
+    const creativeMem = rawMemories.find(m =>
+      m.dimensions.activity.type === '绘画' ||
+      m.dimensions.activity.detail.includes('画')
+    );
+    if (creativeMem) selectMemory(creativeMem);
+  };
 
   return (
     <>
@@ -155,18 +172,91 @@ export default function MemoryBank() {
               </div>
             </div>
 
+            <div className={`rounded-lg p-3 mb-3 ${
+              isDark ? 'bg-gradient-to-r from-[#00f2ff]/10 to-purple-500/10 border border-[#ffffff06]' : 'bg-gradient-to-r from-cyan-50 to-purple-50 border border-gray-100'
+            }`}>
+              <div className="flex items-center justify-between mb-1">
+                <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  💰 总资产健康度
+                </span>
+                <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  +3 <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>较上月</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`flex-1 h-2.5 rounded-full overflow-hidden ${
+                  isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'
+                }`}>
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#00f2ff] to-purple-400"
+                    style={{ width: '78%' }}
+                  />
+                </div>
+                <span className={`text-sm font-bold ${isDark ? 'text-[#00f2ff]' : 'text-cyan-600'}`}>78</span>
+                <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/100</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mb-3">
+              <svg width="56" height="56" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="22" fill="none"
+                  className={isDark ? 'stroke-[#ffffff08]' : 'stroke-gray-200'}
+                  strokeWidth="6" />
+                <circle cx="28" cy="28" r="22" fill="none"
+                  stroke="#34d399" strokeWidth="6"
+                  strokeDasharray="88.4 138.2"
+                  strokeDashoffset="0"
+                  strokeLinecap="round"
+                  transform="rotate(-90 28 28)" />
+                <circle cx="28" cy="28" r="22" fill="none"
+                  stroke="#f87171" strokeWidth="6"
+                  strokeDasharray="49.8 138.2"
+                  strokeDashoffset="-88.4"
+                  strokeLinecap="round"
+                  transform="rotate(-90 28 28)" />
+                <text x="28" y="31" textAnchor="middle" className={`text-[10px] font-bold ${isDark ? 'fill-gray-200' : 'fill-gray-800'}`}>
+                  64%
+                </text>
+              </svg>
+              <div className="flex-1 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> 正资产
+                  </span>
+                  <span className={`text-[10px] font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                    32 条
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> 待改善
+                  </span>
+                  <span className={`text-[10px] font-medium ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                    18 条
+                  </span>
+                </div>
+                <div className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  正资产占比 64%，整体健康
+                </div>
+              </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-3">
               {DIMENSION_DATA.map(dim => {
                 const predColor = PREDICTION_COLORS[dim.prediction];
                 const barColorClass = isDark ? predColor.bar : predColor.barLight;
                 const textColorClass = isDark ? predColor.text : predColor.textLight;
+                const isExpanded = expandedDim === dim.id;
 
                 return (
                   <div
                     key={dim.id}
-                    className={`rounded-lg p-3 ${
-                      isDark ? 'bg-[#ffffff04] border border-[#ffffff06]' : 'bg-gray-50 border border-gray-100'
+                    className={`rounded-lg p-3 cursor-pointer transition-colors ${
+                      isExpanded
+                        ? isDark ? 'bg-[#ffffff08] border border-[#ffffff10]' : 'bg-gray-100 border border-gray-200'
+                        : isDark ? 'bg-[#ffffff04] border border-[#ffffff06]' : 'bg-gray-50 border border-gray-100'
                     }`}
+                    onClick={() => setExpandedDim(isExpanded ? null : dim.id)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -181,6 +271,9 @@ export default function MemoryBank() {
                         </span>
                         <span className={`text-xs ${textColorClass}`}>
                           {dim.predictionLabel}
+                        </span>
+                        <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                          {isExpanded ? '▲' : '▼'}
                         </span>
                       </div>
                     </div>
@@ -203,6 +296,50 @@ export default function MemoryBank() {
                     >
                       💡 {dim.actionLabel}
                     </button>
+
+                    {isExpanded && (
+                      <div className={`mt-3 pt-3 border-t ${
+                        isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+                      }`}>
+                        <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          历史趋势 ({timeRange})
+                        </div>
+                        <svg width="100%" height="32" viewBox="0 0 200 32" className="mb-2">
+                          <polyline
+                            points="0,24 25,20 50,16 75,18 100,12 125,14 150,10 175,8 200,6"
+                            fill="none"
+                            stroke={dim.trend === 'up' ? '#34d399' : dim.trend === 'down' ? '#f87171' : '#9ca3af'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          关联记忆：
+                        </div>
+                        <div className="space-y-1">
+                          {[
+                            { label: '在公园和新朋友一起踢足球', date: '2026.05.15' },
+                            { label: '周末全家一起去爬山踏青', date: '2026.05.08' },
+                            { label: '和同学组队完成科学项目', date: '2026.04.28' },
+                          ].map((mem, i) => (
+                            <button
+                              key={i}
+                              className={`w-full text-left text-[10px] px-2 py-1 rounded flex items-center gap-2 transition-colors ${
+                                isDark
+                                  ? 'bg-[#ffffff04] hover:bg-[#ffffff08] text-gray-400 hover:text-gray-300'
+                                  : 'bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-800'
+                              }`}
+                            >
+                              <span className="flex-1">{mem.label}</span>
+                              <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                {mem.date}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -237,6 +374,7 @@ export default function MemoryBank() {
                       建议：保持当前社交节奏，可适当增加线下聚会频次
                     </p>
                     <button
+                      onClick={handleTraceSocialMemory}
                       className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
                         isDark ? 'text-amber-400/60 hover:text-amber-400' : 'text-amber-600/60 hover:text-amber-600'
                       }`}
@@ -268,6 +406,7 @@ export default function MemoryBank() {
                       建议：保持当前创意投入节奏，可尝试新媒介激发灵感
                     </p>
                     <button
+                      onClick={handleTraceCreativeMemory}
                       className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
                         isDark ? 'text-green-400/60 hover:text-green-400' : 'text-green-600/60 hover:text-green-600'
                       }`}
