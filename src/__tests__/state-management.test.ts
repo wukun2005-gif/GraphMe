@@ -54,6 +54,7 @@ describe('AppContext — Initial State', () => {
     expect(result.current.navCategory).toBeNull();
     expect(result.current.navSubCategory).toBeNull();
     expect(result.current.crudOpen).toBe(false);
+    expect(result.current.memoryBankOpen).toBe(false);
   });
 
   it('should have initial raw memories loaded from demo data', () => {
@@ -340,5 +341,31 @@ describe('AppContext — CRUD Panel', () => {
 
     act(() => { result.current.toggleCrud(); });
     expect(result.current.crudOpen).toBe(false);
+  });
+});
+
+describe('AppContext — Memory Bank Panel', () => {
+  it('should toggle Memory Bank panel', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    expect(result.current.memoryBankOpen).toBe(false);
+
+    act(() => { result.current.toggleMemoryBank(); });
+    expect(result.current.memoryBankOpen).toBe(true);
+
+    act(() => { result.current.toggleMemoryBank(); });
+    expect(result.current.memoryBankOpen).toBe(false);
+  });
+
+  it('should remain closed when other panels open', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => { result.current.toggleDetail(); });
+    expect(result.current.detailOpen).toBe(true);
+    expect(result.current.memoryBankOpen).toBe(false);
+
+    act(() => { result.current.toggleMemoryBank(); });
+    expect(result.current.memoryBankOpen).toBe(true);
+    expect(result.current.detailOpen).toBe(true);
   });
 });

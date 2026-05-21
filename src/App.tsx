@@ -4,6 +4,7 @@ import NavigationSidebar from './components/Navigation';
 import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
 import ValueDashboard from './components/ValueDashboard';
+import MemoryBank from './components/MemoryBank';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -70,6 +71,7 @@ function AppInner() {
       <DetailPanel />
       <ChatPanel />
       <ValueDashboard />
+      <MemoryBank />
 
       <div className="absolute top-6 left-[240px] z-10">
         <h1 className={`text-lg font-light tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>

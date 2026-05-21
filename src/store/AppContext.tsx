@@ -15,6 +15,7 @@ interface AppState {
   navSubCategory: string | null;
   crudOpen: boolean;
   theme: 'dark' | 'light';
+  memoryBankOpen: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -27,6 +28,7 @@ interface AppContextType extends AppState {
   toggleDetail: () => void;
   toggleCrud: () => void;
   toggleTheme: () => void;
+  toggleMemoryBank: () => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -65,6 +67,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     navSubCategory: null,
     crudOpen: false,
     theme: 'light',
+    memoryBankOpen: false,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
@@ -86,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleDetail = useCallback(() => setState(s => ({ ...s, detailOpen: !s.detailOpen })), []);
   const toggleCrud = useCallback(() => setState(s => ({ ...s, crudOpen: !s.crudOpen })), []);
   const toggleTheme = useCallback(() => setState(s => ({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' })), []);
+  const toggleMemoryBank = useCallback(() => setState(s => ({ ...s, memoryBankOpen: !s.memoryBankOpen })), []);
   const setNavCategory = useCallback((cat: string | null) => setState(s => ({ ...s, navCategory: cat })), []);
   const setNavSubCategory = useCallback((sub: string | null) => setState(s => ({ ...s, navSubCategory: sub })), []);
 
@@ -194,7 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
