@@ -1,4 +1,4 @@
-# GraphMe（小哥）— 记忆星云可视化系统
+# GraphMe — Agent 记忆星云可视化系统
 
 ![GraphMe Demo](assets/demo.gif)
 
