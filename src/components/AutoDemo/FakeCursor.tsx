@@ -321,6 +321,28 @@ if (isCancelled) return;
 await moveAndClick('val-dash-trigger', '关闭价值看板', 1000);
 if (isCancelled) return;
 
+      // P5.5: 记忆银行 (8s)
+await moveAndClick('memory-bank-trigger', '💰 打开记忆银行——生命维度投资组合面板', 2500);
+if (isCancelled) return;
+
+await moveToCenter('📊 5个生命维度：快乐、逻辑、社交、户外活动、创意');
+await wait(2000);
+if (isCancelled) return;
+
+{
+  const bankContent = document.querySelector('.fixed.bottom-36.w-\\[420px\\] .flex-1.overflow-y-auto');
+  if (bankContent) {
+    bankContent.scrollTo({ top: 350, behavior: 'smooth' });
+    await wait(1000);
+  }
+}
+await moveToCenter('🧬 心智模型气质画像：基于记忆数据生成行为模式分析');
+await wait(2000);
+if (isCancelled) return;
+
+await moveAndClick('memory-bank-close', '关闭记忆银行', 1000);
+if (isCancelled) return;
+
       // P6: ChatGPT 导入 + GPT 记忆展示 (14s)
 await moveAndClick('nav-memory-mgr', '⚙️ 打开记忆管理面板', 2000);
 if (isCancelled) return;

@@ -172,6 +172,7 @@ export default function MemoryBank() {
                   ))}
                 </div>
                 <button
+                  id="memory-bank-close"
                   onClick={toggleMemoryBank}
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-colors ${
                     isDark
