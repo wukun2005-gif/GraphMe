@@ -112,6 +112,48 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: memoryId } }));
     };
 
+    const getParticleScreenPos = async (particleId: string): Promise<{ x: number; y: number } | null> => {
+      return new Promise(resolve => {
+        let resolved = false;
+        const handler = (e: Event) => {
+          const detail = (e as CustomEvent).detail as Record<string, { x: number; y: number }>;
+          if (detail[particleId] && !resolved) {
+            resolved = true;
+            window.removeEventListener('demo-particle-positions', handler);
+            resolve(detail[particleId]);
+          }
+        };
+        window.addEventListener('demo-particle-positions', handler);
+        window.dispatchEvent(new CustomEvent('demo-request-particle-positions'));
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            window.removeEventListener('demo-particle-positions', handler);
+            resolve(null);
+          }
+        }, 500);
+      });
+    };
+
+    const clickParticle = async (particleId: string, text: string, waitAfter: number = 2000) => {
+      if (isCancelled) return;
+      setTooltipText(text);
+      const pos = await getParticleScreenPos(particleId);
+      if (pos) {
+        setPosition({ x: pos.x, y: pos.y });
+        await wait(700);
+      } else {
+        setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        await wait(700);
+      }
+      if (isCancelled) return;
+      dispatchSelectMemory(particleId);
+      setIsClicking(true);
+      await wait(250);
+      setIsClicking(false);
+      await wait(waitAfter);
+    };
+
     /** Simulate typing into an input or textarea */
     const simulateType = async (elementId: string, text: string) => {
       if (isCancelled) return;
@@ -179,54 +221,37 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await moveAndClick('nav-sub-编程学习', '💻 "编程学习"子分类——不同视图下星云内容自动变化', 3000);
       if (isCancelled) return;
 
-      // P3: 记忆卡片 · 原始记忆 + 洞察记忆 (12s)
-      const canvasEl = document.getElementById('mem-cloud-canvas');
-      const canvasRect = canvasEl?.getBoundingClientRect();
-      const canvasCX = canvasRect ? canvasRect.left + canvasRect.width * 0.45 : window.innerWidth * 0.4;
-      const canvasCY = canvasRect ? canvasRect.top + canvasRect.height * 0.45 : window.innerHeight * 0.45;
+      // P3: 记忆卡片 · 原始记忆 + 洞察记忆 (14s)
+await clickParticle('mem_007',
+  '📖 点击记忆粒子，打开原始记忆卡片详情面板', 2000);
+if (isCancelled) return;
 
-      await clickAt(canvasCX, canvasCY,
-        '📖 点击记忆粒子，打开原始记忆卡片详情面板', 500);
-      if (isCancelled) return;
-      dispatchSelectMemory('mem_007');
-      await wait(1200);
-      if (isCancelled) return;
+await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
+  '🧠 查看多维信息：时间、地点、人物、情绪、活动、CQI等');
+await wait(3000);
+if (isCancelled) return;
 
-      await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
-        '🧠 查看多维信息：时间、地点、人物、情绪、活动、CQI等');
-      await wait(3000);
-      if (isCancelled) return;
+window.dispatchEvent(new CustomEvent('demo-close-detail'));
+await wait(500);
+if (isCancelled) return;
 
-      window.dispatchEvent(new CustomEvent('demo-close-detail'));
-      await wait(500);
-      if (isCancelled) return;
+await clickParticle('insight_001',
+  '💡 点击金色圆环洞察记忆粒子：AI从原子中推理出的高阶认知', 2000);
+if (isCancelled) return;
 
-      const insightCX = canvasRect ? canvasRect.left + canvasRect.width * 0.55 : window.innerWidth * 0.5;
-      const insightCY = canvasRect ? canvasRect.top + canvasRect.height * 0.55 : window.innerHeight * 0.5;
+await moveTo(window.innerWidth - 210, window.innerHeight * 0.45,
+  '💡 金色圆环代表洞察记忆：趋势、信念、关系、偏好、习惯、成长');
+await wait(3000);
+if (isCancelled) return;
 
-      await clickAt(insightCX, insightCY,
-        '💡 点击金色圆环洞察记忆粒子：AI从原子中推理出的高阶认知', 500);
-      if (isCancelled) return;
-      dispatchSelectMemory('insight_001');
-      await wait(1200);
-      if (isCancelled) return;
+window.dispatchEvent(new CustomEvent('demo-close-detail'));
+await wait(500);
+if (isCancelled) return;
 
-      await moveTo(window.innerWidth - 210, window.innerHeight * 0.45,
-        '💡 金色圆环代表洞察记忆：趋势、信念、关系、偏好、习惯、成长');
-      await wait(3000);
-      if (isCancelled) return;
-
-      window.dispatchEvent(new CustomEvent('demo-close-detail'));
-      await wait(500);
-      if (isCancelled) return;
-
-      // P4: 记忆卡编辑流程 (10s)
-      await clickAt(canvasCX, canvasCY,
-        '📖 再次点击记忆粒子，查看编辑功能', 500);
-      if (isCancelled) return;
-      dispatchSelectMemory('mem_007');
-      await wait(1200);
-      if (isCancelled) return;
+// P4: 记忆卡编辑流程 (10s)
+await clickParticle('mem_007',
+  '📖 再次点击记忆粒子，查看编辑功能', 2000);
+if (isCancelled) return;
 
       await moveAndClick('demo-edit-btn', '✏️ 点击编辑按钮，进入编辑模式', 1500);
       if (isCancelled) return;
@@ -260,39 +285,82 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(500);
       if (isCancelled) return;
 
-      // P5: 价值看板 + 记忆健康 (10s)
-      await moveAndClick('val-dash-trigger', '📊 打开价值看板——查看高价值记忆排行与遗忘预警', 2500);
-      if (isCancelled) return;
+      // P5: 价值看板 + 记忆健康 (14s)
+await moveAndClick('val-dash-trigger', '📊 打开价值看板——查看高价值记忆排行与遗忘预警', 2500);
+if (isCancelled) return;
 
-      await moveAndClick('val-dash-health-tab', '❤️ 切换到"记忆健康"——10维度覆盖率雷达图', 3000);
-      if (isCancelled) return;
+await moveAndClick('val-dash-health-tab', '❤️ 切换到"记忆健康"——10维度覆盖率雷达图', 1500);
+if (isCancelled) return;
 
-      const valDashEl = document.getElementById('val-dash-trigger');
-      const valRect = valDashEl?.getBoundingClientRect();
-      const vdX = valRect ? valRect.left : window.innerWidth - 40;
-      const vdY = valRect ? valRect.bottom - 200 : window.innerHeight - 200;
-      await moveTo(vdX, vdY,
-        '📈 雷达图展示各维度记忆覆盖情况，发现知识空白');
-      await wait(3000);
-      if (isCancelled) return;
+await moveToCenter('📈 雷达图展示各维度记忆覆盖情况，发现知识空白');
+await wait(1500);
+if (isCancelled) return;
 
-      await moveAndClick('val-dash-trigger', '关闭价值看板', 1000);
-      if (isCancelled) return;
+{
+  const dashContent = document.querySelector('.fixed.bottom-20.w-\\[380px\\] .overflow-y-auto');
+  if (dashContent) {
+    dashContent.scrollTo({ top: 200, behavior: 'smooth' });
+    await wait(1000);
+  }
+}
+await moveToCenter('⏳ 向下滚动查看遗忘指数与情绪分布趋势');
+await wait(2500);
+if (isCancelled) return;
 
-      // P6: ChatGPT 导入 (8s)
-      await moveAndClick('nav-memory-mgr', '⚙️ 打开记忆管理面板', 2000);
-      if (isCancelled) return;
+{
+  const dashContent = document.querySelector('.fixed.bottom-20.w-\\[380px\\] .overflow-y-auto');
+  if (dashContent) {
+    dashContent.scrollTo({ top: 400, behavior: 'smooth' });
+    await wait(1000);
+  }
+}
+await moveToCenter('🌈 情绪分布显示近期情绪以快乐和好奇为主');
+await wait(2000);
+if (isCancelled) return;
 
-      await moveAndClick('nav-chatgpt-import', '🤖 从 ChatGPT 一键导入聊天记录转化为记忆碎片', 2000);
-      if (isCancelled) return;
+await moveAndClick('val-dash-trigger', '关闭价值看板', 1000);
+if (isCancelled) return;
 
-      await moveToCenter('📥 模拟导入过程：聊天记录 → 记忆碎片 → 洞察记忆', 3000);
-      if (isCancelled) return;
+      // P6: ChatGPT 导入 + GPT 记忆展示 (14s)
+await moveAndClick('nav-memory-mgr', '⚙️ 打开记忆管理面板', 2000);
+if (isCancelled) return;
 
-      await moveAndClick('nav-memory-mgr', '收起记忆管理面板', 1000);
-      if (isCancelled) return;
+await moveAndClick('nav-chatgpt-import', '🤖 从 ChatGPT 一键导入聊天记录转化为记忆碎片', 2000);
+if (isCancelled) return;
 
-      // P7: Chatbot 问答 + 记忆链接 (10s)
+await moveToCenter('📥 模拟导入过程：聊天记录 → 记忆碎片 → 洞察记忆', 3000);
+if (isCancelled) return;
+
+await moveAndClick('nav-memory-mgr', '收起记忆管理面板', 1000);
+if (isCancelled) return;
+
+await clickParticle('chatgpt_001',
+  '🔵 点击蓝色 GPT 原始记忆：ChatGPT 学习 Python 基础', 2500);
+if (isCancelled) return;
+
+await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
+  '🧠 GPT 记忆同样包含时间、地点、情绪、CQI 等10维数据');
+await wait(3000);
+if (isCancelled) return;
+
+window.dispatchEvent(new CustomEvent('demo-close-detail'));
+await wait(500);
+if (isCancelled) return;
+
+await clickParticle('chatgpt_insight_001',
+  '🟡 点击 GPT 洞察记忆：AI 从 GPT 对话中推理出的高阶认知', 2500);
+if (isCancelled) return;
+
+await moveTo(window.innerWidth - 210, window.innerHeight * 0.40,
+  '💡 GPT 洞察记忆展示跨来源推理：技术话题频率在上升');
+await wait(3000);
+if (isCancelled) return;
+
+window.dispatchEvent(new CustomEvent('demo-close-detail'));
+await wait(500);
+if (isCancelled) return;
+
+// P7: Chatbot 问答 + 记忆链接 (10s)
       await moveAndClick('chat-trigger', '💬 打开 GraphMe 对话助手', 1500);
       if (isCancelled) return;
 

@@ -355,6 +355,53 @@ function DemoCameraController() {
   return null;
 }
 
+const DEMO_PARTICLE_IDS = ['mem_007', 'insight_001', 'chatgpt_001', 'chatgpt_insight_001'];
+
+function ParticlePositionProjector() {
+  const { camera, gl } = useThree();
+  const { rawMemories, insightMemories, navCategory, navSubCategory } = useAppState();
+
+  useEffect(() => {
+    const handler = () => {
+      const canvas = gl.domElement;
+      const rect = canvas.getBoundingClientRect();
+      const positions: Record<string, { x: number; y: number }> = {};
+
+      DEMO_PARTICLE_IDS.forEach(id => {
+        const mem = rawMemories.find(m => m.id === id) || insightMemories.find(m => m.id === id);
+        if (!mem) return;
+
+        let pos: [number, number, number];
+        if (navCategory) {
+          if (mem.type === 'raw') {
+            pos = getNavPosition(mem as RawMemory, navCategory, navSubCategory);
+          } else {
+            pos = getInsightNavPosition(mem as InsightMemory, navCategory, navSubCategory);
+          }
+        } else {
+          pos = (mem as any).position3D;
+        }
+
+        const worldPos = new THREE.Vector3(pos[0], pos[1], pos[2]);
+        const screenPos = worldPos.clone().project(camera);
+        const x = (screenPos.x * 0.5 + 0.5) * rect.width + rect.left;
+        const y = (-screenPos.y * 0.5 + 0.5) * rect.height + rect.top;
+
+        if (screenPos.z < 1) {
+          positions[id] = { x, y };
+        }
+      });
+
+      window.dispatchEvent(new CustomEvent('demo-particle-positions', { detail: positions }));
+    };
+
+    window.addEventListener('demo-request-particle-positions', handler);
+    return () => window.removeEventListener('demo-request-particle-positions', handler);
+  }, [camera, gl, rawMemories, insightMemories, navCategory, navSubCategory]);
+
+  return null;
+}
+
 function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: string | null }) {
   const { rawMemories, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
@@ -573,6 +620,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <DemoCameraController />
+        <ParticlePositionProjector />
         <OrbitControls
           enableDamping
           dampingFactor={0.08}

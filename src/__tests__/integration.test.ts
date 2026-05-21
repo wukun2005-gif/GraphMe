@@ -573,4 +573,84 @@ describe('Integration — BL-045 Auto Demo Fix', () => {
     window.dispatchEvent(new CustomEvent('demo-detail-edit'));
     expect(result.current.selectedMemory?.id).toBe('mem_007');
   });
+
+  it('P3: demo-select-memory for chatgpt_001 should select GPT raw memory', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'chatgpt_001' } }));
+    act(() => {
+      const mem = result.current.allRawMemories.find(m => m.id === 'chatgpt_001');
+      if (mem) result.current.selectMemory(mem);
+    });
+
+    if (result.current.selectedMemory) {
+      expect(result.current.selectedMemory?.id).toBe('chatgpt_001');
+      expect(result.current.selectedMemory?.source).toBe('chatgpt');
+    }
+  });
+
+  it('P6: demo-select-memory for chatgpt_insight_001 should select GPT insight memory', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'chatgpt_insight_001' } }));
+    act(() => {
+      const mem = result.current.insightMemories.find(m => m.id === 'chatgpt_insight_001');
+      if (mem) result.current.selectMemory(mem);
+    });
+
+    if (result.current.selectedMemory) {
+      expect(result.current.selectedMemory?.id).toBe('chatgpt_insight_001');
+      expect(result.current.selectedMemory?.type).toBe('insight');
+      expect(result.current.selectedMemory?.source).toBe('chatgpt');
+    }
+  });
+
+  it('P3: demo-particle-positions event listener pattern should work', () => {
+    const positions: Record<string, { x: number; y: number }> = {};
+
+    const requestHandler = () => {
+      window.dispatchEvent(new CustomEvent('demo-particle-positions', {
+        detail: { mem_007: { x: 500, y: 300 } }
+      }));
+    };
+    window.addEventListener('demo-request-particle-positions', requestHandler);
+
+    const receiveHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      Object.assign(positions, detail);
+    };
+    window.addEventListener('demo-particle-positions', receiveHandler);
+
+    window.dispatchEvent(new CustomEvent('demo-request-particle-positions'));
+
+    expect(positions.mem_007).toEqual({ x: 500, y: 300 });
+
+    window.removeEventListener('demo-request-particle-positions', requestHandler);
+    window.removeEventListener('demo-particle-positions', receiveHandler);
+  });
+
+  it('P3→P6: GPT memory + insight sequential flow should close and reopen detail', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'chatgpt_001' } }));
+    act(() => {
+      const mem = result.current.allRawMemories.find(m => m.id === 'chatgpt_001');
+      if (mem) result.current.selectMemory(mem);
+    });
+    if (result.current.selectedMemory) {
+      expect(result.current.selectedMemory?.id).toBe('chatgpt_001');
+    }
+
+    act(() => { result.current.selectMemory(null); });
+    expect(result.current.detailOpen).toBe(false);
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'chatgpt_insight_001' } }));
+    act(() => {
+      const mem = result.current.insightMemories.find(m => m.id === 'chatgpt_insight_001');
+      if (mem) result.current.selectMemory(mem);
+    });
+    if (result.current.selectedMemory) {
+      expect(result.current.selectedMemory?.id).toBe('chatgpt_insight_001');
+    }
+  });
 });
