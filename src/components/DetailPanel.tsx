@@ -466,9 +466,13 @@ export default function DetailPanel() {
                 : <InsightDetail memory={selectedMemory} />}
               <div className={`mt-6 flex gap-2 border-t pt-4 ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
                 {selectedMemory.type === 'raw' && (
-                  <button onClick={startEdit} className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
-                    isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
-                  }`}>✏️ 编辑</button>
+                  <button
+                    id="demo-edit-btn"
+                    onClick={startEdit}
+                    className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                      isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                    }`}
+                  >✏️ 编辑</button>
                 )}
                 <button
                   onClick={() => deleteMemory(selectedMemory.id)}

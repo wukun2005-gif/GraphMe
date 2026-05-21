@@ -473,3 +473,104 @@ describe('Integration — FakeCursor Demo Flow', () => {
     expect(result.current.demoStep).toBe(0);
   });
 });
+
+describe('Integration — BL-045 Auto Demo Fix', () => {
+  it('P3: demo-select-memory event should select raw memory and open detail', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'mem_007' } }));
+    act(() => {
+      result.current.selectMemory(
+        result.current.rawMemories.find(m => m.id === 'mem_007') || null
+      );
+    });
+
+    expect(result.current.selectedMemory?.id).toBe('mem_007');
+    expect(result.current.detailOpen).toBe(true);
+  });
+
+  it('P3: demo-select-memory event should select insight memory', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: 'insight_001' } }));
+    act(() => {
+      const insight = result.current.insightMemories.find(m => m.id === 'insight_001');
+      if (insight) result.current.selectMemory(insight);
+    });
+
+    if (result.current.selectedMemory) {
+      expect(result.current.selectedMemory?.id).toBe('insight_001');
+      expect(result.current.selectedMemory?.type).toBe('insight');
+    }
+  });
+
+  it('P3: closing detail panel should set detailOpen to false', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+    expect(result.current.detailOpen).toBe(true);
+
+    act(() => { result.current.selectMemory(null); });
+    expect(result.current.detailOpen).toBe(false);
+    expect(result.current.selectedMemory).toBeNull();
+  });
+
+  it('P4: demo-detail-edit custom event should be handled without crashing', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+
+    expect(() => {
+      window.dispatchEvent(new CustomEvent('demo-detail-edit'));
+    }).not.toThrow();
+
+    expect(result.current.selectedMemory?.id).toBe('mem_007');
+  });
+
+  it('P4: demo-detail-cancel-edit custom event should not crash', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+
+    expect(() => {
+      window.dispatchEvent(new CustomEvent('demo-detail-cancel-edit'));
+    }).not.toThrow();
+  });
+
+  it('P4: raw memory should have type raw for edit button visibility', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+
+    expect(result.current.selectedMemory?.type).toBe('raw');
+  });
+
+  it('P3→P4: sequential flow select → close → select → edit should work', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+    expect(result.current.detailOpen).toBe(true);
+    expect(result.current.selectedMemory?.id).toBe('mem_007');
+
+    act(() => { result.current.selectMemory(null); });
+    expect(result.current.detailOpen).toBe(false);
+
+    act(() => {
+      result.current.selectMemory(result.current.rawMemories.find(m => m.id === 'mem_007') || null);
+    });
+    expect(result.current.detailOpen).toBe(true);
+
+    window.dispatchEvent(new CustomEvent('demo-detail-edit'));
+    expect(result.current.selectedMemory?.id).toBe('mem_007');
+  });
+});

@@ -556,6 +556,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
   return (
     <div className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing">
       <Canvas
+        id="mem-cloud-canvas"
         key={bgColor}
         camera={{ position: [0, 2, 8], fov: 60, near: 0.1, far: 50 }}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}

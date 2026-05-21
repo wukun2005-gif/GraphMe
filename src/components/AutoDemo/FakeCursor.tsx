@@ -60,6 +60,19 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(700);
     };
 
+    const clickAt = async (x: number, y: number, text: string, waitAfter: number = 1500) => {
+      if (isCancelled) return;
+      setTooltipText(text);
+      setPosition({ x, y });
+      await wait(700);
+      if (isCancelled) return;
+      setIsClicking(true);
+      await wait(250);
+      if (isCancelled) return;
+      setIsClicking(false);
+      await wait(waitAfter);
+    };
+
     const moveAndClick = async (elementId: string, text: string, waitAfter: number = 2000) => {
       if (isCancelled) return;
       const el = document.getElementById(elementId);
@@ -70,7 +83,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await wait(700);
         if (isCancelled) return;
         setIsClicking(true);
-        await wait(200);
+        await wait(250);
         if (isCancelled) return;
         el.click();
         setIsClicking(false);
@@ -99,16 +112,15 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: memoryId } }));
     };
 
-    /** Simulate typing into an input */
+    /** Simulate typing into an input or textarea */
     const simulateType = async (elementId: string, text: string) => {
       if (isCancelled) return;
-      const el = document.getElementById(elementId) as HTMLInputElement | null;
+      const el = document.getElementById(elementId);
       if (!el) return;
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
       el.focus();
-      // Use native input value setter to trigger React's onChange
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype, 'value'
-      )?.set;
+      const proto = Object.getPrototypeOf(el);
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
       if (nativeInputValueSetter) {
         for (let i = 0; i <= text.length; i++) {
           if (isCancelled) return;
@@ -116,11 +128,17 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
           el.dispatchEvent(new Event('input', { bubbles: true }));
           await wait(60);
         }
+      } else {
+        el.value = text;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        await wait(200);
       }
     };
 
     const runSequence = async () => {
       if (isCancelled) return;
+
+      try {
 
       // INTRO (2s)
       setTooltipText('🚀 开始一键演示：90秒全面探索 GraphMe（按 ESC 随时退出）');
@@ -162,21 +180,40 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
 
       // P3: 记忆卡片 · 原始记忆 + 洞察记忆 (12s)
+      const canvasEl = document.getElementById('mem-cloud-canvas');
+      const canvasRect = canvasEl?.getBoundingClientRect();
+      const canvasCX = canvasRect ? canvasRect.left + canvasRect.width * 0.45 : window.innerWidth * 0.4;
+      const canvasCY = canvasRect ? canvasRect.top + canvasRect.height * 0.45 : window.innerHeight * 0.45;
+
+      await clickAt(canvasCX, canvasCY,
+        '📖 点击记忆粒子，打开原始记忆卡片详情面板', 500);
+      if (isCancelled) return;
       dispatchSelectMemory('mem_007');
-      await moveTo(window.innerWidth - 210, window.innerHeight / 3,
-        '📖 点击记忆粒子，打开原始记忆卡片详情面板');
-      await wait(3500);
+      await wait(1200);
       if (isCancelled) return;
 
-      await moveTo(window.innerWidth - 210, window.innerHeight * 0.55,
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
         '🧠 查看多维信息：时间、地点、人物、情绪、活动、CQI等');
       await wait(3000);
       if (isCancelled) return;
 
+      window.dispatchEvent(new CustomEvent('demo-close-detail'));
+      await wait(500);
+      if (isCancelled) return;
+
+      const insightCX = canvasRect ? canvasRect.left + canvasRect.width * 0.55 : window.innerWidth * 0.5;
+      const insightCY = canvasRect ? canvasRect.top + canvasRect.height * 0.55 : window.innerHeight * 0.5;
+
+      await clickAt(insightCX, insightCY,
+        '💡 点击金色圆环洞察记忆粒子：AI从原子中推理出的高阶认知', 500);
+      if (isCancelled) return;
       dispatchSelectMemory('insight_001');
-      await moveTo(window.innerWidth - 210, window.innerHeight / 3,
-        '💡 金色圆环代表洞察记忆：AI从原子中推理出的高阶认知');
-      await wait(3500);
+      await wait(1200);
+      if (isCancelled) return;
+
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.45,
+        '💡 金色圆环代表洞察记忆：趋势、信念、关系、偏好、习惯、成长');
+      await wait(3000);
       if (isCancelled) return;
 
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
@@ -184,15 +221,18 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
 
       // P4: 记忆卡编辑流程 (10s)
+      await clickAt(canvasCX, canvasCY,
+        '📖 再次点击记忆粒子，查看编辑功能', 500);
+      if (isCancelled) return;
       dispatchSelectMemory('mem_007');
-      await wait(800);
+      await wait(1200);
       if (isCancelled) return;
 
-      window.dispatchEvent(new CustomEvent('demo-detail-edit'));
-      await wait(300);
+      await moveAndClick('demo-edit-btn', '✏️ 点击编辑按钮，进入编辑模式', 1500);
       if (isCancelled) return;
-      await moveTo(window.innerWidth - 210, window.innerHeight / 3,
-        '✏️ 进入编辑模式，修改记忆卡片');
+
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.3,
+        '✏️ 编辑模式：可修改标签、摘要、情绪、地点等字段');
       await wait(2000);
       if (isCancelled) return;
 
@@ -302,6 +342,11 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(3000);
 
       if (!isCancelled) {
+        stopDemo();
+      }
+
+      } catch (err) {
+        console.error('FakeCursor demo sequence error:', err);
         stopDemo();
       }
     };
