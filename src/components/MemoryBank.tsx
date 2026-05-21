@@ -429,6 +429,59 @@ export default function MemoryBank() {
                   ))}
                 </div>
               </div>
+
+              <div className={`border-t pt-3 ${
+                isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+              }`}>
+                <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  💹 记忆类型增值潜力排行
+                </h4>
+                <div className="space-y-1">
+                  {[
+                    { rank: 1, label: '亲子互动记忆', stars: 5, invest: '高', suggestion: '持续高回报资产，保持投入', icon: '👨‍👧' },
+                    { rank: 2, label: '学习成长记忆', stars: 4, invest: '中', suggestion: '稳定增值，可适度增加', icon: '📚' },
+                    { rank: 3, label: '社交情感记忆', stars: 4, invest: '中高', suggestion: '潜在高增长领域', icon: '💬' },
+                    { rank: 4, label: '户外探索记忆', stars: 3, invest: '低', suggestion: '需增加户外活动投入', icon: '🌲' },
+                    { rank: 5, label: '日常习惯记忆', stars: 2, invest: '低', suggestion: '基础配置，维持即可', icon: '🏠' },
+                  ].map(item => (
+                    <div
+                      key={item.rank}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+                        isDark ? 'bg-[#ffffff04]' : 'bg-gray-50'
+                      }`}
+                    >
+                      <span className={`w-5 text-center font-mono text-[10px] ${
+                        isDark ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
+                        #{item.rank}
+                      </span>
+                      <span className="text-xs">{item.icon}</span>
+                      <span className={`flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {item.label}
+                      </span>
+                      <span className="flex gap-0.5">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <span key={i} className={`text-[10px] ${i < item.stars ? 'text-amber-400' : isDark ? 'text-gray-700' : 'text-gray-300'}`}>
+                            ⭐
+                          </span>
+                        ))}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded w-8 text-center ${
+                        item.invest === '高'
+                          ? isDark ? 'bg-green-500/15 text-green-400' : 'bg-green-100 text-green-700'
+                          : item.invest === '中' || item.invest === '中高'
+                            ? isDark ? 'bg-blue-500/15 text-blue-400' : 'bg-blue-100 text-blue-700'
+                            : isDark ? 'bg-gray-500/15 text-gray-400' : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {item.invest}
+                      </span>
+                      <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {item.suggestion}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
