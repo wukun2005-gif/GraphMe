@@ -360,6 +360,75 @@ export default function MemoryBank() {
                   ))}
                 </div>
               </div>
+
+              <div className={`border-t pt-3 ${
+                isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+              }`}>
+                <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  📈 维度利率排名
+                </h4>
+                <div className="space-y-1">
+                  {[
+                    { rank: 1, emoji: '😊', name: '快乐', rate: 4.85, change: '+0.12', up: true, risk: 'low', sparkline: '2,12 25,8 50,14 75,10 98,6' },
+                    { rank: 2, emoji: '👫', name: '社交', rate: 3.67, change: '+0.45', up: true, risk: 'low', sparkline: '2,14 25,10 50,16 75,12 98,8' },
+                    { rank: 3, emoji: '🎨', name: '创意', rate: 3.21, change: '+0.08', up: true, risk: 'low', sparkline: '2,10 25,12 50,8 75,14 98,10' },
+                    { rank: 4, emoji: '🧠', name: '逻辑', rate: 2.14, change: '-0.23', up: false, risk: 'medium', sparkline: '2,8 25,12 50,6 75,10 98,14' },
+                    { rank: 5, emoji: '🏃', name: '户外', rate: 1.08, change: '-0.67', up: false, risk: 'high', sparkline: '2,12 25,16 50,10 75,18 98,20' },
+                  ].map(item => (
+                    <div
+                      key={item.rank}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+                        isDark ? 'bg-[#ffffff04]' : 'bg-gray-50'
+                      } ${
+                        item.risk === 'high'
+                          ? isDark ? 'border border-red-500/20' : 'border border-red-200'
+                          : ''
+                      }`}
+                    >
+                      <span className={`w-5 text-center font-mono text-[10px] ${
+                        isDark ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
+                        #{item.rank}
+                      </span>
+                      <span className="flex items-center gap-1 w-14">
+                        <span className="text-xs">{item.emoji}</span>
+                        <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{item.name}</span>
+                      </span>
+                      <span className={`w-14 text-right font-mono font-medium ${
+                        item.risk === 'high'
+                          ? 'text-red-400'
+                          : isDark ? 'text-[#00f2ff]' : 'text-cyan-600'
+                      }`}>
+                        {item.rate}%
+                      </span>
+                      <span className={`w-14 text-right font-mono text-[10px] ${
+                        item.up ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {item.change}
+                      </span>
+                      <svg width="50" height="18" viewBox="0 0 100 20" className="flex-shrink-0">
+                        <polyline
+                          points={item.sparkline}
+                          fill="none"
+                          stroke={item.up ? '#34d399' : '#f87171'}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ml-auto ${
+                        item.risk === 'high'
+                          ? 'bg-red-500/20 text-red-400'
+                          : item.risk === 'medium'
+                            ? 'bg-yellow-500/15 text-yellow-400'
+                            : 'bg-green-500/15 text-green-400'
+                      }`}>
+                        {item.risk === 'high' ? '⚠ 预警' : item.risk === 'medium' ? '○ 关注' : '✓ 正常'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
