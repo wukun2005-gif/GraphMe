@@ -371,6 +371,7 @@ export default function NavigationSidebar() {
                 }`}>
                   <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>🤖 外部 Agent 记忆</div>
                   <button
+                    id="nav-chatgpt-import"
                     onClick={chatgptImportStatus === 'idle' ? startChatGPTImport : toggleShowChatGPT}
                     disabled={chatgptImportStatus === 'importing'}
                     className={`px-2 py-1 rounded text-xs transition-all cursor-pointer w-full text-left ${

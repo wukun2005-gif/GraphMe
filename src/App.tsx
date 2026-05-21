@@ -84,6 +84,19 @@ function AppInner() {
       <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
         detailOpen ? 'right-[436px]' : 'right-4'
       }`}>
+        {!isDemoPlaying && (
+          <button
+            id="btn-auto-demo"
+            onClick={() => setIsDemoPlaying(true)}
+            className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all font-medium cursor-pointer ${
+              isDark
+                ? 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ffb800]/20 hover:from-[#00f2ff]/30 hover:to-[#ffb800]/30 text-[#00f2ff] border border-[#00f2ff]/20 hover:border-[#00f2ff]/40'
+                : 'bg-gradient-to-r from-[#0088cc]/10 to-[#cc8800]/10 hover:from-[#0088cc]/20 hover:to-[#cc8800]/20 text-[#0088cc] border border-[#0088cc]/20 hover:border-[#0088cc]/40'
+            }`}
+          >
+            ▶ 一键演示
+          </button>
+        )}
         <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${

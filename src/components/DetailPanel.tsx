@@ -328,6 +328,7 @@ export default function DetailPanel() {
                 <div>
                   <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Label</label>
                   <input
+                    id="demo-edit-label"
                     type="text"
                     value={edit.label}
                     onChange={e => updateEdit('label', e.target.value)}
@@ -339,6 +340,7 @@ export default function DetailPanel() {
                 <div>
                   <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Summary</label>
                   <textarea
+                    id="demo-edit-summary"
                     value={edit.summary}
                     onChange={e => updateEdit('summary', e.target.value)}
                     rows={3}

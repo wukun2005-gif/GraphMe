@@ -246,6 +246,7 @@ export default function ValueDashboard() {
                   📊 价值看板
                 </button>
                 <button
+                  id="val-dash-health-tab"
                   onClick={() => setTab('health')}
                   className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     tab === 'health'
