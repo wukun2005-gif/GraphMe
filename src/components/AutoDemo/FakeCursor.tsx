@@ -39,7 +39,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
     let timeoutIds: ReturnType<typeof setTimeout>[] = [];
     let isCancelled = false;
 
-    const TOTAL_DURATION = 90_000; // 90 seconds
+    const SPEED_FACTOR = 1.25;
+    const TOTAL_DURATION = 90_000 / SPEED_FACTOR; // 72s at 1.25x
     const startTime = Date.now();
 
     // Progress tracker
@@ -49,7 +50,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
     }, 200);
 
     const wait = (ms: number) => new Promise<void>(resolve => {
-      const id = setTimeout(resolve, ms);
+      const id = setTimeout(resolve, ms / SPEED_FACTOR);
       timeoutIds.push(id);
     });
 
