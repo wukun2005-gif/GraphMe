@@ -12,9 +12,10 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -118,6 +119,31 @@ function AppInner() {
             ▶ 一键演示
           </button>
         )}
+        {showSearch && (
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="搜索记忆..."
+            autoFocus
+            onBlur={() => { if (!searchQuery) setShowSearch(false); }}
+            className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm border focus:outline-none w-48 ${
+              isDark
+                ? 'bg-[#0d1525]/90 border-[#00f2ff]/30 text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/50'
+                : 'bg-white/90 border-gray-300 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/50'
+            }`}
+          />
+        )}
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            showSearch
+              ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
+              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200' : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🔍
+        </button>
         <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${

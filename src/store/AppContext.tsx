@@ -18,6 +18,7 @@ interface AppState {
   theme: 'dark' | 'light';
   memoryBankOpen: boolean;
   valueDashboardOpen: boolean;
+  searchQuery: string;
 }
 
 interface AppContextType extends AppState {
@@ -32,6 +33,7 @@ interface AppContextType extends AppState {
   toggleTheme: () => void;
   toggleMemoryBank: () => void;
   toggleValueDashboard: () => void;
+  setSearchQuery: (query: string) => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -76,6 +78,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     theme: 'light',
     memoryBankOpen: false,
     valueDashboardOpen: false,
+    searchQuery: '',
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -191,6 +194,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (insights.length > 0) setInsightMems(prev => [...prev, ...insights]);
   }, []);
 
+  const setSearchQuery = useCallback((query: string) => setState(s => ({ ...s, searchQuery: query })), []);
+
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
@@ -258,7 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,

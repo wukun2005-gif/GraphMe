@@ -46,7 +46,7 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -89,10 +89,20 @@ function ParticleCloud({ theme }: { theme: Theme }) {
         col[i * 3 + 1] = c.g;
         col[i * 3 + 2] = c.b;
       }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const haystack = `${m.id} ${m.label} ${m.summary}`.toLowerCase();
+        const matches = q.split(/\s+/).filter(Boolean).every(kw => haystack.includes(kw));
+        if (!matches) {
+          col[i * 3] *= 0.2;
+          col[i * 3 + 1] *= 0.2;
+          col[i * 3 + 2] *= 0.2;
+        }
+      }
     });
 
     return { positions: pos, colors: col };
-  }, [visible, navCategory, navSubCategory, isLight, currentView]);
+  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery]);
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
