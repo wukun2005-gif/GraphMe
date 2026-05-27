@@ -98,6 +98,8 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
   const versions = MOCK_VERSIONS[memory.id];
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteText, setNoteText] = useState(memory.userNote || '');
+  const [showCorrectionInput, setShowCorrectionInput] = useState(false);
+  const [correctionText, setCorrectionText] = useState(memory.userCorrection || '');
 
   const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
     const raw = rawMemories.find(m => m.id === id);
@@ -193,10 +195,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
             {memory.userConfirmed ? '👍 已确认' : '👍 确认'}
           </button>
           <button
-            onClick={() => {
-              const correction = prompt('请输入纠正内容：', memory.userCorrection || '');
-              if (correction !== null) updateInsight(memory.id, { userCorrection: correction });
-            }}
+            onClick={() => setShowCorrectionInput(!showCorrectionInput)}
             className={`flex-1 px-2 py-1.5 text-xs rounded transition-colors cursor-pointer ${
               memory.userCorrection
                 ? isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-300'
@@ -217,11 +216,36 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           </button>
         </div>
 
-        {memory.userCorrection && (
+        {memory.userCorrection && !showCorrectionInput && (
           <div className={`text-xs px-2 py-1 rounded mb-2 ${
             isDark ? 'bg-amber-500/10 text-amber-400/80' : 'bg-amber-50 text-amber-700'
           }`}>
             纠正：{memory.userCorrection}
+          </div>
+        )}
+
+        {showCorrectionInput && (
+          <div className="flex gap-1 mb-2">
+            <input
+              type="text"
+              value={correctionText}
+              onChange={e => setCorrectionText(e.target.value)}
+              placeholder="输入纠正内容..."
+              className={`flex-1 border rounded px-2 py-1 text-xs ${
+                isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+              }`}
+            />
+            <button
+              onClick={() => {
+                updateInsight(memory.id, { userCorrection: correctionText });
+                setShowCorrectionInput(false);
+              }}
+              className={`px-2 py-1 text-xs rounded cursor-pointer ${
+                isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
+              }`}
+            >
+              保存
+            </button>
           </div>
         )}
 
