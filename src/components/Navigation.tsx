@@ -87,6 +87,7 @@ export default function NavigationSidebar() {
   const [formOpen, setFormOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(30);
 
   const [label, setLabel] = useState('');
   const [summary, setSummary] = useState('');
@@ -544,7 +545,7 @@ export default function NavigationSidebar() {
                     </label>
                   </div>
                   <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
-                    {filtered.slice(-30).reverse().map((mem, i) => (
+                    {filtered.slice(-displayCount).reverse().map((mem, i) => (
                       <div key={mem.id}>
                         {editingId === mem.id ? (
                           <div className={`rounded p-2 border space-y-1.5 ${
@@ -623,6 +624,16 @@ export default function NavigationSidebar() {
                       </div>
                     ))}
                   </div>
+                  {filtered.length > displayCount && (
+                    <button
+                      onClick={() => setDisplayCount(prev => prev + 30)}
+                      className={`w-full py-1 mt-1 text-xs rounded transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      加载更多（还有 {filtered.length - displayCount} 条）
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
