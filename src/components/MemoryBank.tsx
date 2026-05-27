@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import type { RawMemory } from '../types';
 
 interface DimensionItem {
   id: string;
@@ -100,6 +101,20 @@ const PREDICTION_COLORS: Record<string, { bar: string; barLight: string; text: s
     textLight: 'text-red-600',
   },
 };
+
+function getRelatedMemories(dimId: string, memories: RawMemory[]): RawMemory[] {
+  const filtered = memories.filter(m => {
+    switch (dimId) {
+      case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
+      case 'social': return m.dimensions.social.persons.length > 1;
+      case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
+      case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
+      case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
+      default: return false;
+    }
+  });
+  return filtered.slice(0, 3);
+}
 
 export default function MemoryBank() {
   const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories } = useAppState();
@@ -332,13 +347,10 @@ export default function MemoryBank() {
                           关联记忆：
                         </div>
                         <div className="space-y-1">
-                          {[
-                            { label: '在公园和新朋友一起踢足球', date: '2026.05.15' },
-                            { label: '周末全家一起去爬山踏青', date: '2026.05.08' },
-                            { label: '和同学组队完成科学项目', date: '2026.04.28' },
-                          ].map((mem, i) => (
+                          {getRelatedMemories(dim.id, rawMemories).map((mem) => (
                             <button
-                              key={i}
+                              key={mem.id}
+                              onClick={() => selectMemory(mem)}
                               className={`w-full text-left text-[10px] px-2 py-1 rounded flex items-center gap-2 transition-colors ${
                                 isDark
                                   ? 'bg-[#ffffff04] hover:bg-[#ffffff08] text-gray-400 hover:text-gray-300'
@@ -347,7 +359,7 @@ export default function MemoryBank() {
                             >
                               <span className="flex-1">{mem.label}</span>
                               <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                {mem.date}
+                                {new Date(mem.dimensions.temporal.timestamp).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}
                               </span>
                             </button>
                           ))}
