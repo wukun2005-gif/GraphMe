@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { RawMemory, InsightMemory, DimensionView } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
@@ -82,6 +82,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [chatgptImportProgress, setChatgptImportProgress] = useState(0);
   const [hiddenMemoryIds, setHiddenMemoryIds] = useState<string[]>([]);
   const [undoStack, setUndoStack] = useState<RawMemory[]>([]);
+  const importIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (importIntervalRef.current) clearInterval(importIntervalRef.current);
+    };
+  }, []);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -152,6 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const next = prev + 4;
         if (next >= 100) {
           clearInterval(interval);
+          importIntervalRef.current = null;
           setChatgptImportStatus('done');
           setShowChatGPT(true);
           return 100;
@@ -159,6 +167,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }, 80);
+    importIntervalRef.current = interval;
   }, [chatgptImportStatus]);
 
   const toggleMemoryVisibility = useCallback((id: string) => {
