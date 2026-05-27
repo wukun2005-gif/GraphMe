@@ -16,6 +16,7 @@ interface AppState {
   crudOpen: boolean;
   theme: 'dark' | 'light';
   memoryBankOpen: boolean;
+  valueDashboardOpen: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -29,6 +30,7 @@ interface AppContextType extends AppState {
   toggleCrud: () => void;
   toggleTheme: () => void;
   toggleMemoryBank: () => void;
+  toggleValueDashboard: () => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -71,6 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     crudOpen: false,
     theme: 'light',
     memoryBankOpen: false,
+    valueDashboardOpen: false,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
@@ -97,7 +100,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, focusedInsight: insight })), []);
   const setDemoMode = useCallback((on: boolean) => setState(s => ({ ...s, demoMode: on, demoStep: on ? 1 : 0 })), []);
   const setDemoStep = useCallback((step: number) => setState(s => ({ ...s, demoStep: step })), []);
-  const toggleChat = useCallback(() => setState(s => ({ ...s, chatOpen: !s.chatOpen })), []);
+  const toggleChat = useCallback(() => setState(s => ({
+    ...s,
+    chatOpen: !s.chatOpen,
+    memoryBankOpen: !s.chatOpen ? false : s.memoryBankOpen,
+    valueDashboardOpen: !s.chatOpen ? false : s.valueDashboardOpen,
+  })), []);
   const toggleDetail = useCallback(() => setState(s => ({
     ...s,
     detailOpen: !s.detailOpen,
@@ -105,7 +113,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   })), []);
   const toggleCrud = useCallback(() => setState(s => ({ ...s, crudOpen: !s.crudOpen })), []);
   const toggleTheme = useCallback(() => setState(s => ({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' })), []);
-  const toggleMemoryBank = useCallback(() => setState(s => ({ ...s, memoryBankOpen: !s.memoryBankOpen })), []);
+  const toggleMemoryBank = useCallback(() => setState(s => ({
+    ...s,
+    memoryBankOpen: !s.memoryBankOpen,
+    chatOpen: !s.memoryBankOpen ? false : s.chatOpen,
+    valueDashboardOpen: !s.memoryBankOpen ? false : s.valueDashboardOpen,
+  })), []);
+
+  const toggleValueDashboard = useCallback(() => setState(s => ({
+    ...s,
+    valueDashboardOpen: !s.valueDashboardOpen,
+    chatOpen: !s.valueDashboardOpen ? false : s.chatOpen,
+    memoryBankOpen: !s.valueDashboardOpen ? false : s.memoryBankOpen,
+  })), []);
   const setNavCategory = useCallback((cat: string | null) => setState(s => ({ ...s, navCategory: cat })), []);
   const setNavSubCategory = useCallback((sub: string | null) => setState(s => ({ ...s, navSubCategory: sub })), []);
 
@@ -240,7 +260,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,

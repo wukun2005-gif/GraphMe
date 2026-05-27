@@ -193,9 +193,9 @@ function EmotionBars({ distribution, total }: { distribution: Record<string, num
 }
 
 export default function ValueDashboard() {
-  const { rawMemories, detailOpen, selectMemory, theme } = useAppState();
+  const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard } = useAppState();
   const isDark = theme === 'dark';
-  const [open, setOpen] = useState(false);
+  const open = valueDashboardOpen;
   const [tab, setTab] = useState<'value' | 'health'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
@@ -211,7 +211,7 @@ export default function ValueDashboard() {
     <>
       <button
         id="val-dash-trigger"
-        onClick={() => setOpen(!open)}
+        onClick={toggleValueDashboard}
         className={`fixed bottom-20 w-12 h-12 bg-[#ffb800]/15 border border-[#ffb800]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#ffb800]/25 transition-all z-20 shadow-[0_0_15px_rgba(255,184,0,0.1)] ${
           detailOpen ? 'right-[436px]' : 'right-6'
         }`}
@@ -258,7 +258,7 @@ export default function ValueDashboard() {
                 </button>
               </div>
               <button
-                onClick={() => setOpen(false)}
+                onClick={toggleValueDashboard}
                 className={`text-lg leading-none ${
                   isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'
                 }`}
@@ -278,7 +278,7 @@ export default function ValueDashboard() {
                       {top5.map((item) => (
                         <button
                           key={item.memory.id}
-                          onClick={() => { selectMemory(item.memory); setOpen(false); }}
+                          onClick={() => { selectMemory(item.memory); toggleValueDashboard(); }}
                           className={`w-full text-left p-2 rounded-lg transition-all cursor-pointer ${
                             isDark
                               ? 'hover:bg-[#ffffff08] bg-[#ffffff03]'
@@ -322,7 +322,7 @@ export default function ValueDashboard() {
                         {riskWarnings.map((item) => (
                           <button
                             key={item.memory.id}
-                            onClick={() => { selectMemory(item.memory); setOpen(false); }}
+                            onClick={() => { selectMemory(item.memory); toggleValueDashboard(); }}
                             className={`w-full text-left p-2 rounded-lg transition-all cursor-pointer ${
                               isDark
                                 ? 'hover:bg-[#ffffff08] bg-[#ffffff03]'
