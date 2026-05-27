@@ -135,7 +135,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
   if (hideRawOnly) return null;
 
   return (
-    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${theme}`} onClick={handleClick}>
+    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}`} onClick={handleClick}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -189,7 +189,7 @@ function InsightRings({ theme }: { theme: Theme }) {
   const ringOpacity = isLight ? 0.85 : 0.7;
 
   return (
-    <group key={`rings-${navCategory || 'all'}-${navSubCategory || 'none'}-${theme}`}>
+    <group key={`rings-${navCategory || 'all'}-${navSubCategory || 'none'}`}>
       {visibleInsights.map(ins => {
         let position: [number, number, number];
         if (navCategory) {
@@ -305,7 +305,7 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
       ];
 
   return (
-    <group key={`lines-${navCategory || 'all'}-${navSubCategory || 'none'}-${theme}`}>
+    <group key={`lines-${navCategory || 'all'}-${navSubCategory || 'none'}`}>
       {allPairs.map(({ pairs, color, opacity }, idx) => {
         if (pairs.length === 0) return null;
         const vertices: number[] = [];
@@ -645,6 +645,14 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
   return null;
 }
 
+function DynamicClearColor({ color }: { color: string }) {
+  const { gl } = useThree();
+  useEffect(() => {
+    gl.setClearColor(new THREE.Color(color));
+  }, [gl, color]);
+  return null;
+}
+
 interface MemCloud3DProps {
   bgColor: string;
   theme: Theme;
@@ -662,15 +670,14 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
     <div className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing">
       <Canvas
         id="mem-cloud-canvas"
-        key={bgColor}
         camera={{ position: [0, 2, 8], fov: 60, near: 0.1, far: 50 }}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
         dpr={[0.75, 1.5]}
         performance={{ min: 0.3 }}
         frameloop="demand"
-        onCreated={({ gl }) => { gl.setClearColor(new THREE.Color(bgColor)); }}
         style={{ background: bgColor }}
       >
+        <DynamicClearColor color={bgColor} />
         <SceneLights theme={theme} />
         {!isLight && <Stars radius={30} depth={50} count={300} factor={3} saturation={0.2} speed={0.1} />}
         <ParticleCloud theme={theme} />
