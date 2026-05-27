@@ -40,6 +40,7 @@ interface AppContextType extends AppState {
   deleteMemory: (id: string) => void;
   updateMemory: (id: string, updates: Partial<RawMemory>) => void;
   updateInsight: (id: string, updates: Partial<InsightMemory>) => void;
+  importMemories: (raws: RawMemory[], insights: InsightMemory[]) => void;
   undoDelete: () => void;
   undoStackCount: number;
   getVisibleMemories: () => RawMemory[];
@@ -167,6 +168,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setInsightMems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
   }, []);
 
+  const importMemories = useCallback((raws: RawMemory[], insights: InsightMemory[]) => {
+    if (raws.length > 0) setRawMems(prev => [...prev, ...raws]);
+    if (insights.length > 0) setInsightMems(prev => [...prev, ...insights]);
+  }, []);
+
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
@@ -236,7 +242,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
-      addMemory, deleteMemory, updateMemory, updateInsight, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
+      addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,

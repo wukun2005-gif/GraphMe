@@ -6,6 +6,7 @@ import { EMOTION_COLORS } from '../types';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { generateStory } from '../utils/storyUtils';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
+import { parseImportJSON } from '../utils/importUtils';
 
 const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: string }[] }> = {
   '家庭生活': { icon: '🏠', sub: [
@@ -49,7 +50,7 @@ export default function NavigationSidebar() {
   const {
     navCategory, navSubCategory,
     setNavCategory, setNavSubCategory,
-    rawMemories, addMemory, deleteMemory, updateMemory,
+    rawMemories, addMemory, deleteMemory, updateMemory, importMemories,
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     insightMemories, theme, selectMemory, selectedMemory,
     showChatGPT, toggleShowChatGPT,
@@ -458,6 +459,40 @@ export default function NavigationSidebar() {
                       </div>
                     )}
                   </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const text = reader.result as string;
+                        const result = parseImportJSON(text);
+                        if (result.rawMemories.length > 0 || result.insightMemories.length > 0) {
+                          importMemories(result.rawMemories, result.insightMemories);
+                        }
+                        if (result.errors.length > 0) {
+                          alert(`导入错误：\n${result.errors.join('\n')}`);
+                        }
+                      };
+                      reader.readAsText(file);
+                      e.target.value = '';
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    id="json-import-input"
+                  />
+                  <label
+                    htmlFor="json-import-input"
+                    className={`block w-full py-1.5 border rounded text-xs text-center transition-colors cursor-pointer ${
+                      isDark ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20' : 'bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100'
+                    }`}
+                  >
+                    📁 导入 JSON 记忆文件
+                  </label>
                 </div>
 
                 <button
