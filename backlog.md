@@ -229,7 +229,7 @@
 1. 点击"小哥说我"，预期面板从右侧滑入（非全屏居中）
 2. 与 DetailPanel 的打开/关闭动画风格一致
 
-## 24. [Performance] 导航过滤逻辑在 Navigation 和 MemCloud3D 之间重复
+## 24. [Performance] 导航过滤逻辑在 Navigation 和 MemCloud3D 之间重复 [✅]
 
 **问题**: Navigation.tsx 的 navMap/subMap 与 MemCloud3D.tsx 的 NAV_MAP/SUB_MAP 是完全相同的映射表，getVisibleMemories 的过滤逻辑与 isMemoryInCategory 高度重复，维护两份容易导致不一致。
 **改动范围**:
