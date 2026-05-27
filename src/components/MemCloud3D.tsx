@@ -228,22 +228,21 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
   const { insightMemories, rawMemories, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
 
-  const { positions, lines } = useMemo(() => {
-    let visible: InsightMemory[];
-    if (!navCategory) {
-      visible = insightMemories;
-    } else {
-      const categoryRawIds = new Set(
-        rawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory)).map(m => m.id)
-      );
-      visible = insightMemories.filter(ins =>
-        ins.sourceRawMemoryIds.some(id => categoryRawIds.has(id))
-      );
-    }
+  // Step 1: Filter visible insights (lightweight, runs on nav switch)
+  const filteredInsights = useMemo(() => {
+    if (!navCategory) return insightMemories;
+    const categoryRawIds = new Set(
+      rawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory)).map(m => m.id)
+    );
+    return insightMemories.filter(ins =>
+      ins.sourceRawMemoryIds.some(id => categoryRawIds.has(id))
+    );
+  }, [insightMemories, rawMemories, navCategory, navSubCategory]);
 
-    // Limit to prevent O(n²) explosion
+  // Step 2: Compute connection lines (expensive O(n²), only re-runs when filtered set changes)
+  const { positions, lines } = useMemo(() => {
     const maxInsights = 100;
-    const limited = visible.length > maxInsights ? visible.slice(0, maxInsights) : visible;
+    const limited = filteredInsights.length > maxInsights ? filteredInsights.slice(0, maxInsights) : filteredInsights;
 
     const posMap = new Map<string, [number, number, number]>();
     limited.forEach(ins => {
@@ -258,7 +257,6 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
     const supporting: [THREE.Vector3, THREE.Vector3][] = [];
     const related: [THREE.Vector3, THREE.Vector3][] = [];
 
-    // Build source memory index for O(n) connection detection
     const sourceIndex = new Map<string, number[]>();
     limited.forEach((ins, idx) => {
       ins.sourceRawMemoryIds.forEach(srcId => {
@@ -267,7 +265,6 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
       });
     });
 
-    // Precompute connection strengths via shared source memories
     const connectionMap = new Map<string, number>();
     sourceIndex.forEach(indices => {
       for (let i = 0; i < indices.length; i++) {
@@ -290,7 +287,7 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
       else related.push([va, vb]);
     });
     return { positions: posMap, lines: { causal, supporting, related } };
-  }, [insightMemories, rawMemories, navCategory, navSubCategory]);
+  }, [filteredInsights, navCategory, navSubCategory]);
 
   const allPairs = isLight
     ? [
