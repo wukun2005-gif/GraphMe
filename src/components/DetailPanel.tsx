@@ -295,6 +295,15 @@ export default function DetailPanel() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
+    if (!detailOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') toggleDetail();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [detailOpen, toggleDetail]);
+
+  useEffect(() => {
     if (!confirmDelete) return;
     const timer = setTimeout(() => setConfirmDelete(false), 3000);
     return () => clearTimeout(timer);

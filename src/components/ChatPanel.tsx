@@ -72,6 +72,15 @@ export default function ChatPanel() {
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+  useEffect(() => {
+    if (!chatOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') toggleChat();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [chatOpen, toggleChat]);
+
   const handleSend = () => {
     const text = userInput.trim();
     if (!text) return;

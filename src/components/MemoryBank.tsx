@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { TimeRange } from '../utils/memoryBankUtils';
@@ -43,6 +43,15 @@ export default function MemoryBank() {
   const isDark = theme === 'dark';
   const [timeRange, setTimeRange] = useState<TimeRange>('月');
   const [expandedDim, setExpandedDim] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!memoryBankOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') toggleMemoryBank();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [memoryBankOpen, toggleMemoryBank]);
 
   const dimensionData = useMemo(() => computeDimensionData(rawMemories, timeRange), [rawMemories, timeRange]);
   const healthScore = useMemo(() => computeHealthScore(rawMemories, timeRange), [rawMemories, timeRange]);
