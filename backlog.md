@@ -158,7 +158,7 @@
 
 ---
 
-## 17. [Bug] Navigation.tsx 模板字符串中的 Tailwind 类不会被构建
+## 17. [Bug] Navigation.tsx 模板字符串中的 Tailwind 类不会被构建 [✅]
 
 **问题**: Navigation.tsx 多处使用 `` `${isDark ? 'text-gray-500' : 'text-gray-700'}` `` 嵌套在外层模板字符串中，Tailwind JIT 编译时无法扫描到完整类名，亮色模式下文字颜色可能被 purge 掉而不生效。
 **改动范围**:
