@@ -258,26 +258,37 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
     const supporting: [THREE.Vector3, THREE.Vector3][] = [];
     const related: [THREE.Vector3, THREE.Vector3][] = [];
 
-    const maxDist = 4;
-    const maxDistSq = maxDist * maxDist;
+    // Build source memory index for O(n) connection detection
+    const sourceIndex = new Map<string, number[]>();
+    limited.forEach((ins, idx) => {
+      ins.sourceRawMemoryIds.forEach(srcId => {
+        if (!sourceIndex.has(srcId)) sourceIndex.set(srcId, []);
+        sourceIndex.get(srcId)!.push(idx);
+      });
+    });
 
-    for (let i = 0; i < limited.length; i++) {
-      const pa = posMap.get(limited[i].id)!;
-      for (let j = i + 1; j < limited.length; j++) {
-        const pb = posMap.get(limited[j].id)!;
-        const dx = pa[0] - pb[0];
-        const dy = pa[1] - pb[1];
-        const dz = pa[2] - pb[2];
-        const distSq = dx * dx + dy * dy + dz * dz;
-        if (distSq >= maxDistSq) continue;
-        const dist = Math.sqrt(distSq);
-        const va = new THREE.Vector3(pa[0], pa[1], pa[2]);
-        const vb = new THREE.Vector3(pb[0], pb[1], pb[2]);
-        if (dist < 2) causal.push([va, vb]);
-        else if (dist < 3) supporting.push([va, vb]);
-        else related.push([va, vb]);
+    // Precompute connection strengths via shared source memories
+    const connectionMap = new Map<string, number>();
+    sourceIndex.forEach(indices => {
+      for (let i = 0; i < indices.length; i++) {
+        for (let j = i + 1; j < indices.length; j++) {
+          const key = `${Math.min(indices[i], indices[j])}-${Math.max(indices[i], indices[j])}`;
+          connectionMap.set(key, (connectionMap.get(key) || 0) + 1);
+        }
       }
-    }
+    });
+
+    connectionMap.forEach((sharedCount, key) => {
+      const [iStr, jStr] = key.split('-');
+      const i = parseInt(iStr), j = parseInt(jStr);
+      const pa = posMap.get(limited[i].id)!;
+      const pb = posMap.get(limited[j].id)!;
+      const va = new THREE.Vector3(pa[0], pa[1], pa[2]);
+      const vb = new THREE.Vector3(pb[0], pb[1], pb[2]);
+      if (sharedCount >= 5) causal.push([va, vb]);
+      else if (sharedCount >= 2) supporting.push([va, vb]);
+      else related.push([va, vb]);
+    });
     return { positions: posMap, lines: { causal, supporting, related } };
   }, [insightMemories, rawMemories, navCategory, navSubCategory]);
 
