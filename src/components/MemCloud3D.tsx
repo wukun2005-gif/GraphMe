@@ -385,6 +385,49 @@ function DemoCameraController() {
   return null;
 }
 
+function CameraFlyTo() {
+  const { selectedMemory, currentView } = useAppState();
+  const { camera } = useThree();
+  const targetPos = useRef(new THREE.Vector3(0, 0, 0));
+  const isAnimating = useRef(false);
+
+  useEffect(() => {
+    if (!selectedMemory) {
+      isAnimating.current = false;
+      return;
+    }
+    const mem = selectedMemory;
+    let pos: [number, number, number];
+    if (mem.type === 'raw') {
+      pos = mem.positions[currentView] || mem.position3D;
+    } else {
+      pos = mem.position3D;
+    }
+    targetPos.current.set(pos[0], pos[1], pos[2]);
+    isAnimating.current = true;
+  }, [selectedMemory, currentView]);
+
+  useFrame(() => {
+    if (!isAnimating.current) return;
+    const dist = camera.position.distanceTo(targetPos.current);
+    if (dist < 0.1) {
+      isAnimating.current = false;
+      return;
+    }
+    camera.position.lerp(
+      new THREE.Vector3(
+        targetPos.current.x + 2,
+        targetPos.current.y + 1.5,
+        targetPos.current.z + 3,
+      ),
+      0.04,
+    );
+    camera.lookAt(targetPos.current);
+  });
+
+  return null;
+}
+
 const DEMO_PARTICLE_IDS = ['mem_007', 'insight_001', 'chatgpt_001', 'chatgpt_insight_001'];
 
 function ParticlePositionProjector() {
@@ -660,6 +703,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <DemoCameraController />
+        <CameraFlyTo />
         <ParticlePositionProjector />
         <InteractionLoop />
         <OrbitControls
