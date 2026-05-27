@@ -756,113 +756,103 @@ export default function NavigationSidebar() {
     <AnimatePresence>
       {showStoryBoard && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ x: 500, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 500, opacity: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className={`fixed right-0 top-0 h-full w-[500px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
+            isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff08]' : 'bg-white/95 border-gray-200'
+          }`}
         >
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowStoryBoard(false)}
-          />
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className={`relative w-full max-w-2xl max-h-[85vh] mx-4 rounded-xl shadow-2xl overflow-hidden ${
-              isDark ? 'bg-[#0a0a0f]/95 border border-[#ffffff08]' : 'bg-white/95 border border-gray-200'
-            }`}
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-inherit">
-              <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                📖 小哥说我
-              </h2>
-              <button
-                onClick={() => setShowStoryBoard(false)}
-                className={`p-1 rounded transition-colors cursor-pointer ${
-                  isDark ? 'text-gray-400 hover:text-white hover:bg-[#ffffff10]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className={`px-6 py-5 space-y-6 overflow-y-auto max-h-[calc(85vh-70px)] ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              {storyChapters.length === 0 ? (
-                <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  暂无足够记忆来生成故事
-                </p>
-              ) : (
-                storyChapters.map((chapter, ci) => (
-                  <div key={ci}>
-                    <div className={`text-xs uppercase tracking-widest mb-3 ${
-                      chapter.type === 'past'
-                        ? isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'
-                        : isDark ? 'text-[#ffb800]/70' : 'text-[#cc8800]/70'
-                    }`}>
-                      {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} · {chapter.title}
-                    </div>
-                    {chapter.imageUrls.length > 0 && (
-                      <div className={`mb-4 p-2 rounded-lg ${
-                        isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'
-                      }`}>
-                        <div className="flex gap-2 overflow-x-auto pb-1">
-                          {chapter.imageUrls.map((url, imgIdx) => (
-                            <img
-                              key={imgIdx}
-                              src={url}
-                              alt={`记忆配图 ${imgIdx + 1}`}
-                              className="h-40 object-cover rounded flex-shrink-0 shadow-sm"
-                              style={{ minWidth: chapter.imageUrls.length === 1 ? '100%' : '200px' }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {chapter.text.split('\n\n').map((paragraph, pi) => {
-                      const paragraphCitations = chapter.citations[pi] || [];
-                      return (
-                        <div key={pi} className="mb-3">
-                          <p className={`text-sm leading-relaxed ${
-                            isDark ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
-                            {paragraph}
-                          </p>
-                          {paragraphCitations.length > 0 && (
-                            <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-                              <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>依据：</span>
-                              {paragraphCitations.map(cit => (
-                                <button
-                                  key={cit.memoryId}
-                                  onClick={() => {
-                                    const allMems = [...rawMemories, ...insightMemories];
-                                    const mem = allMems.find(m => m.id === cit.memoryId);
-                                    if (mem) selectMemory(mem);
-                                    setShowStoryBoard(false);
-                                  }}
-                                  className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
-                                    isDark
-                                      ? 'bg-[#ffffff08] text-[#00f2ff]/70 hover:bg-[#ffffff12] hover:text-[#00f2ff]'
-                                      : 'bg-gray-100 text-[#0088cc]/70 hover:bg-gray-200 hover:text-[#0088cc]'
-                                  }`}
-                                  title={`查看记忆 ${cit.memoryId}`}
-                                >
-                                  {cit.memoryId} · {cit.shortDescription}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-inherit flex-shrink-0">
+            <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              📖 小哥说我
+            </h2>
+            <button
+              onClick={() => setShowStoryBoard(false)}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                isDark ? 'text-gray-400 hover:text-white hover:bg-[#ffffff10]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className={`flex-1 overflow-y-auto px-6 py-5 space-y-6 ${
+            isDark ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            {storyChapters.length === 0 ? (
+              <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                暂无足够记忆来生成故事
+              </p>
+            ) : (
+              storyChapters.map((chapter, ci) => (
+                <div key={ci}>
+                  <div className={`text-xs uppercase tracking-widest mb-3 ${
+                    chapter.type === 'past'
+                      ? isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'
+                      : isDark ? 'text-[#ffb800]/70' : 'text-[#cc8800]/70'
+                  }`}>
+                    {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} · {chapter.title}
                   </div>
-                ))
-              )}
-            </div>
-          </motion.div>
+                  {chapter.imageUrls.length > 0 && (
+                    <div className={`mb-4 p-2 rounded-lg ${
+                      isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'
+                    }`}>
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {chapter.imageUrls.map((url, imgIdx) => (
+                          <img
+                            key={imgIdx}
+                            src={url}
+                            alt={`记忆配图 ${imgIdx + 1}`}
+                            className="h-40 object-cover rounded flex-shrink-0 shadow-sm"
+                            style={{ minWidth: chapter.imageUrls.length === 1 ? '100%' : '200px' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {chapter.text.split('\n\n').map((paragraph, pi) => {
+                    const paragraphCitations = chapter.citations[pi] || [];
+                    return (
+                      <div key={pi} className="mb-3">
+                        <p className={`text-sm leading-relaxed ${
+                          isDark ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          {paragraph}
+                        </p>
+                        {paragraphCitations.length > 0 && (
+                          <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>依据：</span>
+                            {paragraphCitations.map(cit => (
+                              <button
+                                key={cit.memoryId}
+                                onClick={() => {
+                                  const allMems = [...rawMemories, ...insightMemories];
+                                  const mem = allMems.find(m => m.id === cit.memoryId);
+                                  if (mem) selectMemory(mem);
+                                  setShowStoryBoard(false);
+                                }}
+                                className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+                                  isDark
+                                    ? 'bg-[#ffffff08] text-[#00f2ff]/70 hover:bg-[#ffffff12] hover:text-[#00f2ff]'
+                                    : 'bg-gray-100 text-[#0088cc]/70 hover:bg-gray-200 hover:text-[#0088cc]'
+                                }`}
+                                title={`查看记忆 ${cit.memoryId}`}
+                              >
+                                {cit.memoryId} · {cit.shortDescription}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
