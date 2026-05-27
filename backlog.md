@@ -220,7 +220,7 @@
 1. 搜索"编程 课"（带空格），预期返回同时包含"编程"和"课"的记忆
 2. 搜索"孩子表现"，预期返回最接近的结果而非"无匹配"
 
-## 23. [UX] Story Board 和 DetailPanel 使用不同的交互模式
+## 23. [UX] Story Board 和 DetailPanel 使用不同的交互模式 [✅]
 
 **问题**: Story Board 是全屏居中 Modal（fixed inset-0 z-50），DetailPanel 是右侧滑入面板（fixed right-0 w-[420px]）。同一应用中两个主要内容查看器使用完全不同的交互范式，增加用户认知负担。
 **改动范围**:
