@@ -12,7 +12,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
 
@@ -73,10 +73,27 @@ function AppInner() {
       <ValueDashboard />
       <MemoryBank />
 
-      <div className="absolute top-6 left-[240px] z-10">
+      <div className="absolute top-6 left-[240px] z-10 flex items-center gap-3">
         <h1 className={`text-lg font-light tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
           <span className={`font-normal ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>Graph</span>Me
         </h1>
+        <div className={`flex rounded-lg p-0.5 text-xs backdrop-blur-sm ${
+          isDark ? 'bg-[#ffffff08]' : 'bg-black/5'
+        }`}>
+          {(['全局视图', '家庭视图', '学习视图', '情绪视图'] as const).map(view => (
+            <button
+              key={view}
+              onClick={() => setCurrentView(view)}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                currentView === view
+                  ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
+                  : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {view === '全局视图' ? '🌐 全局' : view === '家庭视图' ? '🏠 家庭' : view === '学习视图' ? '🎓 学习' : '😊 情绪'}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={`absolute bottom-6 left-[240px] z-10 text-xs ${isDark ? 'text-gray-700' : 'text-gray-400'}`}>

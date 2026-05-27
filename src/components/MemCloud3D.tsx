@@ -76,7 +76,7 @@ function isMemoryInCategory(mem: RawMemory, category: string, subCategory: strin
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -102,7 +102,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       if (navCategory) {
         p = getNavPosition(m, navCategory, navSubCategory);
       } else {
-        p = m.position3D;
+        p = m.positions[currentView] || m.position3D;
       }
       pos[i * 3] = p[0];
       pos[i * 3 + 1] = p[1];
@@ -122,7 +122,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
     });
 
     return { positions: pos, colors: col };
-  }, [visible, navCategory, navSubCategory, isLight]);
+  }, [visible, navCategory, navSubCategory, isLight, currentView]);
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
