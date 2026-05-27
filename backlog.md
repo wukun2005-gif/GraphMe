@@ -43,7 +43,7 @@
 2. 再次点击才真正删除
 3. 不点击则自动恢复
 
-### 5. [Stability] 记忆编辑的 updateMemory 浅合并导致数据丢失
+### 5. [Stability] 记忆编辑的 updateMemory 浅合并导致数据丢失 [✅]
 
 **问题**: `updateMemory` 使用 `{ ...m, ...updates }` 浅合并，传入嵌套 `dimensions` 对象时会完全覆盖整个 `dimensions`，丢失未编辑的子字段。
 **改动范围**:
