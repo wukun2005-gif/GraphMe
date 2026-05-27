@@ -21,6 +21,7 @@ interface AppState {
   searchQuery: string;
   emotionFilter: EmotionType[];
   favoriteIds: string[];
+  toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
 }
 
 interface AppContextType extends AppState {
@@ -38,6 +39,8 @@ interface AppContextType extends AppState {
   setSearchQuery: (query: string) => void;
   toggleEmotionFilter: (emotion: EmotionType) => void;
   toggleFavorite: (id: string) => void;
+  addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  removeToast: (id: string) => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -86,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     searchQuery: '',
     emotionFilter: [],
     favoriteIds: [],
+    toasts: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -229,6 +233,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    setState(s => ({ ...s, toasts: [...s.toasts, { id, message, type }] }));
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setState(s => ({ ...s, toasts: s.toasts.filter(t => t.id !== id) }));
+  }, []);
+
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
@@ -300,7 +313,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleFavorite, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,

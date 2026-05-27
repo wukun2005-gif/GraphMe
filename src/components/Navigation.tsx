@@ -55,6 +55,7 @@ export default function NavigationSidebar() {
     insightMemories, theme, selectMemory, selectedMemory,
     emotionFilter, toggleEmotionFilter,
     favoriteIds, toggleFavorite,
+    addToast,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
@@ -166,6 +167,7 @@ export default function NavigationSidebar() {
     };
 
     addMemory(newMem);
+    addToast('记忆原子已创建');
     setLabel('');
     setSummary('');
     setEmotion('快乐');
@@ -493,6 +495,7 @@ export default function NavigationSidebar() {
                         const result = parseImportJSON(text);
                         if (result.rawMemories.length > 0 || result.insightMemories.length > 0) {
                           importMemories(result.rawMemories, result.insightMemories);
+                          addToast(`已导入 ${result.rawMemories.length + result.insightMemories.length} 条记忆`);
                         }
                         if (result.errors.length > 0) {
                           alert(`导入错误：\n${result.errors.join('\n')}`);
@@ -784,6 +787,7 @@ export default function NavigationSidebar() {
                               onClick={() => {
                                 if (confirmDeleteId === mem.id) {
                                   deleteMemory(mem.id);
+                                  addToast('已删除，可撤销');
                                   setConfirmDeleteId(null);
                                 } else {
                                   setConfirmDeleteId(mem.id);

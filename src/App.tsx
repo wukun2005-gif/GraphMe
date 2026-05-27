@@ -5,6 +5,7 @@ import DetailPanel from './components/DetailPanel';
 import ChatPanel from './components/ChatPanel';
 import ValueDashboard from './components/ValueDashboard';
 import MemoryBank from './components/MemoryBank';
+import ToastContainer from './components/Toast';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -156,6 +157,7 @@ function AppInner() {
         </button>
       </div>
 
+      <ToastContainer />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
   );
