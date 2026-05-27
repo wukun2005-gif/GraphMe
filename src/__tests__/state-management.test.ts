@@ -369,3 +369,97 @@ describe('AppContext — Memory Bank Panel', () => {
     expect(result.current.detailOpen).toBe(true);
   });
 });
+
+describe('Boundary Cases — updateMemory deep merge', () => {
+  it('should preserve other dimensions when updating a single dimension field', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const mem = result.current.rawMemories[0];
+    const originalSocial = mem.dimensions.social;
+
+    act(() => {
+      result.current.updateMemory(mem.id, {
+        dimensions: {
+          ...mem.dimensions,
+          emotional: { ...mem.dimensions.emotional, primary: '悲伤' },
+        },
+      });
+    });
+
+    const updated = result.current.rawMemories.find(m => m.id === mem.id)!;
+    expect(updated.dimensions.emotional.primary).toBe('悲伤');
+    expect(updated.dimensions.social).toEqual(originalSocial);
+    expect(updated.dimensions.temporal).toEqual(mem.dimensions.temporal);
+  });
+
+  it('should handle updateMemory with only top-level fields (no dimensions)', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const mem = result.current.rawMemories[0];
+
+    act(() => {
+      result.current.updateMemory(mem.id, { label: '新标签' });
+    });
+
+    const updated = result.current.rawMemories.find(m => m.id === mem.id)!;
+    expect(updated.label).toBe('新标签');
+    expect(updated.dimensions).toEqual(mem.dimensions);
+  });
+});
+
+describe('Boundary Cases — special characters', () => {
+  it('should handle special characters in memory label and summary', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const specialLabel = '<script>alert("xss")</script>';
+    const specialSummary = '含有 emoji 🎉 和特殊字符 @#$%^&*()';
+
+    act(() => {
+      result.current.addMemory(createTestMemory({ label: specialLabel, summary: specialSummary }));
+    });
+
+    const found = result.current.rawMemories.find(m => m.label === specialLabel);
+    expect(found).toBeDefined();
+    expect(found!.summary).toBe(specialSummary);
+  });
+});
+
+describe('Boundary Cases — dimension switcher', () => {
+  it('should default to global view', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    expect(result.current.currentView).toBe('全局视图');
+  });
+
+  it('should switch between all dimension views', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const views = ['家庭视图', '学习视图', '情绪视图', '全局视图'] as const;
+
+    views.forEach(view => {
+      act(() => { result.current.setCurrentView(view); });
+      expect(result.current.currentView).toBe(view);
+    });
+  });
+});
+
+describe('Boundary Cases — updateInsight', () => {
+  it('should update insight userConfirmed field', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const insight = result.current.insightMemories[0];
+
+    act(() => {
+      result.current.updateInsight(insight.id, { userConfirmed: true });
+    });
+
+    const updated = result.current.insightMemories.find(m => m.id === insight.id)!;
+    expect(updated.userConfirmed).toBe(true);
+  });
+
+  it('should update insight userNote field', () => {
+    const { result } = renderHook(() => useAppState(), { wrapper });
+    const insight = result.current.insightMemories[0];
+
+    act(() => {
+      result.current.updateInsight(insight.id, { userNote: '测试备注' });
+    });
+
+    const updated = result.current.insightMemories.find(m => m.id === insight.id)!;
+    expect(updated.userNote).toBe('测试备注');
+  });
+});
