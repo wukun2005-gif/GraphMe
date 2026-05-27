@@ -274,7 +274,7 @@
 2. 打开 DetailPanel，反复 Tab，焦点不跳出面板
 3. 在记忆列表中用上下箭头导航，Enter 打开详情
 
-## 28. [Performance] MemoryBank 每次渲染都重新计算关联记忆
+## 28. [Performance] MemoryBank 每次渲染都重新计算关联记忆 [✅]
 
 **问题**: getRelatedMemories 在组件每次渲染时对全量 rawMemories 执行 filter + slice，expandedDim 变化时触发整个列表重渲染。
 **改动范围**:
