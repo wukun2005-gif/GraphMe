@@ -168,7 +168,7 @@
 2. 检查所有文字颜色是否正确显示（非默认黑色）
 3. 运行 `npm run build` 确认无 Tailwind purge 警告
 
-## 18. [Stability] DetailPanel 纠正功能使用 window.prompt() 阻塞 UI
+## 18. [Stability] DetailPanel 纠正功能使用 window.prompt() 阻塞 UI [✅]
 
 **问题**: 洞察记忆详情中"纠正"按钮使用浏览器原生 prompt() 弹窗，体验差且无法多行输入，与"备注"功能的 inline 输入框风格不一致。
 **改动范围**:
