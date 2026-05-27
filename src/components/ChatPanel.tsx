@@ -24,6 +24,7 @@ interface ChatMessage {
   role: 'user' | 'bot';
   text: string;
   refs?: string[];
+  suggestions?: string[];
 }
 
 function matchQuestion(input: string): { answer: string; refs?: string[] } | null {
@@ -50,6 +51,20 @@ function matchQuestion(input: string): { answer: string; refs?: string[] } | nul
   return null;
 }
 
+function getSuggestedQuestions(input: string): string[] {
+  const lower = input.toLowerCase();
+  const scored = QA_PAIRS.map((qa, i) => {
+    const qLower = qa.q.toLowerCase();
+    let score = 0;
+    for (const char of lower) {
+      if (qLower.includes(char)) score++;
+    }
+    return { index: i, question: qa.q, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 3).map(s => s.question);
+}
+
 export default function ChatPanel() {
   const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme } = useAppState();
   const isDark = theme === 'dark';
@@ -61,13 +76,12 @@ export default function ChatPanel() {
     const text = userInput.trim();
     if (!text) return;
     const match = matchQuestion(text);
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', text },
-      match
-        ? { role: 'bot', text: match.answer, refs: match.refs }
-        : { role: 'bot', text: 'Demo 模式下仅支持预设问题，请点击上方的问题按钮提问。' },
-    ]);
+    if (match) {
+      setMessages(prev => [...prev, { role: 'user', text }, { role: 'bot', text: match.answer, refs: match.refs }]);
+    } else {
+      const suggestions = getSuggestedQuestions(text);
+      setMessages(prev => [...prev, { role: 'user', text }, { role: 'bot', text: 'suggestions', suggestions }]);
+    }
     setUserInput('');
   };
 
@@ -114,13 +128,39 @@ export default function ChatPanel() {
             <div className="space-y-2 overflow-y-auto flex-1">
               {messages.map((msg, i) => (
                 <div key={`msg-${i}`} className={msg.role === 'user' ? 'flex justify-end' : ''}>
-                  <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
-                    msg.role === 'user'
-                      ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
-                      : isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
-                  }`}>
-                    {msg.text}
-                  </div>
+                  {msg.suggestions ? (
+                    <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
+                      isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
+                    }`}>
+                      <p className="mb-2">您是否想问：</p>
+                      <div className="space-y-1">
+                        {msg.suggestions.map((q, qi) => (
+                          <button
+                            key={qi}
+                            onClick={() => {
+                              const match = matchQuestion(q);
+                              if (match) {
+                                setMessages(prev => [...prev, { role: 'user', text: q }, { role: 'bot', text: match.answer, refs: match.refs }]);
+                              }
+                            }}
+                            className={`block w-full text-left px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
+                              isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
+                            }`}
+                          >
+                            💡 {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
+                      msg.role === 'user'
+                        ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
+                        : isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  )}
                   {msg.refs && msg.refs.length > 0 && (
                     <div className="px-3 py-1.5 flex gap-2 flex-wrap">
                       {msg.refs.map(ref => (
