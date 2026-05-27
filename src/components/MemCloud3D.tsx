@@ -135,7 +135,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
   if (hideRawOnly) return null;
 
   return (
-    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}`} onClick={handleClick}>
+    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${currentView}`} onClick={handleClick}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -346,6 +346,7 @@ function InteractionLoop() {
   const isActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastInteractionRef = useRef(0);
+  const { currentView } = useAppState();
 
   const keepAlive = useCallback(() => {
     lastInteractionRef.current = Date.now();
@@ -354,6 +355,10 @@ function InteractionLoop() {
       invalidate();
     }
   }, [invalidate]);
+
+  useEffect(() => {
+    invalidate();
+  }, [currentView, invalidate]);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -417,7 +422,7 @@ const DEMO_PARTICLE_IDS = ['mem_007', 'insight_001', 'chatgpt_001', 'chatgpt_ins
 
 function ParticlePositionProjector() {
   const { camera, gl } = useThree();
-  const { rawMemories, insightMemories, navCategory, navSubCategory } = useAppState();
+  const { rawMemories, insightMemories, navCategory, navSubCategory, currentView } = useAppState();
 
   useEffect(() => {
     const handler = () => {
@@ -437,7 +442,9 @@ function ParticlePositionProjector() {
             pos = getInsightNavPosition(mem as InsightMemory, navCategory, navSubCategory);
           }
         } else {
-          pos = (mem as any).position3D;
+          pos = mem.type === 'raw'
+            ? (mem as RawMemory).positions[currentView] || mem.position3D
+            : (mem as any).position3D;
         }
 
         const worldPos = new THREE.Vector3(pos[0], pos[1], pos[2]);
@@ -455,13 +462,13 @@ function ParticlePositionProjector() {
 
     window.addEventListener('demo-request-particle-positions', handler);
     return () => window.removeEventListener('demo-request-particle-positions', handler);
-  }, [camera, gl, rawMemories, insightMemories, navCategory, navSubCategory]);
+  }, [camera, gl, rawMemories, insightMemories, navCategory, navSubCategory, currentView]);
 
   return null;
 }
 
 function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: string | null }) {
-  const { rawMemories, navCategory, navSubCategory } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
   const isLight = theme === 'light';
 
   const allRawMems = useMemo(() => {
@@ -470,7 +477,7 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
       mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
     }
     return mems;
-  }, [rawMemories, navCategory, navSubCategory]);
+  }, [rawMemories, navCategory, navSubCategory, currentView]);
 
   const defaultTags = useMemo(() =>
     allRawMems
@@ -492,7 +499,7 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
   const renderTag = (mem: RawMemory, isHeld: boolean) => {
     const position = navCategory
       ? getNavPosition(mem, navCategory, navSubCategory)
-      : mem.position3D;
+      : mem.positions[currentView] || mem.position3D;
     const imageUrl = mem.dimensions.sensory.images?.[0];
     const isMilestone = mem.dimensions.narrative.isMilestone;
 
@@ -563,7 +570,7 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
 
 function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null) => void }) {
   const { camera, gl } = useThree();
-  const { rawMemories, navCategory, navSubCategory } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pointerDown = useRef(false);
@@ -582,7 +589,7 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
         id: m.id,
         pos: new THREE.Vector3(...(navCategory
           ? getNavPosition(m, navCategory, navSubCategory)
-          : m.position3D)),
+          : m.positions[currentView] || m.position3D)),
       }));
     };
 
@@ -640,7 +647,7 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
         clearTimeout(holdTimer.current);
       }
     };
-  }, [camera, gl, rawMemories, navCategory, navSubCategory]);
+  }, [camera, gl, rawMemories, navCategory, navSubCategory, currentView]);
 
   return null;
 }
