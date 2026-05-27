@@ -6,6 +6,26 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
 import { isMemoryInCategory } from '../utils/navUtils';
 
+function createGlowTexture(): THREE.Texture {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+  gradient.addColorStop(0.7, 'rgba(255,255,255,0.15)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+const glowTexture = createGlowTexture();
+
 function hashCode(s: string): number {
   let hash = 0;
   for (let i = 0; i < s.length; i++) {
@@ -62,10 +82,11 @@ function ParticleCloud({ theme }: { theme: Theme }) {
     return result;
   }, [rawMemories, navCategory, navSubCategory]);
 
-  const { positions, colors } = useMemo(() => {
+  const { positions, colors, sizes } = useMemo(() => {
     const mems = visible;
     const pos = new Float32Array(mems.length * 3);
     const col = new Float32Array(mems.length * 3);
+    const sz = new Float32Array(mems.length);
 
     mems.forEach((m, i) => {
       let p: [number, number, number];
@@ -99,9 +120,14 @@ function ParticleCloud({ theme }: { theme: Theme }) {
           col[i * 3 + 2] *= 0.2;
         }
       }
+
+      const importance = m.dimensions.value.importance;
+      const baseSize = 0.2 + importance * 0.6;
+      const jitter = 0.8 + Math.random() * 0.4;
+      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
     });
 
-    return { positions: pos, colors: col };
+    return { positions: pos, colors: col, sizes: sz };
   }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery]);
 
   const handleClick = useCallback((event: any) => {
@@ -129,9 +155,16 @@ function ParticleCloud({ theme }: { theme: Theme }) {
           array={colors}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-size"
+          count={sizes.length}
+          array={sizes}
+          itemSize={1}
+        />
       </bufferGeometry>
       <pointsMaterial
         size={isLight ? 0.5 : 0.45}
+        map={glowTexture}
         vertexColors
         blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
         depthWrite={false}
@@ -681,6 +714,64 @@ function HoverTooltip() {
   );
 }
 
+function DustParticles({ theme }: { theme: Theme }) {
+  const isLight = theme === 'light';
+
+  const { positions, colors, sizes } = useMemo(() => {
+    const count = 100;
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const sz = new Float32Array(count);
+
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 20;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 16;
+
+      const brightness = isLight ? 0.6 : 0.3;
+      col[i * 3] = brightness;
+      col[i * 3 + 1] = brightness;
+      col[i * 3 + 2] = brightness + (isLight ? 0.1 : 0.2);
+
+      sz[i] = 0.02 + Math.random() * 0.03;
+    }
+
+    return { positions: pos, colors: col, sizes: sz };
+  }, [isLight]);
+
+  const ref = useRef<THREE.Points>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const posAttr = ref.current.geometry.attributes.position as THREE.BufferAttribute;
+    const arr = posAttr.array as Float32Array;
+    const t = clock.getElapsedTime();
+    for (let i = 0; i < arr.length / 3; i++) {
+      arr[i * 3 + 1] += Math.sin(t * 0.3 + i) * 0.001;
+    }
+    posAttr.needsUpdate = true;
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={colors.length / 3} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.04}
+        map={glowTexture}
+        vertexColors
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        transparent
+        opacity={isLight ? 0.15 : 0.25}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
 function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null) => void }) {
   const { camera, gl } = useThree();
   const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
@@ -800,6 +891,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <DynamicClearColor color={bgColor} />
         <SceneLights theme={theme} />
         {!isLight && <Stars radius={30} depth={50} count={300} factor={3} saturation={0.2} speed={0.1} />}
+        <DustParticles theme={theme} />
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
