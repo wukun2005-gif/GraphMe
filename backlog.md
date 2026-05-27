@@ -283,7 +283,7 @@
 1. 在 getRelatedMemories 中添加 console.log 计数
 2. 反复展开/折叠同一维度，预期只在首次展开时计算一次
 
-## 29. [Features] 导入外部 Agent 记忆仅支持 ChatGPT 模拟数据
+## 29. [Features] 导入外部 Agent 记忆仅支持 ChatGPT 模拟数据 [✅]
 
 **问题**: startChatGPTImport 是纯模拟（setInterval 递增进度条），导入的数据来源 chatgptData.ts 是写死的 5+3 条记忆。无法导入真实的外部 Agent 数据。
 **改动范围**:
