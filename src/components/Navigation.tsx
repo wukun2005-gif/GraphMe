@@ -391,7 +391,7 @@ export default function NavigationSidebar() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="px-3 pb-3 space-y-2">
+              <div className="px-3 pb-3 space-y-2 max-h-[50vh] overflow-y-auto">
                 <input
                   type="text"
                   placeholder="搜索记忆 ID / 标签 / 摘要..."
