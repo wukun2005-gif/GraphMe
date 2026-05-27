@@ -4,6 +4,7 @@ import { OrbitControls, Stars, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
+import { isMemoryInCategory } from '../utils/navUtils';
 
 function hashCode(s: string): number {
   let hash = 0;
@@ -41,37 +42,6 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
   ];
 }
 
-const NAV_MAP: Record<string, string[]> = {
-  '家庭生活': ['家', '客厅', '卧室', '厨房', '阳台', '花园'],
-  '学习与成长': ['学校', '书房', '教室', '图书馆'],
-  '社交与情感': ['公园', '商场', '游乐场'],
-  '兴趣与探索': ['公园', '游乐场', '其他'],
-};
-
-const SUB_MAP: Record<string, string[]> = {
-  '快乐时光': ['游乐场', '公园'],
-  '父子协作': ['家'],
-  '日常生活': ['家', '客厅', '卧室', '厨房', '阳台'],
-  '编程学习': ['学校', '家'],
-  '数学学习': ['学校'],
-  '阅读习惯': ['家', '学校'],
-  '朋友互动': ['公园', '商场', '游乐场'],
-  '情感表达': ['家', '公园'],
-  '户外活动': ['公园', '游乐场'],
-  '科幻兴趣': ['家', '其他'],
-};
-
-function isMemoryInCategory(mem: RawMemory, category: string, subCategory: string | null): boolean {
-  if (mem.source === 'chatgpt') return true;
-  if (subCategory) {
-    const subPlaces = SUB_MAP[subCategory];
-    if (!subPlaces) return false;
-    return subPlaces.includes(mem.dimensions.spatial.placeType);
-  }
-  const places = NAV_MAP[category];
-  if (!places || !places.includes(mem.dimensions.spatial.placeType)) return false;
-  return true;
-}
 
 type Theme = 'dark' | 'light';
 

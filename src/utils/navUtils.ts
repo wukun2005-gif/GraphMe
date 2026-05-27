@@ -48,6 +48,18 @@ export const SUBCATEGORY_PLACE_MAP: Record<string, string[]> = {
   '科幻兴趣': ['家', '其他'],
 };
 
+export function isMemoryInCategory(mem: RawMemory, category: string, subCategory: string | null): boolean {
+  if (mem.source === 'chatgpt') return true;
+  if (subCategory) {
+    const subPlaces = SUBCATEGORY_PLACE_MAP[subCategory];
+    if (!subPlaces) return false;
+    return subPlaces.includes(mem.dimensions.spatial.placeType);
+  }
+  const places = CATEGORY_PLACE_MAP[category];
+  if (!places || !places.includes(mem.dimensions.spatial.placeType)) return false;
+  return true;
+}
+
 export function getMemoryCategoryPaths(
   memory: RawMemory | InsightMemory,
   allRawMemories: RawMemory[]

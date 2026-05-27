@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useRe
 import type { RawMemory, InsightMemory, DimensionView } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
+import { isMemoryInCategory } from '../utils/navUtils';
 
 interface AppState {
   currentView: DimensionView;
@@ -225,35 +226,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   [insightMems, showChatGPT]);
 
   const getVisibleMemories = useCallback(() => {
-    const navMap: Record<string, string[]> = {
-      '家庭生活': ['家', '客厅', '卧室', '厨房', '阳台', '花园'],
-      '学习与成长': ['学校', '书房', '教室', '图书馆'],
-      '社交与情感': ['公园', '商场', '游乐场'],
-      '兴趣与探索': ['公园', '游乐场', '其他'],
-    };
-    return visibleRawMemories.filter(m => {
-      if (navCategory) {
-        const places = navMap[navCategory];
-        if (places && !places.includes(m.dimensions.spatial.placeType)) return false;
-        if (navSubCategory) {
-          const subMap: Record<string, string[]> = {
-            '快乐时光': ['游乐场', '公园'],
-            '父子协作': ['家'],
-            '日常生活': ['家', '客厅', '卧室', '厨房', '阳台'],
-            '编程学习': ['学校', '家'],
-            '数学学习': ['学校'],
-            '阅读习惯': ['家', '学校'],
-            '朋友互动': ['公园', '商场', '游乐场'],
-            '情感表达': ['家', '公园'],
-            '户外活动': ['公园', '游乐场'],
-            '科幻兴趣': ['家', '其他'],
-          };
-          const subPlaces = subMap[navSubCategory];
-          if (subPlaces && !subPlaces.includes(m.dimensions.spatial.placeType)) return false;
-        }
-      }
-      return true;
-    });
+    if (!navCategory) return visibleRawMemories;
+    return visibleRawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
   }, [visibleRawMemories, navCategory, navSubCategory]);
 
   return (
