@@ -78,8 +78,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     valueDashboardOpen: false,
   });
 
-  const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
-  const [insightMems, setInsightMems] = useState<InsightMemory[]>(defaultInsightMemories);
+  const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-rawMemories');
+      return saved ? JSON.parse(saved) : defaultRawMemories;
+    } catch { return defaultRawMemories; }
+  });
+  const [insightMems, setInsightMems] = useState<InsightMemory[]>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-insightMemories');
+      return saved ? JSON.parse(saved) : defaultInsightMemories;
+    } catch { return defaultInsightMemories; }
+  });
   const [hideRawOnly, setHideRawOnly] = useState(false);
   const [hideInsightOnly, setHideInsightOnly] = useState(false);
   const [showChatGPT, setShowChatGPT] = useState(false);
@@ -94,6 +104,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (importIntervalRef.current) clearInterval(importIntervalRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-rawMemories', JSON.stringify(rawMems)); } catch {}
+  }, [rawMems]);
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-insightMemories', JSON.stringify(insightMems)); } catch {}
+  }, [insightMems]);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>

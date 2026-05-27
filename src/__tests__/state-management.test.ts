@@ -4,6 +4,10 @@ import { renderHook, act } from '@testing-library/react';
 import { AppProvider, useAppState } from '../store/AppContext';
 import type { RawMemory } from '../types';
 
+beforeEach(() => {
+  localStorage.clear();
+});
+
 function wrapper({ children }: { children: React.ReactNode }) {
   return React.createElement(AppProvider, null, children);
 }

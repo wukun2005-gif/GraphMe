@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { AppProvider, useAppState } from '../store/AppContext';
 import { rawMemories, insightMemories } from '../data/demoData';
 import { getTop5HighValue, getForgettingRiskWarnings, computeValueScore, computeForgettingRisk } from '../utils/valueUtils';
 import type { RawMemory } from '../types';
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return React.createElement(AppProvider, null, children);
