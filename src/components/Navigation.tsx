@@ -417,20 +417,23 @@ export default function NavigationSidebar() {
                   }`}
                 />
 
-                <div className={`rounded border p-2 text-xs ${
-                  isDark ? 'bg-[#1a1a2e]/50 border-[#ffffff08]' : 'bg-gray-100 border-gray-200'
+                <div className={`rounded-lg border p-2.5 text-xs ${
+                  isDark ? 'bg-[#00f2ff]/5 border-[#00f2ff]/20' : 'bg-[#0088cc]/5 border-[#0088cc]/20'
                 }`}>
-                  <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>🤖 外部 Agent 记忆</div>
+                  <div className={`text-[11px] font-semibold mb-2 tracking-wide ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00f2ff] mr-1.5 animate-pulse" />
+                    🤖 外部 Agent 记忆
+                  </div>
                   <button
                     id="nav-chatgpt-import"
                     onClick={chatgptImportStatus === 'idle' ? startChatGPTImport : toggleShowChatGPT}
                     disabled={chatgptImportStatus === 'importing'}
-                    className={`px-2 py-1 rounded text-xs transition-all cursor-pointer w-full text-left ${
+                    className={`px-2.5 py-1.5 rounded-md text-xs transition-all cursor-pointer w-full text-left font-medium ${
                       chatgptImportStatus === 'importing'
-                        ? isDark ? 'bg-[#1a1a2e] text-gray-500 cursor-wait' : 'bg-gray-100 text-gray-400 cursor-wait'
+                        ? isDark ? 'bg-[#1a1a2e] text-gray-400 cursor-wait' : 'bg-gray-100 text-gray-500 cursor-wait'
                         : showChatGPT
-                          ? `${isDark ? 'bg-[#10a37f]/10 text-[#10a37f]' : 'bg-[#10a37f]/10 text-[#10a37f]'}`
-                          : `${isDark ? 'bg-[#1a1a2e] text-gray-500 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`
+                          ? `${isDark ? 'bg-[#10a37f]/15 text-[#10a37f]' : 'bg-[#10a37f]/15 text-[#10a37f]'}`
+                          : `${isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -442,7 +445,7 @@ export default function NavigationSidebar() {
                             : `未导入 (${chatgptCount})`
                       }</span>
                       {chatgptImportStatus === 'idle' && (
-                        <span className="text-[10px] opacity-50">导入</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'}`}>导入</span>
                       )}
                     </div>
                     {chatgptImportStatus === 'importing' && (

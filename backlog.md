@@ -136,3 +136,22 @@
 **验证方式**:
 1. 开始 ChatGPT 导入，在进度条跑完前切换页面/关闭面板
 2. 预期：无控制台错误，无内存泄漏警告
+
+### 15. [Bug] 视图切换后 3D 星云粒子布局不更新 [ ]
+
+**问题**: 点击全局/家庭/学习/情绪视图按钮后，3D 星云粒子位置不变。根因：Canvas 使用 `frameloop="demand"` 但视图切换时无 `invalidate()` 调用；`<points>` key 不含 `currentView` 导致 geometry 未重建；ClusterTags/HoldTagController/ParticlePositionProjector 始终使用 `position3D` 而非 per-view positions。
+**改动范围**:
+- `src/components/MemCloud3D.tsx`: InteractionLoop 增加 currentView 变化时 invalidate()；points key 加入 currentView；ClusterTags、HoldTagController、ParticlePositionProjector 改用 per-view positions
+**验证方式**:
+1. 点击不同视图按钮（全局/家庭/学习/情绪）
+2. 预期：3D 星云粒子布局随之切换，标签跟随粒子移动
+3. 长按粒子，预期：命中检测与可见粒子位置一致
+
+### 16. [UX] 外部 Agent 记忆区域可见性不足 [✅]
+
+**问题**: "外部 Agent 记忆"是 demo 的重要卖点，但标签和按钮使用 `text-gray-500`/`text-gray-400` 等低调灰色，与背景融为一体，用户容易忽略。
+**改动范围**:
+- `src/components/Navigation.tsx`: 将容器、标签、按钮的配色从灰色改为青色/蓝色主题色，增加脉冲圆点指示器和徽章样式
+**验证方式**:
+1. 展开"记忆管理"面板，观察"🤖 外部 Agent 记忆"区域
+2. 预期：标签为亮色（暗色模式青色/亮色模式蓝色），有脉冲圆点，按钮有彩色背景和徽章
