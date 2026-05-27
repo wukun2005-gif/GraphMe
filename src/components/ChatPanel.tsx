@@ -20,10 +20,56 @@ const QA_PAIRS = [
     refs: ['mem_020', 'mem_035', 'mem_007'] },
 ];
 
+interface ChatMessage {
+  role: 'user' | 'bot';
+  text: string;
+  refs?: string[];
+}
+
+function matchQuestion(input: string): { answer: string; refs?: string[] } | null {
+  const lower = input.toLowerCase();
+  const keywords: Record<number, string[]> = {
+    0: ['情绪', '心情', '今天', '怎么样', '开心', '难过'],
+    1: ['兴趣', '喜欢', '编程', '最近', '感兴', '什么'],
+    2: ['互动', '朋友', '和谁', '社交', '人', '关系'],
+    3: ['关注', '问题', '困难', '担心', '需要'],
+    4: ['重要', '时刻', '月', '高光', '里程碑'],
+  };
+  let bestIndex = -1;
+  let bestScore = 0;
+  for (const [idx, words] of Object.entries(keywords)) {
+    const score = words.filter(w => lower.includes(w)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = Number(idx);
+    }
+  }
+  if (bestIndex >= 0 && bestScore >= 1) {
+    return { answer: QA_PAIRS[bestIndex].a, refs: QA_PAIRS[bestIndex].refs };
+  }
+  return null;
+}
+
 export default function ChatPanel() {
   const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme } = useAppState();
   const isDark = theme === 'dark';
   const [activeQA, setActiveQA] = useState<number | null>(null);
+  const [userInput, setUserInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const handleSend = () => {
+    const text = userInput.trim();
+    if (!text) return;
+    const match = matchQuestion(text);
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', text },
+      match
+        ? { role: 'bot', text: match.answer, refs: match.refs }
+        : { role: 'bot', text: 'Demo 模式下仅支持预设问题，请点击上方的问题按钮提问。' },
+    ]);
+    setUserInput('');
+  };
 
   // Listen for demo event to programmatically expand a QA pair
   useEffect(() => {
@@ -66,6 +112,40 @@ export default function ChatPanel() {
             </div>
 
             <div className="space-y-2 overflow-y-auto flex-1">
+              {messages.map((msg, i) => (
+                <div key={`msg-${i}`} className={msg.role === 'user' ? 'flex justify-end' : ''}>
+                  <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
+                    msg.role === 'user'
+                      ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
+                      : isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
+                  }`}>
+                    {msg.text}
+                  </div>
+                  {msg.refs && msg.refs.length > 0 && (
+                    <div className="px-3 py-1.5 flex gap-2 flex-wrap">
+                      {msg.refs.map(ref => (
+                        <button
+                          key={ref}
+                          onClick={() => {
+                            const isInsight = ref.startsWith('insight_');
+                            const memory = isInsight
+                              ? insightMemories.find(m => m.id === ref)
+                              : rawMemories.find(m => m.id === ref);
+                            if (memory) selectMemory(memory);
+                          }}
+                          className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                            ref.startsWith('insight_')
+                              ? 'bg-[#ffb800]/10 text-[#ffb800]/80 hover:bg-[#ffb800]/20 border border-[#ffb800]/20'
+                              : 'bg-[#00f2ff]/10 text-[#00f2ff]/80 hover:bg-[#00f2ff]/20 border border-[#00f2ff]/20'
+                          }`}
+                        >
+                          🔗 {ref}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
               {QA_PAIRS.map((qa, i) => (
                 <div key={i}>
                   <button
@@ -126,14 +206,20 @@ export default function ChatPanel() {
               <div className="flex gap-2">
                 <input
                   type="text"
+                  value={userInput}
+                  onChange={e => setUserInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
                   placeholder="输入你的问题..."
                   className={`flex-1 border rounded-lg px-3 py-1.5 text-xs focus:outline-none ${
                     isDark ? 'bg-[#1a1a2e]/50 border-[#ffffff08] text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/30' : 'bg-gray-100 border-gray-200 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/30'
                   }`}
                 />
-                <button className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                  isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
-                }`}>
+                <button
+                  onClick={handleSend}
+                  className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                    isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
+                  }`}
+                >
                   发送
                 </button>
               </div>
