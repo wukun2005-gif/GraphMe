@@ -128,7 +128,7 @@
 1. 删除一条记忆，点击"撤销"
 2. 预期：记忆恢复到删除前状态
 
-### 14. [Security] ChatGPT 导入 setInterval 无错误处理和清理
+### 14. [Security] ChatGPT 导入 setInterval 无错误处理和清理 [✅]
 
 **问题**: `startChatGPTImport` 使用 `setInterval` 模拟导入进度，组件卸载时未清除会导致内存泄漏。
 **改动范围**:
