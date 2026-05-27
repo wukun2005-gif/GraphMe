@@ -68,19 +68,25 @@ export default function MemoryBank() {
     }).slice(0, 2);
   }, [dimensionData]);
 
-  const getRelatedMemoriesForDim = (dimId: string) => {
-    const filtered = rawMemories.filter(m => {
-      switch (dimId) {
-        case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
-        case 'social': return m.dimensions.social.persons.length > 1;
-        case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
-        case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
-        case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
-        default: return false;
-      }
-    });
-    return filtered.slice(0, 3);
-  };
+  const relatedMemoriesByDim = useMemo(() => {
+    const dims = ['happiness', 'social', 'creativity', 'logic', 'outdoor'];
+    const result: Record<string, typeof rawMemories> = {};
+    for (const dimId of dims) {
+      result[dimId] = rawMemories.filter(m => {
+        switch (dimId) {
+          case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
+          case 'social': return m.dimensions.social.persons.length > 1;
+          case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
+          case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
+          case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
+          default: return false;
+        }
+      }).slice(0, 3);
+    }
+    return result;
+  }, [rawMemories]);
+
+  const getRelatedMemoriesForDim = (dimId: string) => relatedMemoriesByDim[dimId] || [];
 
   return (
     <>
