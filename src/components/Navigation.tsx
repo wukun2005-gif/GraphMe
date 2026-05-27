@@ -53,6 +53,7 @@ export default function NavigationSidebar() {
     rawMemories, addMemory, deleteMemory, updateMemory, importMemories,
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     insightMemories, theme, selectMemory, selectedMemory,
+    emotionFilter, toggleEmotionFilter,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
@@ -374,14 +375,30 @@ export default function NavigationSidebar() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>粒子颜色 = 情绪色彩</div>
+                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>
+                    粒子颜色 = 情绪色彩
+                    {emotionFilter.length > 0 && (
+                      <span className={`ml-1 text-[10px] ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>(已筛选)</span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
-                    {Object.entries(EMOTION_COLORS).map(([emotion, color]) => (
-                      <div key={emotion} className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                        <span className={`${isDark ? 'text-gray-600' : 'text-gray-500'}`}>{EMOTION_LABELS[emotion as EmotionType] || emotion}</span>
-                      </div>
-                    ))}
+                    {Object.entries(EMOTION_COLORS).map(([emotion, color]) => {
+                      const isActive = emotionFilter.includes(emotion as EmotionType);
+                      return (
+                        <button
+                          key={emotion}
+                          onClick={() => toggleEmotionFilter(emotion as EmotionType)}
+                          className={`flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer transition-colors ${
+                            isActive
+                              ? isDark ? 'bg-[#ffffff10]' : 'bg-black/5'
+                              : isDark ? 'hover:bg-[#ffffff05]' : 'hover:bg-black/5'
+                          } ${emotionFilter.length > 0 && !isActive ? 'opacity-30' : ''}`}
+                        >
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className={`${isDark ? 'text-gray-600' : 'text-gray-500'}`}>{EMOTION_LABELS[emotion as EmotionType] || emotion}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

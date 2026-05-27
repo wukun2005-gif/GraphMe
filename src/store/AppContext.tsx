@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -19,6 +19,21 @@ interface AppState {
   memoryBankOpen: boolean;
   valueDashboardOpen: boolean;
   searchQuery: string;
+  emotionFilter: EmotionType[];
+}
+
+interface AppContextType extends AppState {
+  setCurrentView: (view: DimensionView) => void;
+  selectMemory: (mem: RawMemory | InsightMemory | null) => void;
+  focusInsight: (insight: InsightMemory | null) => void;
+  setDemoMode: (on: boolean) => void;
+  setDemoStep: (step: number) => void;
+  toggleChat: () => void;
+  toggleDetail: () => void;
+  toggleCrud: () => void;
+  toggleTheme: () => void;
+  toggleMemoryBank: () => void;
+  toggleValueDashboard: () => void;
 }
 
 interface AppContextType extends AppState {
@@ -34,6 +49,7 @@ interface AppContextType extends AppState {
   toggleMemoryBank: () => void;
   toggleValueDashboard: () => void;
   setSearchQuery: (query: string) => void;
+  toggleEmotionFilter: (emotion: EmotionType) => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -80,6 +96,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     memoryBankOpen: false,
     valueDashboardOpen: false,
     searchQuery: '',
+    emotionFilter: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -205,6 +222,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setSearchQuery = useCallback((query: string) => setState(s => ({ ...s, searchQuery: query })), []);
 
+  const toggleEmotionFilter = useCallback((emotion: EmotionType) => {
+    setState(s => ({
+      ...s,
+      emotionFilter: s.emotionFilter.includes(emotion)
+        ? s.emotionFilter.filter(e => e !== emotion)
+        : [...s.emotionFilter, emotion],
+    }));
+  }, []);
+
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
@@ -253,11 +279,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const allRawMemories = mergedRawMemories;
 
-  const visibleRawMemories = useMemo(() =>
-    hiddenMemoryIds.length === 0
+  const visibleRawMemories = useMemo(() => {
+    let result = hiddenMemoryIds.length === 0
       ? mergedRawMemories
-      : mergedRawMemories.filter(m => !hiddenMemoryIds.includes(m.id)),
-  [mergedRawMemories, hiddenMemoryIds]);
+      : mergedRawMemories.filter(m => !hiddenMemoryIds.includes(m.id));
+    if (state.emotionFilter.length > 0) {
+      result = result.filter(m => state.emotionFilter.includes(m.dimensions.emotional.primary));
+    }
+    return result;
+  }, [mergedRawMemories, hiddenMemoryIds, state.emotionFilter]);
 
   const mergedInsightMemories = useMemo(() =>
     showChatGPT ? [...insightMems, ...chatgptInsightMemories] : insightMems,
@@ -272,7 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
