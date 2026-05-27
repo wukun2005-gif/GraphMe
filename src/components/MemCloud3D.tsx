@@ -473,6 +473,88 @@ function CameraFlyTo() {
   return null;
 }
 
+function SearchFlyTo() {
+  const { rawMemories, insightMemories, searchQuery, navCategory, navSubCategory, currentView } = useAppState();
+  const { camera, invalidate } = useThree();
+  const isAnimating = useRef(false);
+  const targetPos = useRef(new THREE.Vector3(0, 0, 0));
+
+  useEffect(() => {
+    if (!searchQuery) {
+      isAnimating.current = false;
+      return;
+    }
+
+    const q = searchQuery.toLowerCase();
+    const keywords = q.split(/\s+/).filter(Boolean);
+    if (keywords.length === 0) {
+      isAnimating.current = false;
+      return;
+    }
+
+    const matchingPositions: THREE.Vector3[] = [];
+
+    rawMemories.forEach(m => {
+      if (m.type !== 'raw') return;
+      const haystack = `${m.id} ${m.label} ${m.summary}`.toLowerCase();
+      if (!keywords.every(kw => haystack.includes(kw))) return;
+      let pos: [number, number, number];
+      if (navCategory) {
+        pos = getNavPosition(m, navCategory, navSubCategory);
+      } else {
+        pos = m.positions[currentView] || m.position3D;
+      }
+      matchingPositions.push(new THREE.Vector3(pos[0], pos[1], pos[2]));
+    });
+
+    insightMemories.forEach(ins => {
+      const haystack = `${ins.id} ${ins.statement} ${ins.description}`.toLowerCase();
+      if (!keywords.every(kw => haystack.includes(kw))) return;
+      let pos: [number, number, number];
+      if (navCategory) {
+        pos = getInsightNavPosition(ins, navCategory, navSubCategory);
+      } else {
+        pos = ins.position3D;
+      }
+      matchingPositions.push(new THREE.Vector3(pos[0], pos[1], pos[2]));
+    });
+
+    if (matchingPositions.length === 0) {
+      isAnimating.current = false;
+      return;
+    }
+
+    const centroid = new THREE.Vector3();
+    matchingPositions.forEach(p => centroid.add(p));
+    centroid.divideScalar(matchingPositions.length);
+
+    targetPos.current.copy(centroid);
+    isAnimating.current = true;
+    invalidate();
+  }, [searchQuery, rawMemories, insightMemories, navCategory, navSubCategory, currentView, camera, invalidate]);
+
+  useFrame(() => {
+    if (!isAnimating.current) return;
+    const dist = camera.position.distanceTo(targetPos.current);
+    if (dist < 0.5) {
+      isAnimating.current = false;
+      return;
+    }
+    camera.position.lerp(
+      new THREE.Vector3(
+        targetPos.current.x + 3,
+        targetPos.current.y + 2,
+        targetPos.current.z + 4,
+      ),
+      0.04,
+    );
+    camera.lookAt(targetPos.current);
+    invalidate();
+  });
+
+  return null;
+}
+
 const DEMO_PARTICLE_IDS = ['mem_007', 'insight_001', 'chatgpt_001', 'chatgpt_insight_001'];
 
 function ParticlePositionProjector() {
@@ -623,12 +705,12 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
   );
 }
 
-function HoverTooltip() {
+type HoverInfo = { id: string; x: number; y: number } | null;
+
+function HoverDetector({ onHover }: { onHover: (info: HoverInfo) => void }) {
   const { camera, gl } = useThree();
-  const { rawMemories, navCategory, navSubCategory, currentView, theme } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
-  const isDark = theme === 'dark';
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -642,7 +724,6 @@ function HoverTooltip() {
       }
       return raws.map(m => ({
         id: m.id,
-        mem: m,
         pos: new THREE.Vector3(...(navCategory
           ? getNavPosition(m, navCategory, navSubCategory)
           : m.positions[currentView] || m.position3D)),
@@ -670,9 +751,9 @@ function HoverTooltip() {
       });
 
       if (nearestId) {
-        setHovered({ id: nearestId, x: e.clientX, y: e.clientY });
+        onHover({ id: nearestId, x: e.clientX, y: e.clientY });
       } else {
-        setHovered(null);
+        onHover(null);
       }
     };
 
@@ -687,7 +768,7 @@ function HoverTooltip() {
     };
 
     const handlePointerLeave = () => {
-      setHovered(null);
+      onHover(null);
       if (throttleTimer !== null) {
         clearTimeout(throttleTimer);
         throttleTimer = null;
@@ -701,38 +782,9 @@ function HoverTooltip() {
       canvas.removeEventListener('pointerleave', handlePointerLeave);
       if (throttleTimer !== null) clearTimeout(throttleTimer);
     };
-  }, [camera, gl, rawMemories, navCategory, navSubCategory, currentView, raycaster]);
+  }, [camera, gl, rawMemories, navCategory, navSubCategory, currentView, raycaster, onHover]);
 
-  if (!hovered) return null;
-
-  const mem = rawMemories.find(m => m.id === hovered.id);
-  if (!mem) return null;
-
-  return (
-    <Html
-      position={[0, 0, 0]}
-      style={{
-        position: 'fixed',
-        left: hovered.x + 12,
-        top: hovered.y - 40,
-        pointerEvents: 'none',
-        zIndex: 100,
-      }}
-      center={false}
-    >
-      <div className={`px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap ${
-        isDark ? 'bg-[#0d1525]/95 border-[#ffffff10] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
-      }`}>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
-          <span className="font-medium">{mem.label}</span>
-        </div>
-        <div className={`mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {mem.dimensions.emotional.primary} · {mem.id}
-        </div>
-      </div>
-    </Html>
-  );
+  return null;
 }
 
 function DustParticles({ theme }: { theme: Theme }) {
@@ -896,12 +948,21 @@ interface MemCloud3DProps {
 }
 
 export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
+  const { rawMemories } = useAppState();
   const isLight = theme === 'light';
   const [heldClusterId, setHeldClusterId] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<HoverInfo>(null);
+  const isDark = theme === 'dark';
 
   const handleHoldChange = useCallback((id: string | null) => {
     setHeldClusterId(id);
   }, []);
+
+  const handleHover = useCallback((info: HoverInfo) => {
+    setHovered(info);
+  }, []);
+
+  const hoveredMem = hovered ? rawMemories.find(m => m.id === hovered.id) : null;
 
   return (
     <div className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing">
@@ -923,9 +984,10 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
-        <HoverTooltip />
+        <HoverDetector onHover={handleHover} />
         <DemoCameraController />
         <CameraFlyTo />
+        <SearchFlyTo />
         <ParticlePositionProjector />
         <InteractionLoop />
         <OrbitControlsWithInvalidation
@@ -937,6 +999,22 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
           target={[0, 0, 0]}
         />
       </Canvas>
+      {hoveredMem && (
+        <div
+          className={`fixed px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap pointer-events-none ${
+            isDark ? 'bg-[#0d1525] border-[#ffffff10] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+          }`}
+          style={{ left: hovered!.x + 8, top: hovered!.y - 28, zIndex: 99999 }}
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hoveredMem.color }} />
+            <span className="font-medium">{hoveredMem.label}</span>
+          </div>
+          <div className={`mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            {hoveredMem.dimensions.emotional.primary} · {hoveredMem.id}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
