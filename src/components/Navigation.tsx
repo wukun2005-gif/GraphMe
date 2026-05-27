@@ -91,6 +91,7 @@ export default function NavigationSidebar() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(30);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!confirmDeleteId) return;
@@ -709,9 +710,13 @@ export default function NavigationSidebar() {
                             </div>
                           </div>
                         ) : (
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded ${
-                            isDark ? 'hover:bg-[#ffffff05]' : 'hover:bg-black/5'
-                          }`}>
+                          <div
+                            className={`flex items-center gap-1 px-2 py-1 rounded relative ${
+                              isDark ? 'hover:bg-[#ffffff05]' : 'hover:bg-black/5'
+                            }`}
+                            onMouseEnter={() => setHoveredId(mem.id)}
+                            onMouseLeave={() => setHoveredId(null)}
+                          >
                             <input
                               type="checkbox"
                               checked={!hiddenMemoryIds.includes(mem.id)}
@@ -749,6 +754,30 @@ export default function NavigationSidebar() {
                             >
                               {confirmDeleteId === mem.id ? '确认删除？' : '🗑'}
                             </button>
+                            {hoveredId === mem.id && (
+                              <div className={`absolute left-0 top-full mt-1 z-50 w-56 p-2.5 rounded-lg shadow-xl border text-xs ${
+                                isDark ? 'bg-[#0d1525]/98 border-[#ffffff10] text-gray-300' : 'bg-white/98 border-gray-200 text-gray-700'
+                              }`}>
+                                <p className={`mb-1.5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {mem.summary.length > 60 ? mem.summary.slice(0, 60) + '...' : mem.summary}
+                                </p>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
+                                  <span>{mem.dimensions.emotional.primary}</span>
+                                  <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                    ({mem.dimensions.emotional.intensity.toFixed(2)})
+                                  </span>
+                                </div>
+                                {mem.dimensions.social.persons.length > 0 && (
+                                  <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+                                    👤 {mem.dimensions.social.persons.join('、')}
+                                  </div>
+                                )}
+                                <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+                                  📍 {mem.dimensions.spatial.placeType}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
