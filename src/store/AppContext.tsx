@@ -36,6 +36,7 @@ interface AppContextType extends AppState {
   addMemory: (mem: RawMemory) => void;
   deleteMemory: (id: string) => void;
   updateMemory: (id: string, updates: Partial<RawMemory>) => void;
+  updateInsight: (id: string, updates: Partial<InsightMemory>) => void;
   getVisibleMemories: () => RawMemory[];
   hideRawOnly: boolean;
   hideInsightOnly: boolean;
@@ -71,6 +72,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(defaultRawMemories);
+  const [insightMems, setInsightMems] = useState<InsightMemory[]>(defaultInsightMemories);
   const [hideRawOnly, setHideRawOnly] = useState(false);
   const [hideInsightOnly, setHideInsightOnly] = useState(false);
   const [showChatGPT, setShowChatGPT] = useState(false);
@@ -115,6 +117,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return merged;
     }));
+  }, []);
+
+  const updateInsight = useCallback((id: string, updates: Partial<InsightMemory>) => {
+    setInsightMems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
   }, []);
 
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
@@ -170,8 +176,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   [mergedRawMemories, hiddenMemoryIds]);
 
   const mergedInsightMemories = useMemo(() =>
-    showChatGPT ? [...defaultInsightMemories, ...chatgptInsightMemories] : defaultInsightMemories,
-  [showChatGPT]);
+    showChatGPT ? [...insightMems, ...chatgptInsightMemories] : insightMems,
+  [insightMems, showChatGPT]);
 
   const getVisibleMemories = useCallback(() => {
     const navMap: Record<string, string[]> = {
@@ -211,7 +217,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
-      addMemory, deleteMemory, updateMemory, getVisibleMemories,
+      addMemory, deleteMemory, updateMemory, updateInsight, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,

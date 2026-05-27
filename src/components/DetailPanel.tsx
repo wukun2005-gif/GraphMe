@@ -93,9 +93,11 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 }
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
-  const { rawMemories, theme, selectMemory } = useAppState();
+  const { rawMemories, theme, selectMemory, updateInsight } = useAppState();
   const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState(memory.userNote || '');
 
   const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
     const raw = rawMemories.find(m => m.id === id);
@@ -177,6 +179,85 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           📖 版本 v{memory.version - 1} → v{memory.version}
         </div>
       )}
+
+      <div className={`pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+        <div className="flex gap-2 mb-2">
+          <button
+            onClick={() => updateInsight(memory.id, { userConfirmed: !memory.userConfirmed })}
+            className={`flex-1 px-2 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+              memory.userConfirmed
+                ? isDark ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-green-100 text-green-700 border border-green-300'
+                : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {memory.userConfirmed ? '👍 已确认' : '👍 确认'}
+          </button>
+          <button
+            onClick={() => {
+              const correction = prompt('请输入纠正内容：', memory.userCorrection || '');
+              if (correction !== null) updateInsight(memory.id, { userCorrection: correction });
+            }}
+            className={`flex-1 px-2 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+              memory.userCorrection
+                ? isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-700 border border-amber-300'
+                : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            ✏️ {memory.userCorrection ? '已纠正' : '纠正'}
+          </button>
+          <button
+            onClick={() => setShowNoteInput(!showNoteInput)}
+            className={`flex-1 px-2 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+              memory.userNote
+                ? isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'
+                : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            💬 {memory.userNote ? '已备注' : '备注'}
+          </button>
+        </div>
+
+        {memory.userCorrection && (
+          <div className={`text-xs px-2 py-1 rounded mb-2 ${
+            isDark ? 'bg-amber-500/10 text-amber-400/80' : 'bg-amber-50 text-amber-700'
+          }`}>
+            纠正：{memory.userCorrection}
+          </div>
+        )}
+
+        {showNoteInput && (
+          <div className="flex gap-1">
+            <input
+              type="text"
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              placeholder="输入备注..."
+              className={`flex-1 border rounded px-2 py-1 text-xs ${
+                isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+              }`}
+            />
+            <button
+              onClick={() => {
+                updateInsight(memory.id, { userNote: noteText });
+                setShowNoteInput(false);
+              }}
+              className={`px-2 py-1 text-xs rounded cursor-pointer ${
+                isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
+              }`}
+            >
+              保存
+            </button>
+          </div>
+        )}
+
+        {memory.userNote && !showNoteInput && (
+          <div className={`text-xs px-2 py-1 rounded ${
+            isDark ? 'bg-blue-500/10 text-blue-400/80' : 'bg-blue-50 text-blue-700'
+          }`}>
+            备注：{memory.userNote}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
