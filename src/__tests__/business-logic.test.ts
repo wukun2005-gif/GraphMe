@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
 import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings } from '../utils/valueUtils';
 import { generateStory } from '../utils/storyUtils';
+import { getMemoryCategoryPaths } from '../utils/navUtils';
 import type { RawMemory, InsightMemory } from '../types';
 
 describe('Business Logic — Insight Memory Version Chains', () => {
@@ -428,6 +429,72 @@ describe('Business Logic — Story Generation Citations', () => {
       const paraCitations = past!.citations[i];
       expect(paraCitations.length).toBe(1);
       expect(paraCitations[0].memoryId).toBe(past!.memoryIds[i]);
+    });
+  });
+});
+
+describe('getMemoryCategoryPaths', () => {
+  it('should return paths for a memory with placeType "家"', () => {
+    const mem = rawMemories.find(m => m.dimensions.spatial.placeType === '家')!;
+    expect(mem).toBeDefined();
+    const paths = getMemoryCategoryPaths(mem, rawMemories);
+    expect(paths.length).toBeGreaterThan(0);
+    const pathKeys = paths.map(p => `${p.category}/${p.subCategory}`);
+    expect(pathKeys).toContain('家庭生活/父子协作');
+    expect(pathKeys).toContain('家庭生活/日常生活');
+  });
+
+  it('should return paths for a memory with placeType "学校"', () => {
+    const mem = rawMemories.find(m => m.dimensions.spatial.placeType === '学校')!;
+    expect(mem).toBeDefined();
+    const paths = getMemoryCategoryPaths(mem, rawMemories);
+    const pathKeys = paths.map(p => `${p.category}/${p.subCategory}`);
+    expect(pathKeys).toContain('学习与成长/编程学习');
+    expect(pathKeys).toContain('学习与成长/数学学习');
+    expect(pathKeys).toContain('学习与成长/阅读习惯');
+  });
+
+  it('should return paths for a memory with placeType "游乐场"', () => {
+    const mem = rawMemories.find(m => m.dimensions.spatial.placeType === '游乐场')!;
+    expect(mem).toBeDefined();
+    const paths = getMemoryCategoryPaths(mem, rawMemories);
+    const pathKeys = paths.map(p => `${p.category}/${p.subCategory}`);
+    expect(pathKeys).toContain('社交与情感/朋友互动');
+    expect(pathKeys).toContain('兴趣与探索/户外活动');
+  });
+
+  it('should not contain duplicate paths', () => {
+    const mem = rawMemories[0];
+    const paths = getMemoryCategoryPaths(mem, rawMemories);
+    const keys = paths.map(p => `${p.category}/${p.subCategory}`);
+    const unique = new Set(keys);
+    expect(keys.length).toBe(unique.size);
+  });
+
+  it('should return empty array for insight memory with no matching raw memories', () => {
+    const insight = insightMemories[0];
+    const paths = getMemoryCategoryPaths(insight, []);
+    expect(paths).toEqual([]);
+  });
+
+  it('should return paths aggregated from source raw memories for insight', () => {
+    const insight = insightMemories.find(m => m.sourceRawMemoryIds.length > 0)!;
+    expect(insight).toBeDefined();
+    const paths = getMemoryCategoryPaths(insight, rawMemories);
+    expect(paths.length).toBeGreaterThanOrEqual(0);
+    const keys = paths.map(p => `${p.category}/${p.subCategory}`);
+    const unique = new Set(keys);
+    expect(keys.length).toBe(unique.size);
+  });
+
+  it('every path should have valid icons and names', () => {
+    const mem = rawMemories[0];
+    const paths = getMemoryCategoryPaths(mem, rawMemories);
+    paths.forEach(p => {
+      expect(p.category).toBeTruthy();
+      expect(p.categoryIcon).toBeTruthy();
+      expect(p.subCategory).toBeTruthy();
+      expect(p.subCategoryIcon).toBeTruthy();
     });
   });
 });

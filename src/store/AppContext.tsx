@@ -86,7 +86,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setDemoMode = useCallback((on: boolean) => setState(s => ({ ...s, demoMode: on, demoStep: on ? 1 : 0 })), []);
   const setDemoStep = useCallback((step: number) => setState(s => ({ ...s, demoStep: step })), []);
   const toggleChat = useCallback(() => setState(s => ({ ...s, chatOpen: !s.chatOpen })), []);
-  const toggleDetail = useCallback(() => setState(s => ({ ...s, detailOpen: !s.detailOpen })), []);
+  const toggleDetail = useCallback(() => setState(s => ({
+    ...s,
+    detailOpen: !s.detailOpen,
+    selectedMemory: s.detailOpen ? null : s.selectedMemory,
+  })), []);
   const toggleCrud = useCallback(() => setState(s => ({ ...s, crudOpen: !s.crudOpen })), []);
   const toggleTheme = useCallback(() => setState(s => ({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' })), []);
   const toggleMemoryBank = useCallback(() => setState(s => ({ ...s, memoryBankOpen: !s.memoryBankOpen })), []);

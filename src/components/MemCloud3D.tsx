@@ -241,8 +241,12 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
       );
     }
 
+    // Limit to prevent O(n²) explosion
+    const maxInsights = 100;
+    const limited = visible.length > maxInsights ? visible.slice(0, maxInsights) : visible;
+
     const posMap = new Map<string, [number, number, number]>();
-    visible.forEach(ins => {
+    limited.forEach(ins => {
       if (navCategory) {
         posMap.set(ins.id, getInsightNavPosition(ins, navCategory, navSubCategory));
       } else {
@@ -254,18 +258,19 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
     const supporting: [THREE.Vector3, THREE.Vector3][] = [];
     const related: [THREE.Vector3, THREE.Vector3][] = [];
 
-    for (let i = 0; i < visible.length; i++) {
-      for (let j = i + 1; j < visible.length; j++) {
-        const a = visible[i];
-        const b = visible[j];
-        const pa = posMap.get(a.id)!;
-        const pb = posMap.get(b.id)!;
-        const dist = Math.sqrt(
-          Math.pow(pa[0] - pb[0], 2) +
-          Math.pow(pa[1] - pb[1], 2) +
-          Math.pow(pa[2] - pb[2], 2)
-        );
-        if (dist >= 4) continue;
+    const maxDist = 4;
+    const maxDistSq = maxDist * maxDist;
+
+    for (let i = 0; i < limited.length; i++) {
+      const pa = posMap.get(limited[i].id)!;
+      for (let j = i + 1; j < limited.length; j++) {
+        const pb = posMap.get(limited[j].id)!;
+        const dx = pa[0] - pb[0];
+        const dy = pa[1] - pb[1];
+        const dz = pa[2] - pb[2];
+        const distSq = dx * dx + dy * dy + dz * dz;
+        if (distSq >= maxDistSq) continue;
+        const dist = Math.sqrt(distSq);
         const va = new THREE.Vector3(pa[0], pa[1], pa[2]);
         const vb = new THREE.Vector3(pb[0], pb[1], pb[2]);
         if (dist < 2) causal.push([va, vb]);
@@ -325,30 +330,72 @@ function SceneLights({ theme }: { theme: Theme }) {
   );
 }
 
+function InteractionLoop() {
+  const { invalidate, gl } = useThree();
+  const isActiveRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const lastInteractionRef = useRef(0);
+
+  const keepAlive = useCallback(() => {
+    lastInteractionRef.current = Date.now();
+    if (!isActiveRef.current) {
+      isActiveRef.current = true;
+      invalidate();
+    }
+  }, [invalidate]);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.addEventListener('pointerdown', keepAlive);
+    canvas.addEventListener('pointermove', keepAlive);
+    canvas.addEventListener('wheel', keepAlive);
+    window.addEventListener('demo-camera-move', keepAlive);
+
+    return () => {
+      canvas.removeEventListener('pointerdown', keepAlive);
+      canvas.removeEventListener('pointermove', keepAlive);
+      canvas.removeEventListener('wheel', keepAlive);
+      window.removeEventListener('demo-camera-move', keepAlive);
+      isActiveRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [gl, keepAlive]);
+
+  return null;
+}
+
 function DemoCameraController() {
-  const { camera } = useThree();
-  const [animating, setAnimating] = useState(false);
-  const [angle, setAngle] = useState(0);
+  const { camera, invalidate } = useThree();
+  const animatingRef = useRef(false);
+  const angleRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handleMove = (e: any) => {
       if (e.detail?.action === 'rotate') {
-        setAnimating(true);
-        // Turn off after some time
-        setTimeout(() => setAnimating(false), 5000);
+        animatingRef.current = true;
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          animatingRef.current = false;
+        }, 5000);
+        invalidate();
       }
     };
     window.addEventListener('demo-camera-move', handleMove);
-    return () => window.removeEventListener('demo-camera-move', handleMove);
-  }, []);
+    return () => {
+      window.removeEventListener('demo-camera-move', handleMove);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [invalidate]);
 
   useFrame((_, delta) => {
-    if (animating) {
-      setAngle(a => a + delta * 0.5);
+    if (animatingRef.current) {
+      angleRef.current += delta * 0.5;
       const radius = 8;
-      camera.position.x = THREE.MathUtils.lerp(camera.position.x, Math.sin(angle) * radius, 0.05);
-      camera.position.z = THREE.MathUtils.lerp(camera.position.z, Math.cos(angle) * radius, 0.05);
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, Math.sin(angleRef.current) * radius, 0.05);
+      camera.position.z = THREE.MathUtils.lerp(camera.position.z, Math.cos(angleRef.current) * radius, 0.05);
       camera.lookAt(0, 0, 0);
+      invalidate();
     }
   });
 
@@ -607,13 +654,14 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         key={bgColor}
         camera={{ position: [0, 2, 8], fov: 60, near: 0.1, far: 50 }}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
-        dpr={[1, 1.5]}
+        dpr={[0.75, 1.5]}
         performance={{ min: 0.3 }}
+        frameloop="demand"
         onCreated={({ gl }) => { gl.setClearColor(new THREE.Color(bgColor)); }}
         style={{ background: bgColor }}
       >
         <SceneLights theme={theme} />
-        {!isLight && <Stars radius={30} depth={50} count={300} factor={3} saturation={0.2} fade speed={0.1} />}
+        {!isLight && <Stars radius={30} depth={50} count={300} factor={3} saturation={0.2} speed={0.1} />}
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
@@ -621,6 +669,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <HoldTagController onHoldChange={handleHoldChange} />
         <DemoCameraController />
         <ParticlePositionProjector />
+        <InteractionLoop />
         <OrbitControls
           enableDamping
           dampingFactor={0.08}

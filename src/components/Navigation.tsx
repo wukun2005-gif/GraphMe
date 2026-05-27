@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, EmotionType } from '../types';
 import { EMOTION_COLORS } from '../types';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { generateStory } from '../utils/storyUtils';
+import { getMemoryCategoryPaths } from '../utils/navUtils';
 
 const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: string }[] }> = {
   '家庭生活': { icon: '🏠', sub: [
@@ -50,13 +51,15 @@ export default function NavigationSidebar() {
     setNavCategory, setNavSubCategory,
     rawMemories, addMemory, deleteMemory, updateMemory,
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
-    insightMemories, theme, selectMemory,
+    insightMemories, theme, selectMemory, selectedMemory,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
+  const allRawMemoriesRef = useRef(allRawMemories);
+  allRawMemoriesRef.current = allRawMemories;
   const [collapsed, setCollapsed] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
@@ -65,6 +68,20 @@ export default function NavigationSidebar() {
   const storyChapters = useMemo(
     () => generateStory(rawMemories, insightMemories),
     [rawMemories, insightMemories]
+  );
+
+  const connectionPaths = useMemo(
+    () => selectedMemory ? getMemoryCategoryPaths(selectedMemory, allRawMemoriesRef.current) : [],
+    [selectedMemory]
+  );
+
+  const activePathCategories = useMemo(
+    () => new Set(connectionPaths.map(p => p.category)),
+    [connectionPaths]
+  );
+  const activePathSubCategories = useMemo(
+    () => new Set(connectionPaths.map(p => p.subCategory)),
+    [connectionPaths]
   );
 
   const [formOpen, setFormOpen] = useState(false);
@@ -206,6 +223,21 @@ export default function NavigationSidebar() {
         </button>
       </div>
 
+      {connectionPaths.length > 0 && (
+        <div className={`px-4 py-2 border-b text-xs ${isDark ? 'border-[#ffffff08] bg-[#ffb800]/5' : 'border-gray-200 bg-[#cc8800]/5'}`}>
+          <div className={`font-medium mb-1 ${isDark ? 'text-[#ffb800]' : 'text-[#cc8800]'}`}>
+            🔗 连接路径 ({connectionPaths.length})
+          </div>
+          <div className="space-y-0.5">
+            {connectionPaths.map(p => (
+              <div key={`${p.category}/${p.subCategory}`} className={`${isDark ? 'text-[#ffb800]/80' : 'text-[#cc8800]/80'}`}>
+                {p.categoryIcon} {p.category} → {p.subCategoryIcon} {p.subCategory}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {Object.entries(NAV_STRUCTURE).map(([category, { icon, sub }]) => (
           <div key={category}>
@@ -218,7 +250,9 @@ export default function NavigationSidebar() {
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 cursor-pointer ${
                 navCategory === category
                   ? isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
-                  : isDark ? 'text-gray-400 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-500 hover:bg-black/5 hover:text-gray-700'
+                  : activePathCategories.has(category)
+                    ? isDark ? 'bg-[#ffb800]/10 text-[#ffb800] border-l-2 border-[#ffb800]/30' : 'bg-[#cc8800]/10 text-[#cc8800] border-l-2 border-[#cc8800]/30'
+                    : isDark ? 'text-gray-400 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-500 hover:bg-black/5 hover:text-gray-700'
               }`}
             >
               <span>{icon}</span>
@@ -239,7 +273,9 @@ export default function NavigationSidebar() {
                     className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-2 cursor-pointer ${
                       navSubCategory === s.id
                         ? isDark ? 'bg-[#00f2ff]/5 text-[#00f2ff] border-l-2 border-[#00f2ff]/30' : 'bg-[#0088cc]/5 text-[#0088cc] border-l-2 border-[#0088cc]/30'
-                        : isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-400' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'
+                        : activePathSubCategories.has(s.id)
+                          ? isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-[#cc8800]/10 text-[#cc8800]'
+                          : isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-400' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'
                     }`}
                   >
                     {s.icon} {s.id}
