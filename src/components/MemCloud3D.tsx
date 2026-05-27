@@ -588,6 +588,99 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
   );
 }
 
+function HoverTooltip() {
+  const { camera, gl } = useThree();
+  const { rawMemories, navCategory, navSubCategory, currentView, theme } = useAppState();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
+  const isDark = theme === 'dark';
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const getMemoryPositions = () => {
+      let raws = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
+      if (navCategory) {
+        raws = raws.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+      }
+      return raws.map(m => ({
+        id: m.id,
+        mem: m,
+        pos: new THREE.Vector3(...(navCategory
+          ? getNavPosition(m, navCategory, navSubCategory)
+          : m.positions[currentView] || m.position3D)),
+      }));
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      raycaster.setFromCamera(mouse, camera);
+
+      const memPositions = getMemoryPositions();
+      let nearestId: string | null = null;
+      let nearestDist = Infinity;
+
+      memPositions.forEach(({ id, pos }) => {
+        const dist = raycaster.ray.distanceToPoint(pos);
+        if (dist < nearestDist && dist < 1.5) {
+          nearestDist = dist;
+          nearestId = id;
+        }
+      });
+
+      if (nearestId) {
+        setHovered({ id: nearestId, x: e.clientX, y: e.clientY });
+      } else {
+        setHovered(null);
+      }
+    };
+
+    const handlePointerLeave = () => setHovered(null);
+
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerleave', handlePointerLeave);
+    return () => {
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerleave', handlePointerLeave);
+    };
+  }, [camera, gl, rawMemories, navCategory, navSubCategory, currentView, raycaster]);
+
+  if (!hovered) return null;
+
+  const mem = rawMemories.find(m => m.id === hovered.id);
+  if (!mem) return null;
+
+  return (
+    <Html
+      position={[0, 0, 0]}
+      style={{
+        position: 'fixed',
+        left: hovered.x + 12,
+        top: hovered.y - 40,
+        pointerEvents: 'none',
+        zIndex: 100,
+      }}
+      center={false}
+    >
+      <div className={`px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap ${
+        isDark ? 'bg-[#0d1525]/95 border-[#ffffff10] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
+      }`}>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
+          <span className="font-medium">{mem.label}</span>
+        </div>
+        <div className={`mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          {mem.dimensions.emotional.primary} · {mem.id}
+        </div>
+      </div>
+    </Html>
+  );
+}
+
 function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null) => void }) {
   const { camera, gl } = useThree();
   const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
@@ -712,6 +805,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
+        <HoverTooltip />
         <DemoCameraController />
         <CameraFlyTo />
         <ParticlePositionProjector />
