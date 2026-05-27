@@ -1,79 +1,15 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import type { RawMemory } from '../types';
-
-interface DimensionItem {
-  id: string;
-  emoji: string;
-  label: string;
-  value: number;
-  trend: 'up' | 'down' | 'stable';
-  trendPct: number;
-  prediction: 'up' | 'down' | 'warn';
-  predictionLabel: string;
-  actionLabel: string;
-}
-
-const DIMENSION_DATA: DimensionItem[] = [
-  {
-    id: 'happiness',
-    emoji: '😊',
-    label: '快乐',
-    value: 80,
-    trend: 'up',
-    trendPct: 12,
-    prediction: 'up',
-    predictionLabel: '↗ 保持',
-    actionLabel: '保持当前节奏',
-  },
-  {
-    id: 'logic',
-    emoji: '🧠',
-    label: '逻辑',
-    value: 60,
-    trend: 'down',
-    trendPct: 8,
-    prediction: 'down',
-    predictionLabel: '↘ 下降',
-    actionLabel: '增加数学活动',
-  },
-  {
-    id: 'social',
-    emoji: '👫',
-    label: '社交',
-    value: 40,
-    trend: 'down',
-    trendPct: 15,
-    prediction: 'warn',
-    predictionLabel: '⚠ 预警',
-    actionLabel: '建议安排聚会',
-  },
-  {
-    id: 'outdoor',
-    emoji: '🏃',
-    label: '户外活动',
-    value: 20,
-    trend: 'down',
-    trendPct: 30,
-    prediction: 'warn',
-    predictionLabel: '⚠ 预警',
-    actionLabel: '建议周末出游',
-  },
-  {
-    id: 'creativity',
-    emoji: '🎨',
-    label: '创意',
-    value: 90,
-    trend: 'up',
-    trendPct: 5,
-    prediction: 'up',
-    predictionLabel: '↗ 保持',
-    actionLabel: '当前表现良好',
-  },
-];
-
-type TimeRange = '周' | '月' | '季';
+import type { TimeRange } from '../utils/memoryBankUtils';
+import {
+  computeDimensionData,
+  computeHealthScore,
+  computeAssetStats,
+  computeTemperament,
+  computeDimensionRates,
+  computeMemoryTypePotential,
+} from '../utils/memoryBankUtils';
 
 const TREND_ICON: Record<string, string> = {
   up: '↗',
@@ -102,40 +38,39 @@ const PREDICTION_COLORS: Record<string, { bar: string; barLight: string; text: s
   },
 };
 
-function getRelatedMemories(dimId: string, memories: RawMemory[]): RawMemory[] {
-  const filtered = memories.filter(m => {
-    switch (dimId) {
-      case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
-      case 'social': return m.dimensions.social.persons.length > 1;
-      case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
-      case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
-      case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
-      default: return false;
-    }
-  });
-  return filtered.slice(0, 3);
-}
-
 export default function MemoryBank() {
   const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories } = useAppState();
   const isDark = theme === 'dark';
   const [timeRange, setTimeRange] = useState<TimeRange>('月');
   const [expandedDim, setExpandedDim] = useState<string | null>(null);
 
-  const handleTraceSocialMemory = () => {
-    const socialMem = rawMemories.find(m =>
-      m.dimensions.social.persons.length > 1 &&
-      m.dimensions.emotional.primary === '快乐'
-    );
-    if (socialMem) selectMemory(socialMem);
-  };
+  const dimensionData = useMemo(() => computeDimensionData(rawMemories, timeRange), [rawMemories, timeRange]);
+  const healthScore = useMemo(() => computeHealthScore(rawMemories, timeRange), [rawMemories, timeRange]);
+  const assetStats = useMemo(() => computeAssetStats(rawMemories), [rawMemories]);
+  const temperament = useMemo(() => computeTemperament(rawMemories), [rawMemories]);
+  const dimensionRates = useMemo(() => computeDimensionRates(rawMemories, timeRange), [rawMemories, timeRange]);
+  const memoryTypePotential = useMemo(() => computeMemoryTypePotential(rawMemories), [rawMemories]);
 
-  const handleTraceCreativeMemory = () => {
-    const creativeMem = rawMemories.find(m =>
-      m.dimensions.activity.type === '绘画' ||
-      m.dimensions.activity.detail.includes('画')
-    );
-    if (creativeMem) selectMemory(creativeMem);
+  const topImproving = useMemo(() => {
+    return [...dimensionData].sort((a, b) => {
+      const aDiff = a.trend === 'up' ? a.trendPct : a.trend === 'down' ? -a.trendPct : 0;
+      const bDiff = b.trend === 'up' ? b.trendPct : b.trend === 'down' ? -b.trendPct : 0;
+      return bDiff - aDiff;
+    }).slice(0, 2);
+  }, [dimensionData]);
+
+  const getRelatedMemoriesForDim = (dimId: string) => {
+    const filtered = rawMemories.filter(m => {
+      switch (dimId) {
+        case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
+        case 'social': return m.dimensions.social.persons.length > 1;
+        case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
+        case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
+        case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
+        default: return false;
+      }
+    });
+    return filtered.slice(0, 3);
   };
 
   return (
@@ -201,6 +136,7 @@ export default function MemoryBank() {
               </div>
             </div>
 
+            {/* 总资产健康度 */}
             <div className={`rounded-lg p-3 mb-3 ${
               isDark ? 'bg-gradient-to-r from-[#00f2ff]/10 to-purple-500/10 border border-[#ffffff06]' : 'bg-gradient-to-r from-cyan-50 to-purple-50 border border-gray-100'
             }`}>
@@ -208,8 +144,8 @@ export default function MemoryBank() {
                 <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   💰 总资产健康度
                 </span>
-                <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                  +3 <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>较上月</span>
+                <span className={`text-xs ${healthScore.delta >= 0 ? (isDark ? 'text-green-400' : 'text-green-600') : (isDark ? 'text-red-400' : 'text-red-600')}`}>
+                  {healthScore.delta >= 0 ? '+' : ''}{healthScore.delta} <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>较上期</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -218,14 +154,15 @@ export default function MemoryBank() {
                 }`}>
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-[#00f2ff] to-purple-400"
-                    style={{ width: '78%' }}
+                    style={{ width: `${healthScore.score}%` }}
                   />
                 </div>
-                <span className={`text-sm font-bold ${isDark ? 'text-[#00f2ff]' : 'text-cyan-600'}`}>78</span>
+                <span className={`text-sm font-bold ${isDark ? 'text-[#00f2ff]' : 'text-cyan-600'}`}>{healthScore.score}</span>
                 <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/100</span>
               </div>
             </div>
 
+            {/* 正/负资产 */}
             <div className="flex items-center gap-3 mb-3">
               <svg width="56" height="56" viewBox="0 0 56 56">
                 <circle cx="28" cy="28" r="22" fill="none"
@@ -233,18 +170,18 @@ export default function MemoryBank() {
                   strokeWidth="6" />
                 <circle cx="28" cy="28" r="22" fill="none"
                   stroke="#34d399" strokeWidth="6"
-                  strokeDasharray="88.4 138.2"
+                  strokeDasharray={`${(assetStats.ratio / 100) * 138.2} ${138.2 - (assetStats.ratio / 100) * 138.2}`}
                   strokeDashoffset="0"
                   strokeLinecap="round"
                   transform="rotate(-90 28 28)" />
                 <circle cx="28" cy="28" r="22" fill="none"
                   stroke="#f87171" strokeWidth="6"
-                  strokeDasharray="49.8 138.2"
-                  strokeDashoffset="-88.4"
+                  strokeDasharray={`${((100 - assetStats.ratio) / 100) * 138.2} ${138.2 - ((100 - assetStats.ratio) / 100) * 138.2}`}
+                  strokeDashoffset={`${-(assetStats.ratio / 100) * 138.2}`}
                   strokeLinecap="round"
                   transform="rotate(-90 28 28)" />
                 <text x="28" y="31" textAnchor="middle" className={`text-[10px] font-bold ${isDark ? 'fill-gray-200' : 'fill-gray-800'}`}>
-                  64%
+                  {assetStats.ratio}%
                 </text>
               </svg>
               <div className="flex-1 space-y-1.5">
@@ -253,7 +190,7 @@ export default function MemoryBank() {
                     <span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> 正资产
                   </span>
                   <span className={`text-[10px] font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                    32 条
+                    {assetStats.positive} 条
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -261,17 +198,18 @@ export default function MemoryBank() {
                     <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> 待改善
                   </span>
                   <span className={`text-[10px] font-medium ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    18 条
+                    {assetStats.negative} 条
                   </span>
                 </div>
                 <div className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  正资产占比 64%，整体健康
+                  正资产占比 {assetStats.ratio}%，{assetStats.ratio >= 60 ? '整体健康' : '需要关注'}
                 </div>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3">
-              {DIMENSION_DATA.map(dim => {
+              {/* 维度投资组合 */}
+              {dimensionData.map(dim => {
                 const predColor = PREDICTION_COLORS[dim.prediction];
                 const barColorClass = isDark ? predColor.bar : predColor.barLight;
                 const textColorClass = isDark ? predColor.text : predColor.textLight;
@@ -312,7 +250,7 @@ export default function MemoryBank() {
                     }`}>
                       <div
                         className={`h-full rounded-full transition-all ${barColorClass}`}
-                        style={{ width: `${dim.value}%` }}
+                        style={{ width: `${Math.min(dim.value, 100)}%` }}
                       />
                     </div>
 
@@ -335,7 +273,7 @@ export default function MemoryBank() {
                         </div>
                         <svg width="100%" height="32" viewBox="0 0 200 32" className="mb-2">
                           <polyline
-                            points="0,24 25,20 50,16 75,18 100,12 125,14 150,10 175,8 200,6"
+                            points={`0,${32 - dim.value * 0.32} 50,${32 - dim.value * 0.28} 100,${32 - dim.value * 0.3} 150,${32 - dim.value * 0.25} 200,${32 - dim.value * 0.2}`}
                             fill="none"
                             stroke={dim.trend === 'up' ? '#34d399' : dim.trend === 'down' ? '#f87171' : '#9ca3af'}
                             strokeWidth="2"
@@ -347,10 +285,10 @@ export default function MemoryBank() {
                           关联记忆：
                         </div>
                         <div className="space-y-1">
-                          {getRelatedMemories(dim.id, rawMemories).map((mem) => (
+                          {getRelatedMemoriesForDim(dim.id).map((mem) => (
                             <button
                               key={mem.id}
-                              onClick={() => selectMemory(mem)}
+                              onClick={(e) => { e.stopPropagation(); selectMemory(mem); }}
                               className={`w-full text-left text-[10px] px-2 py-1 rounded flex items-center gap-2 transition-colors ${
                                 isDark
                                   ? 'bg-[#ffffff04] hover:bg-[#ffffff08] text-gray-400 hover:text-gray-300'
@@ -370,6 +308,7 @@ export default function MemoryBank() {
                 );
               })}
 
+              {/* 正资产鼓励 */}
               <div className={`border-t pt-3 ${
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
@@ -377,72 +316,51 @@ export default function MemoryBank() {
                   🌟 正资产鼓励
                 </h4>
                 <div className="space-y-2">
-                  <div
-                    className={`rounded-lg p-3 border bg-gradient-to-r ${
-                      isDark
-                        ? 'from-amber-500/10 to-yellow-500/5 border-amber-500/20'
-                        : 'from-amber-50 to-yellow-50 border-amber-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-xs">👫</span>
-                      <span className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                        社交维度创新高
-                      </span>
-                      <span className="ml-auto text-[10px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">
-                        ↗ +15%
-                      </span>
-                    </div>
-                    <p className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      最近一周社交互动频率显著提升，与朋友、同事的互动次数创近3月新高
-                    </p>
-                    <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      建议：保持当前社交节奏，可适当增加线下聚会频次
-                    </p>
-                    <button
-                      onClick={handleTraceSocialMemory}
-                      className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
-                        isDark ? 'text-amber-400/60 hover:text-amber-400' : 'text-amber-600/60 hover:text-amber-600'
-                      }`}
-                    >
-                      📎 追溯相关记忆
-                    </button>
-                  </div>
+                  {topImproving.map((dim, i) => {
+                    const isPositive = dim.trend === 'up';
+                    const gradientClass = isDark
+                      ? isPositive ? 'from-green-500/10 to-emerald-500/5 border-green-500/20' : 'from-amber-500/10 to-yellow-500/5 border-amber-500/20'
+                      : isPositive ? 'from-green-50 to-emerald-50 border-green-200' : 'from-amber-50 to-yellow-50 border-amber-200';
+                    const textClass = isDark
+                      ? isPositive ? 'text-green-300' : 'text-amber-300'
+                      : isPositive ? 'text-green-700' : 'text-amber-700';
+                    const badgeClass = isPositive ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400';
 
-                  <div
-                    className={`rounded-lg p-3 border bg-gradient-to-r ${
-                      isDark
-                        ? 'from-green-500/10 to-emerald-500/5 border-green-500/20'
-                        : 'from-green-50 to-emerald-50 border-green-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-xs">🎨</span>
-                      <span className={`text-xs font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
-                        创意维度持续上升
-                      </span>
-                      <span className="ml-auto text-[10px] px-1 py-0.5 rounded bg-green-500/20 text-green-400">
-                        ↗ +5%
-                      </span>
-                    </div>
-                    <p className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      创意活动（绘画、手工、写作）频次连续4周增长，创造力指数稳步提升
-                    </p>
-                    <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      建议：保持当前创意投入节奏，可尝试新媒介激发灵感
-                    </p>
-                    <button
-                      onClick={handleTraceCreativeMemory}
-                      className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
-                        isDark ? 'text-green-400/60 hover:text-green-400' : 'text-green-600/60 hover:text-green-600'
-                      }`}
-                    >
-                      📎 追溯相关记忆
-                    </button>
-                  </div>
+                    return (
+                      <div
+                        key={dim.id}
+                        className={`rounded-lg p-3 border bg-gradient-to-r ${gradientClass}`}
+                      >
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xs">{dim.emoji}</span>
+                          <span className={`text-xs font-medium ${textClass}`}>
+                            {dim.label}维度{isPositive ? '创新高' : '需关注'}
+                          </span>
+                          <span className={`ml-auto text-[10px] px-1 py-0.5 rounded ${badgeClass}`}>
+                            {isPositive ? '↗' : '↘'} {dim.trendPct > 0 ? (isPositive ? '+' : '-') : ''}{dim.trendPct}%
+                          </span>
+                        </div>
+                        <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          建议：{dim.actionLabel}
+                        </p>
+                        <button
+                          onClick={() => {
+                            const mem = getRelatedMemoriesForDim(dim.id)[0];
+                            if (mem) selectMemory(mem);
+                          }}
+                          className={`text-[10px] px-1.5 py-0.5 rounded underline-offset-2 hover:underline transition-colors ${
+                            isDark ? `${textClass}/60 hover:${textClass}` : `${textClass}/60 hover:${textClass}`
+                          }`}
+                        >
+                          📎 追溯相关记忆
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
+              {/* 心智模型气质画像 */}
               <div className={`border-t pt-3 ${
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
@@ -454,47 +372,40 @@ export default function MemoryBank() {
                     <circle cx="32" cy="32" r="28" fill="none"
                       className={isDark ? 'stroke-[#ffffff08]' : 'stroke-gray-200'}
                       strokeWidth="8" />
-                    <circle cx="32" cy="32" r="28" fill="none"
-                      stroke="#f59e0b" strokeWidth="8"
-                      strokeDasharray="78.4 175.9"
-                      strokeDashoffset="0"
-                      strokeLinecap="round"
-                      transform="rotate(-90 32 32)" />
-                    <circle cx="32" cy="32" r="28" fill="none"
-                      stroke="#8b5cf6" strokeWidth="8"
-                      strokeDasharray="52.3 175.9"
-                      strokeDashoffset="-78.4"
-                      strokeLinecap="round"
-                      transform="rotate(-90 32 32)" />
-                    <circle cx="32" cy="32" r="28" fill="none"
-                      stroke="#06b6d4" strokeWidth="8"
-                      strokeDasharray="45.2 175.9"
-                      strokeDashoffset="-130.7"
-                      strokeLinecap="round"
-                      transform="rotate(-90 32 32)" />
+                    {temperament.traits.map((trait, i) => {
+                      const totalPct = temperament.traits.reduce((s, t) => s + t.pct, 0) || 1;
+                      const circumference = 2 * Math.PI * 28;
+                      const offset = temperament.traits.slice(0, i).reduce((s, t) => s + (t.pct / totalPct) * circumference, 0);
+                      const dashLen = (trait.pct / totalPct) * circumference;
+                      const colors = ['#f59e0b', '#8b5cf6', '#06b6d4'];
+                      return (
+                        <circle key={i} cx="32" cy="32" r="28" fill="none"
+                          stroke={colors[i % 3]} strokeWidth="8"
+                          strokeDasharray={`${dashLen} ${circumference - dashLen}`}
+                          strokeDashoffset={`${-offset}`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 32 32)" />
+                      );
+                    })}
                     <text x="32" y="36" textAnchor="middle" className={`text-xs font-bold ${isDark ? 'fill-gray-200' : 'fill-gray-800'}`}>
-                      78%
+                      {temperament.confidence}%
                     </text>
                   </svg>
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
                       <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        俄耳甫斯气质
+                        {temperament.type}
                       </span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
-                        情感驱动型学习者
+                        {temperament.label}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                        isDark ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100 text-amber-700'
-                      }`}>🟡 情感驱动 45%</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                        isDark ? 'bg-purple-500/15 text-purple-400' : 'bg-purple-100 text-purple-700'
-                      }`}>🟣 安全依赖 30%</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                        isDark ? 'bg-cyan-500/15 text-cyan-400' : 'bg-cyan-100 text-cyan-700'
-                      }`}>🔵 创造力导向 25%</span>
+                      {temperament.traits.map((trait, i) => (
+                        <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          isDark ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100 text-amber-700'
+                        }`}>{trait.emoji} {trait.name} {trait.pct}%</span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -502,11 +413,7 @@ export default function MemoryBank() {
                   代表性记忆片段：
                 </div>
                 <div className="space-y-1.5">
-                  {[
-                    { emoji: '🎨', label: '第一次画出完整故事', date: '2026.03.15', type: '创意' },
-                    { emoji: '🤗', label: '主动拥抱久别重逢的家人', date: '2026.04.28', type: '情感' },
-                    { emoji: '📖', label: '睡前拉着妈妈读三本书', date: '2026.05.10', type: '安全' },
-                  ].map((mem, i) => (
+                  {temperament.representativeMems.map((mem, i) => (
                     <button
                       key={i}
                       className={`w-full text-left text-[10px] px-2 py-1.5 rounded flex items-center gap-2 transition-colors ${
@@ -526,6 +433,7 @@ export default function MemoryBank() {
                 </div>
               </div>
 
+              {/* 维度利率排名 */}
               <div className={`border-t pt-3 ${
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
@@ -533,13 +441,7 @@ export default function MemoryBank() {
                   📈 维度利率排名
                 </h4>
                 <div className="space-y-1">
-                  {[
-                    { rank: 1, emoji: '😊', name: '快乐', rate: 4.85, change: '+0.12', up: true, risk: 'low', sparkline: '2,12 25,8 50,14 75,10 98,6' },
-                    { rank: 2, emoji: '👫', name: '社交', rate: 3.67, change: '+0.45', up: true, risk: 'low', sparkline: '2,14 25,10 50,16 75,12 98,8' },
-                    { rank: 3, emoji: '🎨', name: '创意', rate: 3.21, change: '+0.08', up: true, risk: 'low', sparkline: '2,10 25,12 50,8 75,14 98,10' },
-                    { rank: 4, emoji: '🧠', name: '逻辑', rate: 2.14, change: '-0.23', up: false, risk: 'medium', sparkline: '2,8 25,12 50,6 75,10 98,14' },
-                    { rank: 5, emoji: '🏃', name: '户外', rate: 1.08, change: '-0.67', up: false, risk: 'high', sparkline: '2,12 25,16 50,10 75,18 98,20' },
-                  ].map(item => (
+                  {dimensionRates.map(item => (
                     <div
                       key={item.rank}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
@@ -571,16 +473,6 @@ export default function MemoryBank() {
                       }`}>
                         {item.change}
                       </span>
-                      <svg width="50" height="18" viewBox="0 0 100 20" className="flex-shrink-0">
-                        <polyline
-                          points={item.sparkline}
-                          fill="none"
-                          stroke={item.up ? '#34d399' : '#f87171'}
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded ml-auto ${
                         item.risk === 'high'
                           ? 'bg-red-500/20 text-red-400'
@@ -595,6 +487,7 @@ export default function MemoryBank() {
                 </div>
               </div>
 
+              {/* 记忆类型增值潜力排行 */}
               <div className={`border-t pt-3 ${
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
@@ -602,13 +495,7 @@ export default function MemoryBank() {
                   💹 记忆类型增值潜力排行
                 </h4>
                 <div className="space-y-1">
-                  {[
-                    { rank: 1, label: '亲子互动记忆', stars: 5, invest: '高', suggestion: '持续高回报资产，保持投入', icon: '👨‍👧' },
-                    { rank: 2, label: '学习成长记忆', stars: 4, invest: '中', suggestion: '稳定增值，可适度增加', icon: '📚' },
-                    { rank: 3, label: '社交情感记忆', stars: 4, invest: '中高', suggestion: '潜在高增长领域', icon: '💬' },
-                    { rank: 4, label: '户外探索记忆', stars: 3, invest: '低', suggestion: '需增加户外活动投入', icon: '🌲' },
-                    { rank: 5, label: '日常习惯记忆', stars: 2, invest: '低', suggestion: '基础配置，维持即可', icon: '🏠' },
-                  ].map(item => (
+                  {memoryTypePotential.map(item => (
                     <div
                       key={item.rank}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
