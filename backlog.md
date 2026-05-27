@@ -178,7 +178,7 @@
 2. 预期：出现 inline 输入框（非浏览器弹窗），输入内容后点击保存
 3. 纠正内容正确显示在面板中
 
-## 19. [Stability] 洞察网络连线在导航切换时重复全量计算
+## 19. [Stability] 洞察网络连线在导航切换时重复全量计算 [✅]
 
 **问题**: InsightNetworkLines 的 useMemo 依赖 rawMemories/insightMemories 引用，导航切换时引用不变但需要重新过滤子集，导致每次切换都重新执行完整的 O(n²) 连线计算。
 **改动范围**:
