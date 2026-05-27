@@ -92,7 +92,7 @@
 2. 点击"确认"→ `userConfirmed` 变为 true
 3. 点击"备注"→ 弹出文本输入，保存到 `userNote`
 
-### 10. [Performance] InsightNetworkLines O(n²) 距离计算
+### 10. [Performance] InsightNetworkLines O(n²) 距离计算 [✅]
 
 **问题**: 洞察连线使用两两距离计算，当前限制 `maxInsights=100` 但算法复杂度仍是 O(n²)。
 **改动范围**:
