@@ -42,6 +42,7 @@ type EditData = {
   importance: number;
   persons: string;
   knowledge: string;
+  privacyLevel: '公开' | '家庭可见' | '仅自己' | '加密';
 };
 
 function RawDetail({ memory }: { memory: RawMemory }) {
@@ -84,6 +85,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
         )}
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⭐ 重要性</span> {d.value.importance.toFixed(2)}</div>
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 CQI</span> {d.value.cqi.toFixed(2)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔒 隐私</span> {d.value.privacyLevel}</div>
         {d.narrative.storyline && (
           <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔗 故事线</span> {d.narrative.storyline}</div>
         )}
@@ -310,6 +312,7 @@ export default function DetailPanel() {
     importance: 0.5,
     persons: '',
     knowledge: '',
+    privacyLevel: '家庭可见',
   });
 
   useEffect(() => {
@@ -326,6 +329,7 @@ export default function DetailPanel() {
         importance: m.dimensions.value.importance,
         persons: m.dimensions.social.persons.join('、'),
         knowledge: m.dimensions.semantic.knowledge.join('、'),
+        privacyLevel: m.dimensions.value.privacyLevel,
       });
       setEditMode(false);
     }
@@ -345,6 +349,7 @@ export default function DetailPanel() {
       importance: m.dimensions.value.importance,
       persons: m.dimensions.social.persons.join('、'),
       knowledge: m.dimensions.semantic.knowledge.join('、'),
+      privacyLevel: m.dimensions.value.privacyLevel,
     });
     setEditMode(true);
   };
@@ -378,6 +383,7 @@ export default function DetailPanel() {
         value: {
           ...memory.dimensions.value,
           importance: edit.importance,
+          privacyLevel: edit.privacyLevel,
         },
         social: {
           ...memory.dimensions.social,
@@ -562,6 +568,21 @@ export default function DetailPanel() {
                     onChange={e => updateEdit('importance', parseFloat(e.target.value))}
                     className="w-full accent-[#00f2ff]"
                   />
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>隐私级别</label>
+                  <select
+                    value={edit.privacyLevel}
+                    onChange={e => updateEdit('privacyLevel', e.target.value)}
+                    className={`w-full border rounded px-2 py-1.5 text-xs focus:outline-none ${
+                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                    }`}
+                  >
+                    <option value="公开">🌐 公开</option>
+                    <option value="家庭可见">👨‍👩‍👧 家庭可见</option>
+                    <option value="仅自己">🔒 仅自己</option>
+                    <option value="加密">🔐 加密</option>
+                  </select>
                 </div>
               </div>
               <div className={`flex gap-2 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>

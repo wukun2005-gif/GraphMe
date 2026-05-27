@@ -105,6 +105,7 @@ export default function NavigationSidebar() {
   const [persons, setPersons] = useState('');
   const [activityType, setActivityType] = useState('活动');
   const [importance, setImportance] = useState(0.5);
+  const [privacyLevel, setPrivacyLevel] = useState<RawMemory['dimensions']['value']['privacyLevel']>('家庭可见');
 
   const [editLabel, setEditLabel] = useState('');
   const [editSummary, setEditSummary] = useState('');
@@ -145,7 +146,7 @@ export default function NavigationSidebar() {
         activity: { type: activityType, detail: summary },
         sensory: { images: [], audio: [], videos: [], interactions: [] },
         semantic: { knowledge: [], preferences: {}, skills: [] },
-        value: { importance, cqi: 0.2, accessCount: 0, privacyLevel: '家庭可见' },
+        value: { importance, cqi: 0.2, accessCount: 0, privacyLevel },
         narrative: { storyline, previousRefs: [], nextRefs: [], isMilestone: false },
         agentState: { agentType: '陪伴型', version: '2.1.0', status: 'active' },
       },
@@ -167,6 +168,7 @@ export default function NavigationSidebar() {
     setPersons('');
     setActivityType('活动');
     setImportance(0.5);
+    setPrivacyLevel('家庭可见');
     setFormOpen(false);
   };
 
@@ -573,6 +575,18 @@ export default function NavigationSidebar() {
                             </span>
                           </div>
                         </div>
+                        <select
+                          value={privacyLevel}
+                          onChange={e => setPrivacyLevel(e.target.value as RawMemory['dimensions']['value']['privacyLevel'])}
+                          className={`w-full border rounded px-2 py-1 text-xs ${
+                            isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+                          }`}
+                        >
+                          <option value="公开">🌐 公开</option>
+                          <option value="家庭可见">👨‍👩‍👧 家庭可见</option>
+                          <option value="仅自己">🔒 仅自己</option>
+                          <option value="加密">🔐 加密</option>
+                        </select>
                         <button
                           onClick={handleCreate}
                           className={`w-full py-1 text-xs rounded transition-colors cursor-pointer ${
