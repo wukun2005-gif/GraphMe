@@ -101,6 +101,9 @@ export default function NavigationSidebar() {
   const [emotion, setEmotion] = useState<EmotionType>('快乐');
   const [placeType, setPlaceType] = useState<RawMemory['dimensions']['spatial']['placeType']>('家');
   const [storyline, setStoryline] = useState('');
+  const [persons, setPersons] = useState('');
+  const [activityType, setActivityType] = useState('活动');
+  const [importance, setImportance] = useState(0.5);
 
   const [editLabel, setEditLabel] = useState('');
   const [editSummary, setEditSummary] = useState('');
@@ -137,12 +140,12 @@ export default function NavigationSidebar() {
       dimensions: {
         temporal: { timestamp: Date.now(), dateType: '普通日', timeOfDay: '下午', season: '夏', duration: 30 },
         spatial: { placeType, room: '客厅', landmark: '手动添加' },
-        social: { persons: [], relationship: [], groupInteraction: false, intimacy: 0.3 },
+        social: { persons: persons ? persons.split('、').map(s => s.trim()).filter(Boolean) : [], relationship: [], groupInteraction: false, intimacy: 0.3 },
         emotional: { primary: emotion, intensity: 0.7, trigger: '用户手动添加' },
-        activity: { type: '活动', detail: summary },
+        activity: { type: activityType, detail: summary },
         sensory: { images: [], audio: [], videos: [], interactions: [] },
         semantic: { knowledge: [], preferences: {}, skills: [] },
-        value: { importance: 0.3, cqi: 0.2, accessCount: 0, privacyLevel: '家庭可见' },
+        value: { importance, cqi: 0.2, accessCount: 0, privacyLevel: '家庭可见' },
         narrative: { storyline, previousRefs: [], nextRefs: [], isMilestone: false },
         agentState: { agentType: '陪伴型', version: '2.1.0', status: 'active' },
       },
@@ -161,6 +164,9 @@ export default function NavigationSidebar() {
     setLabel('');
     setSummary('');
     setEmotion('快乐');
+    setPersons('');
+    setActivityType('活动');
+    setImportance(0.5);
     setFormOpen(false);
   };
 
@@ -523,6 +529,47 @@ export default function NavigationSidebar() {
                             isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
                           }`}
                         />
+                        <input
+                          type="text"
+                          placeholder="人物（用、分隔，如：爸爸、小明）"
+                          value={persons}
+                          onChange={e => setPersons(e.target.value)}
+                          className={`w-full border rounded px-2 py-1 text-xs placeholder-gray-600 ${
+                            isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+                          }`}
+                        />
+                        <div className="flex gap-1.5">
+                          <select
+                            value={activityType}
+                            onChange={e => setActivityType(e.target.value)}
+                            className={`flex-1 border rounded px-1.5 py-1 text-xs ${
+                              isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+                            }`}
+                          >
+                            <option value="活动">🎮 活动</option>
+                            <option value="学习">📚 学习</option>
+                            <option value="游戏">🎯 游戏</option>
+                            <option value="对话">💬 对话</option>
+                            <option value="探索">🔍 探索</option>
+                            <option value="创作">🎨 创作</option>
+                            <option value="运动">🏃 运动</option>
+                          </select>
+                          <div className="flex-1 flex items-center gap-1">
+                            <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>⭐</span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={importance}
+                              onChange={e => setImportance(parseFloat(e.target.value))}
+                              className="flex-1 h-1 cursor-pointer"
+                            />
+                            <span className={`text-[10px] w-6 text-right ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                              {importance.toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
                         <button
                           onClick={handleCreate}
                           className={`w-full py-1 text-xs rounded transition-colors cursor-pointer ${
