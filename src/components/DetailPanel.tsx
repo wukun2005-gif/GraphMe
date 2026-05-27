@@ -155,7 +155,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                   }`} />
                   <div className="text-xs">
                     <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v{v.version}</span>
-                    <span className="mx-1 ${isDark ? 'text-gray-700' : 'text-gray-300'}">({v.date})</span>
+                    <span className={`mx-1 ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>({v.date})</span>
                     <span className={`text-xs ${isLatest ? (isDark ? 'text-[#ffb800]' : 'text-[#b8860b]') : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
                       {isLatest ? ' ← 当前版本' : ''}
                     </span>

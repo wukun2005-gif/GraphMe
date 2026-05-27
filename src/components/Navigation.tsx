@@ -321,9 +321,9 @@ export default function NavigationSidebar() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-3 text-xs space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}">
+              <div className={`px-4 pb-3 text-xs space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <div className="space-y-1.5">
-                  <div className="font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}">记忆点类型</div>
+                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>记忆点类型</div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#00f2ff] inline-block flex-shrink-0" />
                     <span>彩色粒子 — 原始记忆原子</span>
@@ -335,7 +335,7 @@ export default function NavigationSidebar() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}">连线含义</div>
+                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>连线含义</div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-[2px] bg-[#ffb800]/40 flex-shrink-0" />
                     <span>金色实线 — 因果关系</span>
