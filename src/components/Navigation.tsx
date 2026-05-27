@@ -118,10 +118,9 @@ export default function NavigationSidebar() {
 
   const filtered = allRawMemories.filter(m => {
     if (!searchText) return true;
-    const q = searchText.toLowerCase();
-    return m.id.toLowerCase().includes(q)
-      || m.label.toLowerCase().includes(q)
-      || m.summary.toLowerCase().includes(q);
+    const keywords = searchText.toLowerCase().split(/\s+/).filter(Boolean);
+    const haystack = `${m.id} ${m.label} ${m.summary}`.toLowerCase();
+    return keywords.every(kw => haystack.includes(kw));
   });
 
   const handleCreate = () => {
