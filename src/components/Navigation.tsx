@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, EmotionType } from '../types';
@@ -88,6 +88,13 @@ export default function NavigationSidebar() {
   const [searchText, setSearchText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(30);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!confirmDeleteId) return;
+    const timer = setTimeout(() => setConfirmDeleteId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [confirmDeleteId]);
 
   const [label, setLabel] = useState('');
   const [summary, setSummary] = useState('');
@@ -614,10 +621,21 @@ export default function NavigationSidebar() {
                               ✏️
                             </button>
                             <button
-                              onClick={() => deleteMemory(mem.id)}
-                              className="text-xs cursor-pointer text-gray-600 hover:text-red-400"
+                              onClick={() => {
+                                if (confirmDeleteId === mem.id) {
+                                  deleteMemory(mem.id);
+                                  setConfirmDeleteId(null);
+                                } else {
+                                  setConfirmDeleteId(mem.id);
+                                }
+                              }}
+                              className={`text-xs cursor-pointer transition-colors ${
+                                confirmDeleteId === mem.id
+                                  ? 'text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded'
+                                  : 'text-gray-600 hover:text-red-400'
+                              }`}
                             >
-                              🗑
+                              {confirmDeleteId === mem.id ? '确认删除？' : '🗑'}
                             </button>
                           </div>
                         )}

@@ -185,6 +185,15 @@ export default function DetailPanel() {
   const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const timer = setTimeout(() => setConfirmDelete(false), 3000);
+    return () => clearTimeout(timer);
+  }, [confirmDelete]);
+
+  useEffect(() => { setConfirmDelete(false); }, [selectedMemory?.id]);
   const [edit, setEdit] = useState<EditData>({
     label: '',
     summary: '',
@@ -475,10 +484,21 @@ export default function DetailPanel() {
                   >✏️ 编辑</button>
                 )}
                 <button
-                  onClick={() => deleteMemory(selectedMemory.id)}
-                  className="px-3 py-1.5 text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded transition-colors cursor-pointer"
+                  onClick={() => {
+                    if (confirmDelete) {
+                      deleteMemory(selectedMemory.id);
+                      setConfirmDelete(false);
+                    } else {
+                      setConfirmDelete(true);
+                    }
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                    confirmDelete
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
+                  }`}
                 >
-                  🗑️ 删除
+                  {confirmDelete ? '确认删除？' : '🗑️ 删除'}
                 </button>
               </div>
             </>
