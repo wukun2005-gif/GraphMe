@@ -45,6 +45,7 @@ interface AppContextType extends AppState {
   importMemories: (raws: RawMemory[], insights: InsightMemory[]) => void;
   undoDelete: () => void;
   undoStackCount: number;
+  undoStackAction: 'delete' | 'edit' | null;
   getVisibleMemories: () => RawMemory[];
   hideRawOnly: boolean;
   hideInsightOnly: boolean;
@@ -99,7 +100,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [chatgptImportStatus, setChatgptImportStatus] = useState<'idle' | 'importing' | 'done'>('idle');
   const [chatgptImportProgress, setChatgptImportProgress] = useState(0);
   const [hiddenMemoryIds, setHiddenMemoryIds] = useState<string[]>([]);
-  const [undoStack, setUndoStack] = useState<RawMemory[]>([]);
+  const [undoStack, setUndoStack] = useState<{ action: 'delete' | 'edit'; snapshot: RawMemory }[]>([]);
   const importIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -159,7 +160,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteMemory = useCallback((id: string) => {
     setRawMems(prev => {
       const deleted = prev.find(m => m.id === id);
-      if (deleted) setUndoStack(stack => [deleted, ...stack].slice(0, 5));
+      if (deleted) setUndoStack(stack => [{ action: 'delete' as const, snapshot: deleted }, ...stack].slice(0, 5));
       return prev.filter(m => m.id !== id);
     });
     setState(s => s.selectedMemory?.id === id ? { ...s, selectedMemory: null, detailOpen: false } : s);
@@ -168,21 +169,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const undoDelete = useCallback(() => {
     setUndoStack(stack => {
       if (stack.length === 0) return stack;
-      const [restored, ...rest] = stack;
-      setRawMems(prev => [...prev, restored]);
+      const [entry, ...rest] = stack;
+      if (entry.action === 'delete') {
+        setRawMems(prev => [...prev, entry.snapshot]);
+      } else {
+        setRawMems(prev => prev.map(m => m.id === entry.snapshot.id ? entry.snapshot : m));
+      }
       return rest;
     });
   }, []);
 
   const updateMemory = useCallback((id: string, updates: Partial<RawMemory>) => {
-    setRawMems(prev => prev.map(m => {
-      if (m.id !== id) return m;
-      const merged = { ...m, ...updates };
-      if (updates.dimensions && m.dimensions) {
-        merged.dimensions = { ...m.dimensions, ...updates.dimensions };
-      }
-      return merged;
-    }));
+    setRawMems(prev => {
+      const old = prev.find(m => m.id === id);
+      if (old) setUndoStack(stack => [{ action: 'edit' as const, snapshot: old }, ...stack].slice(0, 5));
+      return prev.map(m => {
+        if (m.id !== id) return m;
+        const merged = { ...m, ...updates };
+        if (updates.dimensions && m.dimensions) {
+          merged.dimensions = { ...m.dimensions, ...updates.dimensions };
+        }
+        return merged;
+      });
+    });
   }, []);
 
   const updateInsight = useCallback((id: string, updates: Partial<InsightMemory>) => {
@@ -265,7 +274,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
-      addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
+      addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,

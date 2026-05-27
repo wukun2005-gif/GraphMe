@@ -56,7 +56,7 @@ export default function NavigationSidebar() {
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
-    undoDelete, undoStackCount,
+    undoDelete, undoStackCount, undoStackAction,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -648,9 +648,9 @@ export default function NavigationSidebar() {
                           className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
                             isDark ? 'bg-[#ffffff08] text-[#00f2ff] hover:bg-[#ffffff12]' : 'bg-gray-100 text-[#0088cc] hover:bg-gray-200'
                           }`}
-                          title="撤销上次删除"
+                          title={`撤销上次${undoStackAction === 'edit' ? '编辑' : '删除'}`}
                         >
-                          ↩ 撤销 ({undoStackCount})
+                          ↩ 撤销{undoStackAction === 'edit' ? '编辑' : '删除'} ({undoStackCount})
                         </button>
                       )}
                     </div>
