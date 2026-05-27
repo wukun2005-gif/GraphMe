@@ -107,7 +107,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateMemory = useCallback((id: string, updates: Partial<RawMemory>) => {
-    setRawMems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    setRawMems(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const merged = { ...m, ...updates };
+      if (updates.dimensions && m.dimensions) {
+        merged.dimensions = { ...m.dimensions, ...updates.dimensions };
+      }
+      return merged;
+    }));
   }, []);
 
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
