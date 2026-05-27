@@ -54,6 +54,7 @@ export default function NavigationSidebar() {
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     insightMemories, theme, selectMemory, selectedMemory,
     emotionFilter, toggleEmotionFilter,
+    favoriteIds, toggleFavorite,
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
@@ -681,6 +682,31 @@ export default function NavigationSidebar() {
                       全选
                     </label>
                   </div>
+                  {favoriteIds.length > 0 && (
+                    <div className="mb-2">
+                      <div className={`text-[10px] mb-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                        ⭐ 收藏 ({favoriteIds.length})
+                      </div>
+                      <div className="space-y-0.5">
+                        {favoriteIds.map(id => {
+                          const mem = allRawMemories.find(m => m.id === id);
+                          if (!mem) return null;
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => selectMemory(mem)}
+                              className={`w-full text-left px-2 py-1 rounded text-xs flex items-center gap-1 cursor-pointer transition-colors ${
+                                isDark ? 'hover:bg-[#ffffff05] text-gray-400' : 'hover:bg-black/5 text-gray-600'
+                              }`}
+                            >
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
+                              <span className="truncate">{mem.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
                     {filtered.slice(-displayCount).reverse().map((mem, i) => (
                       <div key={mem.id}>

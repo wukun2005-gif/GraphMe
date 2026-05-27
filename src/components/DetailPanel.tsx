@@ -289,7 +289,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -446,9 +446,22 @@ export default function DetailPanel() {
             <h3 className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
               {selectedMemory.type === 'raw' ? '记忆原子详情' : 'GraphMe 的发现'}
             </h3>
-            <button onClick={toggleDetail} className={`transition-colors text-xl leading-none cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>
-              ✕
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => toggleFavorite(selectedMemory.id)}
+                className={`transition-colors text-lg cursor-pointer ${
+                  favoriteIds.includes(selectedMemory.id)
+                    ? 'text-amber-400'
+                    : isDark ? 'text-gray-600 hover:text-amber-400' : 'text-gray-400 hover:text-amber-400'
+                }`}
+                title={favoriteIds.includes(selectedMemory.id) ? '取消收藏' : '收藏'}
+              >
+                {favoriteIds.includes(selectedMemory.id) ? '⭐' : '☆'}
+              </button>
+              <button onClick={toggleDetail} className={`transition-colors text-xl leading-none cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>
+                ✕
+              </button>
+            </div>
           </div>
 
           {editMode && selectedMemory.type === 'raw' ? (

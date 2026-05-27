@@ -20,20 +20,7 @@ interface AppState {
   valueDashboardOpen: boolean;
   searchQuery: string;
   emotionFilter: EmotionType[];
-}
-
-interface AppContextType extends AppState {
-  setCurrentView: (view: DimensionView) => void;
-  selectMemory: (mem: RawMemory | InsightMemory | null) => void;
-  focusInsight: (insight: InsightMemory | null) => void;
-  setDemoMode: (on: boolean) => void;
-  setDemoStep: (step: number) => void;
-  toggleChat: () => void;
-  toggleDetail: () => void;
-  toggleCrud: () => void;
-  toggleTheme: () => void;
-  toggleMemoryBank: () => void;
-  toggleValueDashboard: () => void;
+  favoriteIds: string[];
 }
 
 interface AppContextType extends AppState {
@@ -50,6 +37,7 @@ interface AppContextType extends AppState {
   toggleValueDashboard: () => void;
   setSearchQuery: (query: string) => void;
   toggleEmotionFilter: (emotion: EmotionType) => void;
+  toggleFavorite: (id: string) => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
   rawMemories: RawMemory[];
@@ -97,6 +85,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     valueDashboardOpen: false,
     searchQuery: '',
     emotionFilter: [],
+    favoriteIds: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -231,6 +220,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const toggleFavorite = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      favoriteIds: s.favoriteIds.includes(id)
+        ? s.favoriteIds.filter(x => x !== id)
+        : [...s.favoriteIds, id],
+    }));
+  }, []);
+
   const toggleHideRaw = useCallback(() => setHideRawOnly(prev => !prev), []);
   const toggleHideInsight = useCallback(() => setHideInsightOnly(prev => !prev), []);
   const toggleShowChatGPT = useCallback(() => setShowChatGPT(prev => !prev), []);
@@ -302,7 +300,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleFavorite, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
