@@ -430,7 +430,7 @@ function DemoCameraController() {
 
 function CameraFlyTo() {
   const { selectedMemory, currentView } = useAppState();
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 0, 0));
   const isAnimating = useRef(false);
 
@@ -448,7 +448,8 @@ function CameraFlyTo() {
     }
     targetPos.current.set(pos[0], pos[1], pos[2]);
     isAnimating.current = true;
-  }, [selectedMemory, currentView]);
+    invalidate();
+  }, [selectedMemory, currentView, invalidate]);
 
   useFrame(() => {
     if (!isAnimating.current) return;
@@ -466,6 +467,7 @@ function CameraFlyTo() {
       0.04,
     );
     camera.lookAt(targetPos.current);
+    invalidate();
   });
 
   return null;
@@ -630,6 +632,8 @@ function HoverTooltip() {
 
   useEffect(() => {
     const canvas = gl.domElement;
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null;
+    let latestEvent: PointerEvent | null = null;
 
     const getMemoryPositions = () => {
       let raws = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
@@ -645,7 +649,7 @@ function HoverTooltip() {
       }));
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
+    const processHover = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       const mouse = new THREE.Vector2(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -672,13 +676,30 @@ function HoverTooltip() {
       }
     };
 
-    const handlePointerLeave = () => setHovered(null);
+    const handlePointerMove = (e: PointerEvent) => {
+      latestEvent = e;
+      if (throttleTimer === null) {
+        throttleTimer = setTimeout(() => {
+          throttleTimer = null;
+          if (latestEvent) processHover(latestEvent);
+        }, 100);
+      }
+    };
+
+    const handlePointerLeave = () => {
+      setHovered(null);
+      if (throttleTimer !== null) {
+        clearTimeout(throttleTimer);
+        throttleTimer = null;
+      }
+    };
 
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerleave', handlePointerLeave);
     return () => {
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerleave', handlePointerLeave);
+      if (throttleTimer !== null) clearTimeout(throttleTimer);
     };
   }, [camera, gl, rawMemories, navCategory, navSubCategory, currentView, raycaster]);
 
@@ -864,6 +885,11 @@ function DynamicClearColor({ color }: { color: string }) {
   return null;
 }
 
+function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitControls>) {
+  const { invalidate } = useThree();
+  return <OrbitControls {...props} onChange={() => invalidate()} />;
+}
+
 interface MemCloud3DProps {
   bgColor: string;
   theme: Theme;
@@ -902,7 +928,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <CameraFlyTo />
         <ParticlePositionProjector />
         <InteractionLoop />
-        <OrbitControls
+        <OrbitControlsWithInvalidation
           enableDamping
           dampingFactor={0.08}
           minDistance={3}

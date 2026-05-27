@@ -516,6 +516,15 @@ export default function NavigationSidebar() {
                     📁 导入 JSON 记忆文件
                   </label>
                 </div>
+                <a
+                  href="/sample-import.json"
+                  download="sample-import.json"
+                  className={`block w-full py-1.5 border rounded text-xs text-center transition-colors ${
+                    isDark ? 'bg-[#ffffff05] border-[#ffffff08] text-gray-400 hover:bg-[#ffffff10] hover:text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                  }`}
+                >
+                  ⬇️ 下载示例 JSON 文件
+                </a>
 
                 <button
                   onClick={() => setFormOpen(!formOpen)}
@@ -802,9 +811,9 @@ export default function NavigationSidebar() {
                               {confirmDeleteId === mem.id ? '确认删除？' : '🗑'}
                             </button>
                             {hoveredId === mem.id && (
-                              <div className={`absolute left-0 top-full mt-1 z-50 w-56 p-2.5 rounded-lg shadow-xl border text-xs ${
-                                isDark ? 'bg-[#0d1525]/98 border-[#ffffff10] text-gray-300' : 'bg-white/98 border-gray-200 text-gray-700'
-                              }`}>
+                              <div className={`absolute left-0 top-full mt-1 z-[9999] w-64 p-3 rounded-lg shadow-2xl border text-xs ${
+                                isDark ? 'bg-[#0d1525] border-[#ffffff20] text-gray-200' : 'bg-white border-gray-200 text-gray-700'
+                              }`} style={{ backdropFilter: 'none' }}>
                                 <p className={`mb-1.5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   {mem.summary.length > 60 ? mem.summary.slice(0, 60) + '...' : mem.summary}
                                 </p>
@@ -885,7 +894,7 @@ export default function NavigationSidebar() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 500, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className={`fixed right-0 top-0 h-full w-[500px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
+          className={`fixed right-0 top-0 h-full w-full max-w-[500px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
             isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff08]' : 'bg-white/95 border-gray-200'
           }`}
         >
@@ -906,7 +915,7 @@ export default function NavigationSidebar() {
           </div>
           <div className={`flex-1 overflow-y-auto px-6 py-5 space-y-6 ${
             isDark ? 'text-gray-300' : 'text-gray-700'
-          }`}>
+          }`} style={{ overflowX: 'hidden' }}>
             {storyChapters.length === 0 ? (
               <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                 暂无足够记忆来生成故事
@@ -943,13 +952,13 @@ export default function NavigationSidebar() {
                     return (
                       <div key={pi} className="mb-3">
                         <p className={`text-sm leading-relaxed ${
-                          isDark ? 'text-gray-400' : 'text-gray-600'
+                          isDark ? 'text-gray-200' : 'text-gray-700'
                         }`}>
                           {paragraph}
                         </p>
                         {paragraphCitations.length > 0 && (
                           <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-                            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>依据：</span>
+                            <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>依据：</span>
                             {paragraphCitations.map(cit => (
                               <button
                                 key={cit.memoryId}

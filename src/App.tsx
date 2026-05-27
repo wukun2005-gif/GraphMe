@@ -121,19 +121,31 @@ function AppInner() {
           </button>
         )}
         {showSearch && (
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="搜索记忆..."
-            autoFocus
-            onBlur={() => { if (!searchQuery) setShowSearch(false); }}
-            className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm border focus:outline-none w-48 ${
-              isDark
-                ? 'bg-[#0d1525]/90 border-[#00f2ff]/30 text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/50'
-                : 'bg-white/90 border-gray-300 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/50'
-            }`}
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="搜索记忆..."
+              autoFocus
+              onBlur={() => { if (!searchQuery) setShowSearch(false); }}
+              className={`px-3 pr-7 py-1.5 text-xs rounded-lg backdrop-blur-sm border focus:outline-none w-48 ${
+                isDark
+                  ? 'bg-[#0d1525]/90 border-[#00f2ff]/30 text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/50'
+                  : 'bg-white/90 border-gray-300 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/50'
+              }`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(''); }}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs cursor-pointer transition-colors ${
+                  isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         )}
         <button
           onClick={() => setShowSearch(!showSearch)}
