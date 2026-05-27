@@ -55,6 +55,7 @@ export default function NavigationSidebar() {
     showChatGPT, toggleShowChatGPT,
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
+    undoDelete, undoStackCount,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -585,9 +586,22 @@ export default function NavigationSidebar() {
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                      共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                        共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
+                      </p>
+                      {undoStackCount > 0 && (
+                        <button
+                          onClick={undoDelete}
+                          className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+                            isDark ? 'bg-[#ffffff08] text-[#00f2ff] hover:bg-[#ffffff12]' : 'bg-gray-100 text-[#0088cc] hover:bg-gray-200'
+                          }`}
+                          title="撤销上次删除"
+                        >
+                          ↩ 撤销 ({undoStackCount})
+                        </button>
+                      )}
+                    </div>
                     <label className={`flex items-center gap-1 text-[10px] cursor-pointer ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                       <input
                         type="checkbox"

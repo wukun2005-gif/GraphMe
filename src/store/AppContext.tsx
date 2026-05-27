@@ -37,6 +37,8 @@ interface AppContextType extends AppState {
   deleteMemory: (id: string) => void;
   updateMemory: (id: string, updates: Partial<RawMemory>) => void;
   updateInsight: (id: string, updates: Partial<InsightMemory>) => void;
+  undoDelete: () => void;
+  undoStackCount: number;
   getVisibleMemories: () => RawMemory[];
   hideRawOnly: boolean;
   hideInsightOnly: boolean;
@@ -79,6 +81,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [chatgptImportStatus, setChatgptImportStatus] = useState<'idle' | 'importing' | 'done'>('idle');
   const [chatgptImportProgress, setChatgptImportProgress] = useState(0);
   const [hiddenMemoryIds, setHiddenMemoryIds] = useState<string[]>([]);
+  const [undoStack, setUndoStack] = useState<RawMemory[]>([]);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
   const selectMemory = useCallback((mem: RawMemory | InsightMemory | null) =>
@@ -104,8 +107,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteMemory = useCallback((id: string) => {
-    setRawMems(prev => prev.filter(m => m.id !== id));
+    setRawMems(prev => {
+      const deleted = prev.find(m => m.id === id);
+      if (deleted) setUndoStack(stack => [deleted, ...stack].slice(0, 5));
+      return prev.filter(m => m.id !== id);
+    });
     setState(s => s.selectedMemory?.id === id ? { ...s, selectedMemory: null, detailOpen: false } : s);
+  }, []);
+
+  const undoDelete = useCallback(() => {
+    setUndoStack(stack => {
+      if (stack.length === 0) return stack;
+      const [restored, ...rest] = stack;
+      setRawMems(prev => [...prev, restored]);
+      return rest;
+    });
   }, []);
 
   const updateMemory = useCallback((id: string, updates: Partial<RawMemory>) => {
@@ -217,7 +233,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
-      addMemory, deleteMemory, updateMemory, updateInsight, getVisibleMemories,
+      addMemory, deleteMemory, updateMemory, updateInsight, undoDelete, undoStackCount: undoStack.length, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
