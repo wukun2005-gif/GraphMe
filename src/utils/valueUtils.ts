@@ -78,6 +78,24 @@ export interface DailyMemoryResult {
   daysAgo: number;
 }
 
+export interface ReviewCandidate {
+  memory: RawMemory;
+  risk: number;
+  score: number;
+}
+
+export function getReviewCandidates(memories: RawMemory[], topN: number = 3): ReviewCandidate[] {
+  return memories
+    .map(m => {
+      const risk = computeForgettingRisk(m);
+      const value = computeValueScore(m);
+      return { memory: m, risk: risk.risk, score: value.score };
+    })
+    .filter(c => c.risk >= 0.3)
+    .sort((a, b) => (b.risk * b.score) - (a.risk * a.score))
+    .slice(0, topN);
+}
+
 export interface DecayCurvePoint {
   day: number;
   theoretical: number; // Ebbinghaus retention

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap } from '../utils/valueUtils';
+import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -651,6 +651,48 @@ export default function ValueDashboard() {
                       </div>
                     )}
                   </section>
+
+                  {(() => {
+                    const reviewCandidates = getReviewCandidates(rawMemories);
+                    return reviewCandidates.length > 0 ? (
+                      <section>
+                        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          📌 今日推荐重温
+                        </h4>
+                        <div className="space-y-1.5">
+                          {reviewCandidates.map(item => {
+                            const emoColor = EMOTION_COLORS[item.memory.dimensions.emotional.primary] || '#888';
+                            return (
+                              <div key={item.memory.id} className={`p-2 rounded-lg flex items-center gap-2 ${
+                                isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'
+                              }`}>
+                                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: emoColor }} />
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    {item.memory.label}
+                                  </p>
+                                  <p className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                    {item.memory.dimensions.emotional.primary} · 风险 {(item.risk * 100).toFixed(0)}%
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    reinforceMemory(item.memory.id);
+                                    addToast('已重温，遗忘曲线已重置', 'success');
+                                  }}
+                                  className={`text-[10px] px-2 py-0.5 rounded cursor-pointer transition-colors flex-shrink-0 ${
+                                    isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
+                                  }`}
+                                >
+                                  温故
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ) : null;
+                  })()}
                 </>
               )}
 
