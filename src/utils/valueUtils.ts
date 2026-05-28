@@ -78,6 +78,52 @@ export interface DailyMemoryResult {
   daysAgo: number;
 }
 
+export interface TrajectoryPair {
+  from: RawMemory;
+  to: RawMemory;
+  description: string;
+}
+
+export interface DailyTrajectory {
+  date: string;
+  pairs: TrajectoryPair[];
+}
+
+export function computeDailyTrajectories(memories: RawMemory[]): DailyTrajectory[] {
+  const dayMap = new Map<string, RawMemory[]>();
+
+  memories.forEach(m => {
+    const d = new Date(m.dimensions.temporal.timestamp);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (!dayMap.has(key)) dayMap.set(key, []);
+    dayMap.get(key)!.push(m);
+  });
+
+  const trajectories: DailyTrajectory[] = [];
+
+  dayMap.forEach((dayMems, date) => {
+    if (dayMems.length < 2) return;
+    const sorted = dayMems.sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
+    const pairs: TrajectoryPair[] = [];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const from = sorted[i];
+      const to = sorted[i + 1];
+      const fromEmo = from.dimensions.emotional.primary;
+      const toEmo = to.dimensions.emotional.primary;
+      const fromTime = from.dimensions.temporal.timeOfDay;
+      const toTime = to.dimensions.temporal.timeOfDay;
+      pairs.push({
+        from,
+        to,
+        description: `${fromTime}→${toTime} 情绪从${fromEmo}变为${toEmo}`,
+      });
+    }
+    trajectories.push({ date, pairs });
+  });
+
+  return trajectories.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export interface AnnualStats {
   totalMemories: number;
   emotionDistribution: Record<string, number>;

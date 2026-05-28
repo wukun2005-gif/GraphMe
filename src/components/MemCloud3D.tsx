@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
 import { isMemoryInCategory } from '../utils/navUtils';
+import { computeDailyTrajectories } from '../utils/valueUtils';
+import { EMOTION_COLORS } from '../types';
 
 function createGlowTexture(): THREE.Texture {
   const size = 64;
@@ -328,6 +330,79 @@ function RippleEffect({ theme }: { theme: Theme }) {
           />
         </mesh>
       ))}
+    </group>
+  );
+}
+
+function EmotionTrajectoryLines({ theme }: { theme: Theme }) {
+  const { rawMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+
+  const trajectories = useMemo(() => computeDailyTrajectories(rawMemories), [rawMemories]);
+
+  // Limit to recent trajectories to avoid visual clutter
+  const recentTrajectories = useMemo(() => trajectories.slice(-7), [trajectories]);
+
+  const lineData = useMemo(() => {
+    const lines: { points: [number, number, number][]; fromColor: string; toColor: string; tooltip: string }[] = [];
+    recentTrajectories.forEach(t => {
+      t.pairs.forEach(pair => {
+        const fromPos = pair.from.positions[currentView] || pair.from.position3D;
+        const toPos = pair.to.positions[currentView] || pair.to.position3D;
+        const fromColor = EMOTION_COLORS[pair.from.dimensions.emotional.primary] || '#888';
+        const toColor = EMOTION_COLORS[pair.to.dimensions.emotional.primary] || '#888';
+
+        // Create curved path via midpoint with vertical offset
+        const mid: [number, number, number] = [
+          (fromPos[0] + toPos[0]) / 2,
+          (fromPos[1] + toPos[1]) / 2 + 0.5,
+          (fromPos[2] + toPos[2]) / 2,
+        ];
+
+        lines.push({
+          points: [fromPos, mid, toPos],
+          fromColor,
+          toColor,
+          tooltip: `${t.date} ${pair.description}`,
+        });
+      });
+    });
+    return lines;
+  }, [recentTrajectories, currentView]);
+
+  if (lineData.length === 0) return null;
+
+  return (
+    <group>
+      {lineData.map((line, i) => {
+        const curve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(...line.points[0]),
+          new THREE.Vector3(...line.points[1]),
+          new THREE.Vector3(...line.points[2]),
+        );
+        const points = curve.getPoints(16);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        // Vertex colors: from → to gradient
+        const colors = new Float32Array(points.length * 3);
+        const c1 = new THREE.Color(line.fromColor);
+        const c2 = new THREE.Color(line.toColor);
+        points.forEach((_, j) => {
+          const t = j / (points.length - 1);
+          const c = c1.clone().lerp(c2, t);
+          colors[j * 3] = c.r;
+          colors[j * 3 + 1] = c.g;
+          colors[j * 3 + 2] = c.b;
+        });
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const lineObj = new THREE.Line(
+          geometry,
+          new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: isLight ? 0.3 : 0.25 }),
+        );
+
+        return <primitive key={i} object={lineObj} />;
+      })}
     </group>
   );
 }
@@ -1078,6 +1153,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
+        <EmotionTrajectoryLines theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />
