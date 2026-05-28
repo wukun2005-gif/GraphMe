@@ -578,6 +578,7 @@ export default function DetailPanel() {
             </h3>
             <div className="flex items-center gap-2">
               <button
+                id="demo-favorite-btn"
                 onClick={() => toggleFavorite(selectedMemory.id)}
                 className={`transition-colors text-lg cursor-pointer ${
                   favoriteIds.includes(selectedMemory.id)
@@ -800,6 +801,7 @@ export default function DetailPanel() {
                       }`}
                     >✏️ 编辑</button>
                     <button
+                      id="demo-compare-btn"
                       onClick={() => { setCompareMode(!compareMode); setCompareTarget(null); }}
                       className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                         compareMode
@@ -808,6 +810,7 @@ export default function DetailPanel() {
                       }`}
                     >{compareMode ? '📄 详情' : '📊 对比'}</button>
                     <button
+                      id="demo-export-btn"
                       onClick={async () => {
                         const blob = await renderMemoryCard(selectedMemory);
                         const date = new Date(selectedMemory.dimensions.temporal.timestamp);

@@ -84,12 +84,16 @@ function AppInner() {
     const onChatExpand = (e: Event) => {
       window.dispatchEvent(new CustomEvent('demo-chat-expand-internal', { detail: (e as CustomEvent).detail }));
     };
+    const onCloseSerendipity = () => setShowSerendipity(false);
+    const onCloseAnnualReport = () => setShowAnnualReport(false);
 
     window.addEventListener('demo-select-memory', onSelectMemory);
     window.addEventListener('demo-close-detail', onCloseDetail);
     window.addEventListener('demo-detail-edit', onDetailEdit);
     window.addEventListener('demo-detail-cancel-edit', onDetailCancelEdit);
     window.addEventListener('demo-chat-expand', onChatExpand);
+    window.addEventListener('demo-close-serendipity', onCloseSerendipity);
+    window.addEventListener('demo-close-annual-report', onCloseAnnualReport);
 
     return () => {
       window.removeEventListener('demo-select-memory', onSelectMemory);
@@ -97,6 +101,8 @@ function AppInner() {
       window.removeEventListener('demo-detail-edit', onDetailEdit);
       window.removeEventListener('demo-detail-cancel-edit', onDetailCancelEdit);
       window.removeEventListener('demo-chat-expand', onChatExpand);
+      window.removeEventListener('demo-close-serendipity', onCloseSerendipity);
+      window.removeEventListener('demo-close-annual-report', onCloseAnnualReport);
     };
   }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
 
@@ -130,6 +136,7 @@ function AppInner() {
           {(['全局视图', '家庭视图', '学习视图', '情绪视图'] as const).map(view => (
             <button
               key={view}
+              id={`btn-view-${view}`}
               onClick={() => setCurrentView(view)}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
                 currentView === view
@@ -170,6 +177,7 @@ function AppInner() {
         {showSearch && (
           <div className="relative">
             <input
+              id="demo-search-input"
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -195,6 +203,7 @@ function AppInner() {
           </div>
         )}
         <button
+          id="btn-search"
           onClick={() => setShowSearch(!showSearch)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             showSearch
@@ -205,6 +214,7 @@ function AppInner() {
           🔍
         </button>
         <button
+          id="btn-annual-report"
           onClick={() => setShowAnnualReport(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -215,6 +225,7 @@ function AppInner() {
           📊 年报
         </button>
         <button
+          id="btn-serendipity"
           onClick={() => setShowSerendipity(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark

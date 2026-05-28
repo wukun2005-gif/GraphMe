@@ -40,7 +40,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
     let isCancelled = false;
 
     const SPEED_FACTOR = 1.25;
-    const TOTAL_DURATION = 90_000 / SPEED_FACTOR; // 72s at 1.25x
+    const TOTAL_DURATION = 150_000 / SPEED_FACTOR; // 120s at 1.25x
     const startTime = Date.now();
 
     // Progress tracker
@@ -114,26 +114,40 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
     };
 
     const getParticleScreenPos = async (particleId: string): Promise<{ x: number; y: number } | null> => {
-      return new Promise(resolve => {
-        let resolved = false;
-        const handler = (e: Event) => {
-          const detail = (e as CustomEvent).detail as Record<string, { x: number; y: number }>;
-          if (detail[particleId] && !resolved) {
-            resolved = true;
-            window.removeEventListener('demo-particle-positions', handler);
-            resolve(detail[particleId]);
-          }
-        };
-        window.addEventListener('demo-particle-positions', handler);
-        window.dispatchEvent(new CustomEvent('demo-request-particle-positions'));
-        setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
-            window.removeEventListener('demo-particle-positions', handler);
-            resolve(null);
-          }
-        }, 500);
-      });
+      const tryOnce = (): Promise<{ x: number; y: number } | null> => {
+        return new Promise(resolve => {
+          let resolved = false;
+          const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail as Record<string, { x: number; y: number }>;
+            if (detail[particleId] && !resolved) {
+              resolved = true;
+              window.removeEventListener('demo-particle-positions', handler);
+              resolve(detail[particleId]);
+            }
+          };
+          window.addEventListener('demo-particle-positions', handler);
+          window.dispatchEvent(new CustomEvent('demo-request-particle-positions'));
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              window.removeEventListener('demo-particle-positions', handler);
+              resolve(null);
+            }
+          }, 300);
+        });
+      };
+
+      // First attempt
+      let pos = await tryOnce();
+      if (pos) return pos;
+
+      // Wait 1s for camera/animation to settle, then retry
+      await wait(1000);
+      pos = await tryOnce();
+      if (pos) return pos;
+
+      // Final fallback: screen center
+      return null;
     };
 
     const clickParticle = async (particleId: string, text: string, waitAfter: number = 2000) => {
@@ -178,273 +192,199 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       }
     };
 
+    /** 通过 React 受控组件 setter 安全设置 input 值 */
+    const setInputValue = (id: string, value: string) => {
+      const el = document.getElementById(id);
+      if (!el || !(el instanceof HTMLInputElement)) return;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      if (setter) { setter.call(el, value); el.dispatchEvent(new Event('input', { bubbles: true })); }
+    };
+
     const runSequence = async () => {
       if (isCancelled) return;
-
       try {
 
-      // INTRO (2s)
-      setTooltipText('🚀 开始一键演示：90秒全面探索 GraphMe（按 ESC 随时退出）');
+      // ─── INTRO (3s) ───────────────────────────────
+      setTooltipText('🌌 你的记忆不是文件夹里的文字，而是一个活着的宇宙');
       setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      await wait(2000);
+      await wait(3000);
       if (isCancelled) return;
 
-      // P1: 星云探索 · 3D交互 (10s)
+      // ─── P1: 宇宙诞生 (6s) ────────────────────────
       dispatchCameraMove('zoom-in');
-      await moveToCenter('🌌 三维记忆星云：缩放查看语义距离，粒子越近语义越相似', 2500);
+      await moveToCenter('✨ 每颗粒子是一段记忆，颜色是情绪，大小是重要性', 2500);
       if (isCancelled) return;
-
       dispatchCameraMove('rotate');
-      await moveToCenter('🔄 旋转星云从不同角度观察记忆聚类结构', 2500);
+      await moveToCenter('🔄 语义相近的记忆自动聚类，形成星座', 2500);
       if (isCancelled) return;
-
-      dispatchCameraMove('pan');
-      await moveToCenter('🖐 拖拽平移视角，浏览整个记忆空间', 2500);
-      if (isCancelled) return;
-
       dispatchCameraMove('zoom-out');
-      await wait(2000);
-      if (isCancelled) return;
-
-      // P2: 分类导航 · 多视图切换 (12s)
-      await moveAndClick('nav-cat-家庭生活', '📂 通过多维分类导航聚焦不同生活侧面', 2000);
-      if (isCancelled) return;
-
-      await moveAndClick('nav-sub-快乐时光', '🔍 "快乐时光"子分类——星云自动重新聚类显示相关记忆', 3000);
-      if (isCancelled) return;
-
-      await moveAndClick('nav-cat-家庭生活', '🔙 取消分类返回全局视图', 2000);
-      if (isCancelled) return;
-
-      await moveAndClick('nav-cat-学习与成长', '📂 切换到"学习与成长"分类', 2000);
-      if (isCancelled) return;
-
-      await moveAndClick('nav-sub-编程学习', '💻 "编程学习"子分类——不同视图下星云内容自动变化', 3000);
-      if (isCancelled) return;
-
-      // P3: 记忆卡片 · 原始记忆 + 洞察记忆 (14s)
-await clickParticle('mem_007',
-  '📖 点击记忆粒子，打开原始记忆卡片详情面板', 2000);
-if (isCancelled) return;
-
-await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
-  '🧠 查看多维信息：时间、地点、人物、情绪、活动、CQI等');
-await wait(3000);
-if (isCancelled) return;
-
-window.dispatchEvent(new CustomEvent('demo-close-detail'));
-await wait(500);
-if (isCancelled) return;
-
-await clickParticle('insight_001',
-  '💡 点击金色圆环洞察记忆粒子：AI从原子中推理出的高阶认知', 2000);
-if (isCancelled) return;
-
-await moveTo(window.innerWidth - 210, window.innerHeight * 0.45,
-  '💡 金色圆环代表洞察记忆：趋势、信念、关系、偏好、习惯、成长');
-await wait(3000);
-if (isCancelled) return;
-
-window.dispatchEvent(new CustomEvent('demo-close-detail'));
-await wait(500);
-if (isCancelled) return;
-
-// P4: 记忆卡编辑流程 (10s)
-await clickParticle('mem_007',
-  '📖 再次点击记忆粒子，查看编辑功能', 2000);
-if (isCancelled) return;
-
-      await moveAndClick('demo-edit-btn', '✏️ 点击编辑按钮，进入编辑模式', 1500);
-      if (isCancelled) return;
-
-      await moveTo(window.innerWidth - 210, window.innerHeight * 0.3,
-        '✏️ 编辑模式：可修改标签、摘要、情绪、地点等字段');
-      await wait(2000);
-      if (isCancelled) return;
-
-      await moveAndClick('demo-edit-label', '📝 选中标签字段，输入新标签', 500);
-      if (isCancelled) return;
-      await simulateType('demo-edit-label', '儿童节游乐园冒险日');
       await wait(1500);
       if (isCancelled) return;
 
-      await moveAndClick('demo-edit-summary', '📝 选中摘要字段，更新摘要内容', 500);
+      // ─── P1.5: 粒子悬停 (3s) ──────────────────────
+      await moveToCenter('🖱 悬停粒子显示标签+情绪色块，关联连线自动高亮', 1500);
       if (isCancelled) return;
-      await simulateType('demo-edit-summary', '六一儿童节在游乐园度过快乐的一天，玩了过山车和旋转木马');
-      await wait(1500);
-      if (isCancelled) return;
-
-      window.dispatchEvent(new CustomEvent('demo-detail-cancel-edit'));
-      await wait(300);
-      if (isCancelled) return;
-      await moveTo(window.innerWidth - 210, window.innerHeight * 0.6,
-        '↩️ 取消编辑返回阅读模式');
-      await wait(1500);
+      await moveTo(window.innerWidth * 0.4, window.innerHeight * 0.4,
+        '✨ 记忆星云是可交互的宇宙');
+      await wait(1200);
       if (isCancelled) return;
 
+      // ─── P2: 触摸一颗星 (7s) ──────────────────────
+      await wait(500);
+      if (isCancelled) return;
+      await clickParticle('mem_007', '📖 点击一颗星，打开 10 维数据', 2000);
+      if (isCancelled) return;
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
+        '🧠 时间、地点、人物、情绪、活动、CQI……每段记忆都是多维宇宙');
+      await wait(2500);
+      if (isCancelled) return;
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
       await wait(500);
       if (isCancelled) return;
 
-      // P5: 价值看板 + 记忆健康 (14s)
-await moveAndClick('val-dash-trigger', '📊 打开价值看板——查看高价值记忆排行与遗忘预警', 2500);
-if (isCancelled) return;
-
-await moveAndClick('val-dash-health-tab', '❤️ 切换到"记忆健康"——10维度覆盖率雷达图', 1500);
-if (isCancelled) return;
-
-await moveToCenter('📈 雷达图展示各维度记忆覆盖情况，发现知识空白');
-await wait(1500);
-if (isCancelled) return;
-
-{
-  const dashContent = document.querySelector('.fixed.bottom-20.w-\\[380px\\] .overflow-y-auto');
-  if (dashContent) {
-    dashContent.scrollTo({ top: 200, behavior: 'smooth' });
-    await wait(1000);
-  }
-}
-await moveToCenter('⏳ 向下滚动查看遗忘指数与情绪分布趋势');
-await wait(2500);
-if (isCancelled) return;
-
-{
-  const dashContent = document.querySelector('.fixed.bottom-20.w-\\[380px\\] .overflow-y-auto');
-  if (dashContent) {
-    dashContent.scrollTo({ top: 400, behavior: 'smooth' });
-    await wait(1000);
-  }
-}
-await moveToCenter('🌈 情绪分布显示近期情绪以快乐和好奇为主');
-await wait(2000);
-if (isCancelled) return;
-
-await moveAndClick('val-dash-trigger', '关闭价值看板', 1000);
-if (isCancelled) return;
-
-      // P5.5: 记忆银行 (8s)
-await moveAndClick('memory-bank-trigger', '💰 打开记忆银行——生命维度投资组合面板', 2500);
-if (isCancelled) return;
-
-await moveToCenter('📊 5个生命维度：快乐、逻辑、社交、户外活动、创意');
-await wait(2000);
-if (isCancelled) return;
-
-{
-  const bankContent = document.querySelector('.fixed.bottom-36.w-\\[420px\\] .flex-1.overflow-y-auto');
-  if (bankContent) {
-    bankContent.scrollTo({ top: 350, behavior: 'smooth' });
-    await wait(1000);
-  }
-}
-await moveToCenter('🧬 心智模型气质画像：基于记忆数据生成行为模式分析');
-await wait(2000);
-if (isCancelled) return;
-
-await moveAndClick('memory-bank-close', '关闭记忆银行', 1000);
-if (isCancelled) return;
-
-      // P6: ChatGPT 导入 + GPT 记忆展示 (14s)
-await moveAndClick('nav-memory-mgr', '⚙️ 打开记忆管理面板', 2000);
-if (isCancelled) return;
-
-await moveAndClick('nav-chatgpt-import', '🤖 从 ChatGPT 一键导入聊天记录转化为记忆碎片', 2000);
-if (isCancelled) return;
-
-await moveToCenter('📥 模拟导入过程：聊天记录 → 记忆碎片 → 洞察记忆', 3000);
-if (isCancelled) return;
-
-await moveAndClick('nav-memory-mgr', '收起记忆管理面板', 1000);
-if (isCancelled) return;
-
-await clickParticle('chatgpt_001',
-  '🔵 点击蓝色 GPT 原始记忆：ChatGPT 学习 Python 基础', 2500);
-if (isCancelled) return;
-
-await moveTo(window.innerWidth - 210, window.innerHeight * 0.35,
-  '🧠 GPT 记忆同样包含时间、地点、情绪、CQI 等10维数据');
-await wait(3000);
-if (isCancelled) return;
-
-window.dispatchEvent(new CustomEvent('demo-close-detail'));
-await wait(500);
-if (isCancelled) return;
-
-await clickParticle('chatgpt_insight_001',
-  '🟡 点击 GPT 洞察记忆：AI 从 GPT 对话中推理出的高阶认知', 2500);
-if (isCancelled) return;
-
-await moveTo(window.innerWidth - 210, window.innerHeight * 0.40,
-  '💡 GPT 洞察记忆展示跨来源推理：技术话题频率在上升');
-await wait(3000);
-if (isCancelled) return;
-
-window.dispatchEvent(new CustomEvent('demo-close-detail'));
-await wait(500);
-if (isCancelled) return;
-
-// P7: Chatbot 问答 + 记忆链接 (10s)
-      await moveAndClick('chat-trigger', '💬 打开 GraphMe 对话助手', 1500);
+      // ─── P2.5: 全局搜索 (4s) ──────────────────────
+      await moveAndClick('btn-search', '🔍 全局搜索——在记忆宇宙中快速定位', 800);
+      if (isCancelled) return;
+      await moveTo(window.innerWidth - 100, 16, '输入关键词，匹配粒子自动高亮放大');
+      await wait(400);
+      if (isCancelled) return;
+      setInputValue('demo-search-input', '编程');
+      await wait(2000);
+      if (isCancelled) return;
+      setInputValue('demo-search-input', '');
+      await wait(300);
+      if (isCancelled) return;
+      await moveAndClick('btn-search', '关闭搜索', 500);
       if (isCancelled) return;
 
-      window.dispatchEvent(new CustomEvent('demo-chat-expand', { detail: { index: 0 } }));
+      // ─── P3: 分类导航 (5s) ────────────────────────
+      await moveAndClick('nav-cat-家庭生活', '📂 多维分类导航——聚焦"家庭生活"', 1500);
+      if (isCancelled) return;
+      await moveAndClick('nav-sub-快乐时光', '🔍 子分类"快乐时光"——星云自动重新聚类', 1500);
+      if (isCancelled) return;
+      await moveAndClick('nav-cat-家庭生活', '🔙 再次点击取消分类', 1000);
+      if (isCancelled) return;
+
+      // ─── P4: 情绪筛选 (4s) ────────────────────────
+      await moveAndClick('nav-legend', '🎨 图例区域——粒子颜色 = 情绪色彩', 800);
+      if (isCancelled) return;
+      await moveAndClick('emotion-filter-快乐', '😊 点击"快乐"——星云只显示快乐记忆', 1800);
+      if (isCancelled) return;
+      await moveAndClick('emotion-filter-快乐', '再次点击取消筛选', 800);
+      if (isCancelled) return;
+
+      // ─── P5: 四种视角 (6s) ────────────────────────
+      await moveAndClick('btn-view-家庭视图', '🏠 家庭视角——家庭记忆聚拢', 1500);
+      if (isCancelled) return;
+      await moveAndClick('btn-view-学习视图', '🎓 学习视角——学习记忆浮出', 1500);
+      if (isCancelled) return;
+      await moveAndClick('btn-view-情绪视图', '😊 情绪视角——按情感重排', 1500);
+      if (isCancelled) return;
+      await moveAndClick('btn-view-全局视图', '🌐 回到全局视图', 800);
+      if (isCancelled) return;
+
+      // ─── P6: 记忆碰碰对 (10s) ★ 高潮 ─────────────
+      await moveAndClick('btn-serendipity', '🎲 机缘引擎：发现记忆之间隐藏的联系', 2500);
+      if (isCancelled) return;
+      await moveToCenter('🔗 看！两条看似无关的记忆，其实共享同一个周六上午', 3000);
+      if (isCancelled) return;
+      await moveToCenter('🎲 每次"换一组"都能发现新的隐藏联系', 2000);
+      if (isCancelled) return;
+      window.dispatchEvent(new CustomEvent('demo-close-serendipity'));
       await wait(800);
       if (isCancelled) return;
 
-      const chatPanel = document.querySelector('.fixed.bottom-20.w-\\[360px\\]');
-      const chatRect = chatPanel?.getBoundingClientRect();
-      if (chatRect) {
-        await moveTo(chatRect.left + chatRect.width / 2, chatRect.top + 100,
-          '❓ AI 基于记忆网络生成深度分析回答');
-      } else {
-        await moveToCenter('❓ AI 基于记忆网络生成深度分析回答');
-      }
+      // ─── P7: AI 洞察 (8s) ────────────────────────
+      await wait(500);
+      if (isCancelled) return;
+      await clickParticle('insight_001', '💡 金色圆环——AI 推理出的高阶认知', 2000);
+      if (isCancelled) return;
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.45,
+        '🧠 趋势、信念、关系、偏好、习惯、成长——超越原始记忆');
       await wait(3000);
       if (isCancelled) return;
-
-      await moveAndClick('chat-link-0', '🔗 点击记忆链接直接跳转到相关记忆详情', 3000);
-      if (isCancelled) return;
-
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
-      await wait(300);
-      if (isCancelled) return;
-      await moveAndClick('chat-trigger', '关闭对话助手', 500);
+      await wait(500);
       if (isCancelled) return;
 
-      // P8: Story Board 叙事展示 (8s)
-      await moveAndClick('nav-storyboard', '📖 打开"我的侧写"——AGI 用记忆讲述你的故事', 3000);
+      // ─── P8: 收藏+导出 (6s) ──────────────────────
+      await clickParticle('mem_007', '📖 再次打开记忆详情', 1500);
+      if (isCancelled) return;
+      await moveAndClick('demo-favorite-btn', '⭐ 收藏——高频星星被置顶', 1500);
+      if (isCancelled) return;
+      await moveTo(window.innerWidth - 210, window.innerHeight * 0.65,
+        '📸 导出记忆卡片——可保存为 PNG 分享给家人');
+      await wait(1500);
+      if (isCancelled) return;
+      window.dispatchEvent(new CustomEvent('demo-close-detail'));
+      await wait(500);
       if (isCancelled) return;
 
-      await moveToCenter('📖 图文并茂的叙事：原始记忆讲述过去，洞察记忆描绘未来', 3000);
+      // ─── P9: ChatGPT 导入 (8s) ───────────────────
+      await moveAndClick('nav-memory-mgr', '⚙️ 记忆管理——外部 Agent 记忆一键导入', 1500);
+      if (isCancelled) return;
+      await moveAndClick('nav-chatgpt-import', '🤖 从 ChatGPT 导入聊天记录，自动转化为结构化记忆', 2500);
+      if (isCancelled) return;
+      await moveToCenter('📥 聊天记录 → 记忆碎片 → 洞察记忆，全链路自动化', 2000);
+      if (isCancelled) return;
+      await moveAndClick('nav-memory-mgr', '收起面板', 800);
       if (isCancelled) return;
 
-      {
-        const storyContent = document.querySelector('.max-h-\\[calc\\(85vh-70px\\)\\]');
-        if (storyContent) {
-          storyContent.scrollTo({ top: storyContent.scrollHeight, behavior: 'smooth' });
-          await wait(1500);
-        }
-      }
-      await moveToCenter('🔮 向下滚动——洞察记忆描绘未来的你', 3000);
+      // ─── P9.5: 记忆银行 (6s) ─────────────────────
+      await moveAndClick('memory-bank-trigger', '💰 记忆银行——生命维度投资组合', 1500);
+      if (isCancelled) return;
+      await moveToCenter('📊 5个生命维度：快乐、逻辑、社交、户外、创意', 1500);
+      if (isCancelled) return;
+      await moveToCenter('🧬 心智模型气质画像——基于记忆的行为模式分析', 1500);
+      if (isCancelled) return;
+      await moveAndClick('memory-bank-close', '关闭', 800);
       if (isCancelled) return;
 
-      await moveToCenter('点击遮罩或关闭按钮退出 Story Board', 2000);
+      // ─── P10: StoryWeaver (10s) ───────────────────
+      await moveAndClick('nav-storyboard', '📖 "我的侧写"——AGI 用记忆讲述你的故事', 1500);
+      if (isCancelled) return;
+      await moveAndClick('storyweaver-play-btn', '▶ 播放：记忆节点逐一亮起，情绪轨迹线流动', 1500);
+      if (isCancelled) return;
+      await moveToCenter('📖 从过去到现在，从现在到未来', 3500);
+      if (isCancelled) return;
+      await moveToCenter('🔮 每段记忆都是故事的一个章节', 2000);
+      if (isCancelled) return;
+      await moveAndClick('nav-storyboard', '关闭侧写', 800);
       if (isCancelled) return;
 
-      // Close Story Board by clicking backdrop (center of screen is covered by modal)
-      // Click the close button area - near top right
-      await moveAndClick('nav-storyboard', '收起我的侧写', 1000);
+      // ─── P11: 价值看板 (12s) ─────────────────────
+      await moveAndClick('val-dash-trigger', '📊 价值看板——高价值记忆排行与遗忘预警', 2000);
+      if (isCancelled) return;
+      await moveToCenter('📈 高价值记忆排行 + 遗忘风险预警', 2000);
+      if (isCancelled) return;
+      await moveAndClick('val-dash-health-tab', '❤️ 记忆健康——10 维度覆盖率雷达图', 2000);
+      if (isCancelled) return;
+      await moveToCenter('📊 雷达图展示各维度记忆覆盖情况，发现知识空白', 2000);
+      if (isCancelled) return;
+      await moveAndClick('val-dash-decay-tab', '📉 遗忘曲线——艾宾浩斯理论 vs 实际衰减', 2000);
+      if (isCancelled) return;
+      await moveAndClick('demo-review-btn', '🔄 点击"温故"——重温记忆，遗忘曲线重置', 1500);
+      if (isCancelled) return;
+      await moveAndClick('val-dash-trigger', '关闭价值看板', 800);
       if (isCancelled) return;
 
-      // OUTRO (3s)
-      setTooltipText('✅ 演示结束！GraphMe — 让每一段记忆都有迹可循');
+      // ─── P12: 年度报告 (8s) ──────────────────────
+      await moveAndClick('btn-annual-report', '📊 年度记忆报告——你的 2026 记忆人格', 2000);
+      if (isCancelled) return;
+      await moveToCenter('📈 情绪分布、月度活跃、年度关键词', 2500);
+      if (isCancelled) return;
+      await moveToCenter('🌈 你的情绪以快乐和好奇为主，最常出现的人物是爸爸', 2000);
+      if (isCancelled) return;
+      window.dispatchEvent(new CustomEvent('demo-close-annual-report'));
+      await wait(800);
+      if (isCancelled) return;
+
+      // ─── OUTRO (3s) ───────────────────────────────
+      setTooltipText('✅ GraphMe — 让每一段记忆都有迹可循');
       setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
       setProgress(100);
       await wait(3000);
-
-      if (!isCancelled) {
-        stopDemo();
-      }
+      if (!isCancelled) stopDemo();
 
       } catch (err) {
         console.error('FakeCursor demo sequence error:', err);

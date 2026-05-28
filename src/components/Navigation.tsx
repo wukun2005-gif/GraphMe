@@ -390,6 +390,7 @@ export default function NavigationSidebar() {
                       return (
                         <button
                           key={emotion}
+                          id={`emotion-filter-${emotion}`}
                           onClick={() => toggleEmotionFilter(emotion as EmotionType)}
                           className={`flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer transition-colors ${
                             isActive

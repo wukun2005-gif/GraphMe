@@ -85,6 +85,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {storylines.map(name => (
             <button
               key={name}
+              id={`storyline-btn-${name}`}
               onClick={() => { setSelected(name); stopPlay(); }}
               className={`text-[10px] px-2 py-1 rounded-full cursor-pointer transition-colors ${
                 selected === name
@@ -114,6 +115,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {/* Play controls */}
           <div className="flex items-center justify-center gap-3">
             <button
+              id="storyweaver-play-btn"
               onClick={playing ? stopPlay : startPlay}
               className={`text-xs px-4 py-1.5 rounded-full cursor-pointer transition-all ${
                 playing

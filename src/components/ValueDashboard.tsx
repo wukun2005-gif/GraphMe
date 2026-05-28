@@ -535,6 +535,7 @@ export default function ValueDashboard() {
                   ❤️ 记忆健康
                 </button>
                 <button
+                  id="val-dash-decay-tab"
                   onClick={() => setTab('decay')}
                   className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     tab === 'decay'
@@ -545,6 +546,7 @@ export default function ValueDashboard() {
                   📉 遗忘曲线
                 </button>
                 <button
+                  id="val-dash-calendar-tab"
                   onClick={() => setTab('calendar')}
                   className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     tab === 'calendar'
@@ -676,6 +678,7 @@ export default function ValueDashboard() {
                                   </p>
                                 </div>
                                 <button
+                                  id="demo-review-btn"
                                   onClick={() => {
                                     reinforceMemory(item.memory.id);
                                     addToast('已重温，遗忘曲线已重置', 'success');
