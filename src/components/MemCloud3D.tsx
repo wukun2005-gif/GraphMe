@@ -66,7 +66,7 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -124,11 +124,25 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       const importance = m.dimensions.value.importance;
       const baseSize = 0.2 + importance * 0.6;
       const jitter = 0.8 + Math.random() * 0.4;
-      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
+      let size = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
+
+      // Time range filter: shrink and dim particles outside range
+      if (timeRangeFilter) {
+        const ts = m.dimensions.temporal.timestamp;
+        const inRange = ts >= timeRangeFilter[0] && ts <= timeRangeFilter[1];
+        if (!inRange) {
+          size *= 0.4;
+          col[i * 3] *= 0.15;
+          col[i * 3 + 1] *= 0.15;
+          col[i * 3 + 2] *= 0.15;
+        }
+      }
+
+      sz[i] = size;
     });
 
     return { positions: pos, colors: col, sizes: sz };
-  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery]);
+  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter]);
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();

@@ -22,6 +22,7 @@ interface AppState {
   emotionFilter: EmotionType[];
   favoriteIds: string[];
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
+  timeRangeFilter: [number, number] | null;
 }
 
 interface AppContextType extends AppState {
@@ -68,6 +69,7 @@ interface AppContextType extends AppState {
   toggleMemoryVisibility: (id: string) => void;
   toggleAllMemories: () => void;
   reinforceMemory: (id: string) => void;
+  setTimeRangeFilter: (range: [number, number] | null) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -91,6 +93,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     emotionFilter: [],
     favoriteIds: [],
     toasts: [],
+    timeRangeFilter: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -282,6 +285,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setTimeRangeFilter = useCallback((range: [number, number] | null) => {
+    setState(s => ({ ...s, timeRangeFilter: range }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -341,7 +348,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
-      hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory,
+      hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory, setTimeRangeFilter,
     }}>
       {children}
     </AppContext.Provider>

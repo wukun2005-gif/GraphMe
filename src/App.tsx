@@ -7,6 +7,7 @@ import ValueDashboard from './components/ValueDashboard';
 import MemoryBank from './components/MemoryBank';
 import ToastContainer from './components/Toast';
 import DailyMemoryCard from './components/DailyMemoryCard';
+import TimelineScrubber from './components/TimelineScrubber';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -105,6 +106,8 @@ function AppInner() {
         <span className="mx-2">·</span>
         <span>{insightMemories.length} 洞察记忆</span>
       </div>
+
+      <TimelineScrubber />
 
       <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
         detailOpen ? 'right-[436px]' : 'right-4'
