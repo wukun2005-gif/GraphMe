@@ -942,7 +942,7 @@ export default function NavigationSidebar() {
           exit={{ x: 500, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className={`fixed right-0 top-0 h-full w-full max-w-[500px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
-            isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff08]' : 'bg-white/95 border-gray-200'
+            isDark ? 'bg-[#0d0d1a] border-[#ffffff08]' : 'bg-white border-gray-200'
           }`}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-inherit flex-shrink-0">
