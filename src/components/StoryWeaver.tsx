@@ -138,7 +138,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                 <div
                   key={node.memory.id}
                   ref={setNodeRef(i)}
-                  className={`relative mb-4 last:mb-0 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-30'}`}
+                  className="relative mb-4 last:mb-0"
                 >
                   {/* Connection line segment */}
                   {i > 0 && (
@@ -146,24 +146,30 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
                       style={{
                         background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${node.emotionColor})`,
+                        opacity: isActive ? 0.6 : 0.15,
                       }}
                     />
                   )}
 
                   {/* Node dot */}
                   <div
-                    className={`absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2 ${isActive ? 'opacity-100' : 'opacity-30'}`}
+                    className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2 transition-all duration-300"
                     style={{
                       backgroundColor: node.emotionColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
+                      opacity: isActive ? 1 : 0.2,
+                      boxShadow: isActive ? `0 0 8px ${node.emotionColor}` : 'none',
                     }}
                   />
 
                   {/* Card */}
                   <div
+                    data-card
                     onClick={() => { selectMemory(node.memory); onClose(); }}
-                    className={`p-3 rounded-lg cursor-pointer border ${
-                      isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
+                    className={`p-3 rounded-lg cursor-pointer border transition-all duration-300 ${
+                      isActive
+                        ? isDark ? 'bg-[#ffffff08] border-[#00f2ff]/30 shadow-lg' : 'bg-white border-[#0088cc]/30 shadow-lg'
+                        : isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50/50 border-gray-100'
                     }`}
                   >
                     <div className="flex items-start gap-2.5">
