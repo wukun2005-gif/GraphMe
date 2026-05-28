@@ -85,7 +85,15 @@ function ParticleCloud({ theme }: { theme: Theme }) {
   }, [rawMemories, navCategory, navSubCategory]);
 
   const { positions, colors, sizes } = useMemo(() => {
-    const mems = visible;
+    // Filter by timeRangeFilter first
+    let mems = visible;
+    if (timeRangeFilter) {
+      mems = mems.filter(m => {
+        const ts = m.dimensions.temporal.timestamp;
+        return ts >= timeRangeFilter[0] && ts <= timeRangeFilter[1];
+      });
+    }
+
     const pos = new Float32Array(mems.length * 3);
     const col = new Float32Array(mems.length * 3);
     const sz = new Float32Array(mems.length);
@@ -126,43 +134,31 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       const importance = m.dimensions.value.importance;
       const baseSize = 0.2 + importance * 0.6;
       const jitter = 0.8 + Math.random() * 0.4;
-      let size = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
-
-      // Time range filter: shrink and dim particles outside range
-      if (timeRangeFilter) {
-        const ts = m.dimensions.temporal.timestamp;
-        const inRange = ts >= timeRangeFilter[0] && ts <= timeRangeFilter[1];
-        if (!inRange) {
-          size *= 0.4;
-          col[i * 3] *= 0.15;
-          col[i * 3 + 1] *= 0.15;
-          col[i * 3 + 2] *= 0.15;
-        }
-      }
-
-      sz[i] = size;
+      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
     });
 
     return { positions: pos, colors: col, sizes: sz };
   }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter]);
 
-  const geoRef = useRef<THREE.BufferGeometry>(null);
-
-  // Force Three.js to re-upload buffer data when filter changes
+  // Update visibleRef to match filtered set for click handling
+  const filteredRef = useRef<RawMemory[]>([]);
   useEffect(() => {
-    if (geoRef.current) {
-      const posAttr = geoRef.current.getAttribute('position');
-      const colAttr = geoRef.current.getAttribute('color');
-      if (posAttr) posAttr.needsUpdate = true;
-      if (colAttr) colAttr.needsUpdate = true;
+    let mems = visible;
+    if (timeRangeFilter) {
+      mems = mems.filter(m => {
+        const ts = m.dimensions.temporal.timestamp;
+        return ts >= timeRangeFilter[0] && ts <= timeRangeFilter[1];
+      });
     }
-  }, [timeRangeFilter, positions, colors]);
+    filteredRef.current = mems;
+  }, [visible, timeRangeFilter]);
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
     const index = event.index;
-    if (index !== undefined && index >= 0 && index < visibleRef.current.length) {
-      selectMemory(visibleRef.current[index]);
+    const mems = filteredRef.current;
+    if (index !== undefined && index >= 0 && index < mems.length) {
+      selectMemory(mems[index]);
     }
   }, [selectMemory]);
 
@@ -170,7 +166,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
 
   return (
     <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${currentView}-${timeRangeFilter ? 'filtered' : 'all'}`} onClick={handleClick}>
-      <bufferGeometry ref={geoRef}>
+      <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
           count={positions.length / 3}

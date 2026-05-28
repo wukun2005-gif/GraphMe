@@ -11,31 +11,36 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
+  const rafRef = useRef<number | null>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
-  // Play interval - React state driven so re-renders preserve opacity
+  // Play animation via requestAnimationFrame with forced re-render
   useEffect(() => {
     if (!playing || !woven) return;
-    const id = setInterval(() => {
-      setPlayIndex(prev => {
-        if (prev + 1 >= woven.nodes.length) {
-          setPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 1500);
-    return () => clearInterval(id);
-  }, [playing, woven]);
+    let lastTick = performance.now();
+    let currentIdx = 0;
 
-  // Auto-scroll to current node
-  useEffect(() => {
-    if (!playing) return;
-    const el = nodeRefs.current.get(playIndex);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [playIndex, playing]);
+    const tick = (now: number) => {
+      if (now - lastTick >= 1500) {
+        lastTick = now;
+        currentIdx++;
+        if (currentIdx >= woven.nodes.length) {
+          setPlaying(false);
+          return;
+        }
+        setPlayIndex(currentIdx);
+        // Auto-scroll
+        const el = nodeRefs.current.get(currentIdx);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, woven]);
 
   const handlePlay = () => {
     setPlayIndex(0);
