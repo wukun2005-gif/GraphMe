@@ -8,6 +8,7 @@ import MemoryBank from './components/MemoryBank';
 import ToastContainer from './components/Toast';
 import DailyMemoryCard from './components/DailyMemoryCard';
 import TimelineScrubber from './components/TimelineScrubber';
+import SerendipityModal from './components/SerendipityModal';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -19,6 +20,7 @@ function AppInner() {
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showSerendipity, setShowSerendipity] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -163,6 +165,16 @@ function AppInner() {
           🔍
         </button>
         <button
+          onClick={() => setShowSerendipity(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🎲 机缘
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -175,6 +187,7 @@ function AppInner() {
       </div>
 
       <ToastContainer />
+      <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
   );

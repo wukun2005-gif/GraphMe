@@ -100,3 +100,80 @@ export function getMemoryCategoryPaths(
 
   return allPaths;
 }
+
+export interface HiddenConnection {
+  memoryA: RawMemory;
+  memoryB: RawMemory;
+  description: string;
+}
+
+export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | null {
+  if (memories.length < 2) return null;
+
+  // Try to find two memories from different categories with shared connections
+  const shuffled = [...memories].sort(() => Math.random() - 0.5);
+
+  for (let i = 0; i < shuffled.length; i++) {
+    for (let j = i + 1; j < Math.min(shuffled.length, i + 10); j++) {
+      const a = shuffled[i];
+      const b = shuffled[j];
+
+      // Same category → skip
+      const catA = isMemoryInCategory(a, '', null);
+      const catB = isMemoryInCategory(b, '', null);
+
+      // Check shared persons
+      const sharedPersons = a.dimensions.social.persons.filter(p =>
+        b.dimensions.social.persons.includes(p)
+      );
+
+      // Check same day of week (both on weekends, etc.)
+      const dateA = new Date(a.dimensions.temporal.timestamp);
+      const dateB = new Date(b.dimensions.temporal.timestamp);
+      const sameDayType = a.dimensions.temporal.dateType === b.dimensions.temporal.dateType && a.dimensions.temporal.dateType !== '普通日';
+
+      // Check same time of day
+      const sameTimeOfDay = a.dimensions.temporal.timeOfDay === b.dimensions.temporal.timeOfDay;
+
+      // Check same place type
+      const samePlace = a.dimensions.spatial.placeType === b.dimensions.spatial.placeType;
+
+      if (sharedPersons.length > 0) {
+        return {
+          memoryA: a,
+          memoryB: b,
+          description: `你知道吗？「${a.label}」和「${b.label}」都有${sharedPersons.join('和')}在场，而且分别在${a.dimensions.spatial.landmark || a.dimensions.spatial.placeType}和${b.dimensions.spatial.landmark || b.dimensions.spatial.placeType}。`,
+        };
+      }
+
+      if (sameDayType && sameTimeOfDay) {
+        return {
+          memoryA: a,
+          memoryB: b,
+          description: `有趣的巧合——「${a.label}」和「${b.label}」都发生在${a.dimensions.temporal.dateType}的${a.dimensions.temporal.timeOfDay}，虽然地点不同（${a.dimensions.spatial.placeType} vs ${b.dimensions.spatial.placeType}），但时间节奏惊人地相似。`,
+        };
+      }
+
+      if (samePlace && a.dimensions.emotional.primary !== b.dimensions.emotional.primary) {
+        return {
+          memoryA: a,
+          memoryB: b,
+          description: `同一个地方，两种心情——在${a.dimensions.spatial.placeType}，「${a.label}」时感到${a.dimensions.emotional.primary}，而「${b.label}」时却是${b.dimensions.emotional.primary}。`,
+        };
+      }
+    }
+  }
+
+  // Fallback: pick any two different-category memories
+  if (shuffled.length >= 2) {
+    const a = shuffled[0];
+    const b = shuffled[1];
+    return {
+      memoryA: a,
+      memoryB: b,
+      description: `意外的连接——「${a.label}」（${a.dimensions.emotional.primary}）和「${b.label}」（${b.dimensions.emotional.primary}），虽然看似无关，但都是你记忆星云中闪亮的星。`,
+    };
+  }
+
+  return null;
+}
