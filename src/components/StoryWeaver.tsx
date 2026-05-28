@@ -19,19 +19,14 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   // Play animation via requestAnimationFrame with forced re-render
   useEffect(() => {
     if (!playing || !woven) return;
-    console.log('[StoryWeaver] rAF EFFECT START', { nodesLength: woven.nodes.length });
     let lastTick = performance.now();
     let currentIdx = 0;
-    let tickCount = 0;
 
     const tick = (now: number) => {
-      tickCount++;
       if (now - lastTick >= 1500) {
         lastTick = now;
         currentIdx++;
-        console.log(`[StoryWeaver] rAF ADVANCE to ${currentIdx}`, { tickCount });
         if (currentIdx >= woven.nodes.length) {
-          console.log('[StoryWeaver] rAF DONE');
           setPlaying(false);
           return;
         }
@@ -43,14 +38,10 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     };
 
     rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      console.log('[StoryWeaver] rAF EFFECT CLEANUP');
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [playing, woven]);
 
   const handlePlay = () => {
-    console.log('[StoryWeaver] handlePlay CLICKED', { playing, playIndex });
     setPlayIndex(0);
     setPlaying(true);
   };
@@ -143,12 +134,11 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
             {woven.nodes.map((node, i) => {
               const isActive = !playing || i <= playIndex;
-              console.log(`[StoryWeaver] RENDER node ${i}`, { playing, playIndex, isActive, opacity: isActive ? 1 : 0.3 });
               return (
                 <div
                   key={node.memory.id}
                   ref={setNodeRef(i)}
-                  className="relative mb-4 last:mb-0"
+                  className={`relative mb-4 last:mb-0 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-30'}`}
                 >
                   {/* Connection line segment */}
                   {i > 0 && (
@@ -156,18 +146,16 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
                       style={{
                         background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${node.emotionColor})`,
-                        opacity: isActive ? 0.6 : 0.15,
                       }}
                     />
                   )}
 
                   {/* Node dot */}
                   <div
-                    className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2"
+                    className={`absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2 ${isActive ? 'opacity-100' : 'opacity-30'}`}
                     style={{
                       backgroundColor: node.emotionColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
-                      opacity: isActive ? 1 : 0.3,
                     }}
                   />
 
@@ -177,7 +165,6 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                     className={`p-3 rounded-lg cursor-pointer border ${
                       isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
                     }`}
-                    style={{ opacity: isActive ? 1 : 0.3 }}
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Photo or emotion dot */}
