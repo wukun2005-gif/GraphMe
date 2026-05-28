@@ -78,6 +78,64 @@ export interface DailyMemoryResult {
   daysAgo: number;
 }
 
+export interface DecayCurvePoint {
+  day: number;
+  theoretical: number; // Ebbinghaus retention
+}
+
+export interface MemoryDecayPoint {
+  memory: RawMemory;
+  day: number;
+  retention: number;
+  risk: number;
+}
+
+export interface DecayCurveResult {
+  theoretical: DecayCurvePoint[];
+  actual: MemoryDecayPoint[];
+  abyssCount: number; // memories with risk > 0.7
+}
+
+export function computeDecayCurve(memories: RawMemory[], now: number = Date.now()): DecayCurveResult {
+  const maxDays = 90;
+  const step = 3;
+
+  // Ebbinghaus forgetting curve: R = e^(-t/S), S = stability based on avg importance
+  const avgImportance = memories.length > 0
+    ? memories.reduce((s, m) => s + m.dimensions.value.importance, 0) / memories.length
+    : 0.5;
+  const stability = 5 + avgImportance * 25; // 5-30 days
+
+  const theoretical: DecayCurvePoint[] = [];
+  for (let day = 0; day <= maxDays; day += step) {
+    const retention = Math.exp(-day / stability);
+    theoretical.push({ day, theoretical: Math.round(retention * 1000) / 1000 });
+  }
+
+  // Actual memory decay points
+  const MILLIS_PER_DAY = 86400000;
+  const actual: MemoryDecayPoint[] = [];
+  let abyssCount = 0;
+
+  memories.forEach(m => {
+    const days = Math.max(0, (now - m.dimensions.temporal.timestamp) / MILLIS_PER_DAY);
+    if (days > maxDays) return;
+
+    const { importance, accessCount, cqi } = m.dimensions.value;
+    const accessBoost = Math.min(accessCount / 5, 1) * 0.3;
+    const cqiBoost = cqi * 0.2;
+    const retention = Math.max(0, Math.min(1,
+      Math.exp(-days / (stability * (1 + importance))) + accessBoost + cqiBoost
+    ));
+    const risk = 1 - retention;
+
+    if (risk > 0.7) abyssCount++;
+    actual.push({ memory: m, day: Math.round(days), retention: Math.round(retention * 1000) / 1000, risk: Math.round(risk * 1000) / 1000 });
+  });
+
+  return { theoretical, actual, abyssCount };
+}
+
 export function getDailyMemory(memories: RawMemory[], now: number = Date.now()): DailyMemoryResult | null {
   if (memories.length === 0) return null;
 

@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { getTop5HighValue, getForgettingRiskWarnings } from '../utils/valueUtils';
+import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -192,11 +192,179 @@ function EmotionBars({ distribution, total }: { distribution: Record<string, num
   );
 }
 
+const CHART_W = 340;
+const CHART_H = 180;
+const CHART_PAD = { top: 20, right: 15, bottom: 30, left: 35 };
+const PLOT_W = CHART_W - CHART_PAD.left - CHART_PAD.right;
+const PLOT_H = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
+
+function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
+  rawMemories: RawMemory[];
+  theme: 'dark' | 'light';
+  onReinforce: (id: string) => void;
+  onSelect: (m: RawMemory) => void;
+}) {
+  const isDark = theme === 'dark';
+  const [hovered, setHovered] = useState<{ x: number; y: number; memory: RawMemory; retention: number } | null>(null);
+
+  const curve = useMemo(() => computeDecayCurve(rawMemories), [rawMemories]);
+  const maxDay = 90;
+
+  const toX = (day: number) => CHART_PAD.left + (day / maxDay) * PLOT_W;
+  const toY = (ret: number) => CHART_PAD.top + (1 - ret) * PLOT_H;
+
+  // Theoretical Ebbinghaus curve path
+  const theoryPath = curve.theoretical
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(p.day)},${toY(p.theoretical)}`)
+    .join(' ');
+
+  // Area fill for "memory abyss" zone (retention < 0.3)
+  const abyssY = toY(0.3);
+
+  return (
+    <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          {curve.abyssCount > 0 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">
+              ⚠ {curve.abyssCount} 条记忆濒临遗忘
+            </span>
+          )}
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full h-auto">
+        {/* Grid */}
+        {[0, 0.25, 0.5, 0.75, 1].map(v => (
+          <g key={v}>
+            <line x1={CHART_PAD.left} y1={toY(v)} x2={CHART_W - CHART_PAD.right} y2={toY(v)}
+              stroke={isDark ? '#ffffff08' : '#00000008'} strokeWidth="0.5" />
+            <text x={CHART_PAD.left - 4} y={toY(v)} textAnchor="end" dominantBaseline="central"
+              fontSize="8" fill={isDark ? '#555' : '#999'}>{(v * 100).toFixed(0)}%</text>
+          </g>
+        ))}
+        {[0, 30, 60, 90].map(d => (
+          <g key={d}>
+            <line x1={toX(d)} y1={CHART_PAD.top} x2={toX(d)} y2={CHART_PAD.top + PLOT_H}
+              stroke={isDark ? '#ffffff08' : '#00000008'} strokeWidth="0.5" />
+            <text x={toX(d)} y={CHART_H - 8} textAnchor="middle"
+              fontSize="8" fill={isDark ? '#555' : '#999'}>{d}天</text>
+          </g>
+        ))}
+
+        {/* Memory abyss zone */}
+        <rect x={CHART_PAD.left} y={abyssY} width={PLOT_W} height={PLOT_H - (abyssY - CHART_PAD.top)}
+          fill={isDark ? '#ff444408' : '#ff444405'} />
+        <line x1={CHART_PAD.left} y1={abyssY} x2={CHART_W - CHART_PAD.right} y2={abyssY}
+          stroke="#ff444430" strokeWidth="0.5" strokeDasharray="4,3" />
+        <text x={CHART_W - CHART_PAD.right - 2} y={abyssY - 3} textAnchor="end"
+          fontSize="7" fill="#ff444480">遗忘深渊</text>
+
+        {/* Theoretical Ebbinghaus curve */}
+        <path d={theoryPath} fill="none" stroke={isDark ? '#00f2ff40' : '#0088cc40'} strokeWidth="1.5" />
+
+        {/* Actual memory data points */}
+        {curve.actual.map((p, i) => (
+          <circle
+            key={i}
+            cx={toX(p.day)}
+            cy={toY(p.retention)}
+            r={3}
+            fill={EMOTION_COLORS[p.memory.dimensions.emotional.primary] || '#888'}
+            stroke={isDark ? '#0d1525' : '#fff'}
+            strokeWidth="1"
+            className="cursor-pointer"
+            onMouseEnter={(e) => {
+              const rect = (e.target as SVGCircleElement).closest('svg')!.getBoundingClientRect();
+              setHovered({
+                x: toX(p.day),
+                y: toY(p.retention),
+                memory: p.memory,
+                retention: p.retention,
+              });
+            }}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => onSelect(p.memory)}
+          />
+        ))}
+
+        {/* Axes labels */}
+        <text x={CHART_W / 2} y={CHART_H - 1} textAnchor="middle" fontSize="8" fill={isDark ? '#666' : '#aaa'}>
+          时间（天）
+        </text>
+        <text x={6} y={CHART_H / 2} textAnchor="middle" fontSize="8" fill={isDark ? '#666' : '#aaa'}
+          transform={`rotate(-90, 6, ${CHART_H / 2})`}>
+          记忆留存
+        </text>
+      </svg>
+
+      {/* Hover tooltip */}
+      {hovered && (
+        <div
+          className={`absolute z-50 px-2.5 py-1.5 rounded-lg text-[10px] pointer-events-none border shadow-lg ${
+            isDark ? 'bg-[#1a1020]/95 border-[#ffffff15] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
+          }`}
+          style={{ left: `${(hovered.x / CHART_W) * 100}%`, top: `${(hovered.y / CHART_H) * 100 - 15}%` }}
+        >
+          <div className="font-medium">{hovered.memory.label}</div>
+          <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+            留存 {(hovered.retention * 100).toFixed(0)}% · {hovered.memory.dimensions.emotional.primary}
+          </div>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 mt-2">
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-0.5 rounded" style={{ background: isDark ? '#00f2ff40' : '#0088cc40' }} />
+          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>理论衰减</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full bg-gray-500" />
+          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>实际记忆</span>
+        </div>
+      </div>
+
+      {/* Reinforce section */}
+      {curve.actual.filter(p => p.risk >= 0.5).length > 0 && (
+        <div className="mt-2.5 pt-2 border-t border-[#ffffff08]">
+          <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            📌 建议重温
+          </div>
+          <div className="space-y-1">
+            {curve.actual
+              .filter(p => p.risk >= 0.5)
+              .sort((a, b) => b.risk - a.risk)
+              .slice(0, 3)
+              .map(p => (
+                <div key={p.memory.id} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ background: EMOTION_COLORS[p.memory.dimensions.emotional.primary] || '#888' }} />
+                  <span className={`text-[10px] flex-1 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {p.memory.label}
+                  </span>
+                  <button
+                    onClick={() => onReinforce(p.memory.id)}
+                    className={`text-[10px] px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                      isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
+                    }`}
+                  >
+                    温故
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ValueDashboard() {
-  const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard } = useAppState();
+  const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -255,6 +423,16 @@ export default function ValueDashboard() {
                   }`}
                 >
                   ❤️ 记忆健康
+                </button>
+                <button
+                  onClick={() => setTab('decay')}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    tab === 'decay'
+                      ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  📉 遗忘曲线
                 </button>
               </div>
               <button
@@ -421,6 +599,25 @@ export default function ValueDashboard() {
                     </div>
                   </section>
                 </>
+              )}
+
+              {tab === 'decay' && (
+                <section>
+                  <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    📉 遗忘曲线（艾宾浩斯）
+                  </h4>
+                  <div className="relative">
+                    <DecayCurveChart
+                      rawMemories={rawMemories}
+                      theme={theme}
+                      onReinforce={(id) => {
+                        reinforceMemory(id);
+                        addToast('已重温，遗忘曲线已重置', 'success');
+                      }}
+                      onSelect={(m) => { selectMemory(m); toggleValueDashboard(); }}
+                    />
+                  </div>
+                </section>
               )}
             </div>
           </motion.div>

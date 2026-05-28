@@ -67,6 +67,7 @@ interface AppContextType extends AppState {
   allRawMemories: RawMemory[];
   toggleMemoryVisibility: (id: string) => void;
   toggleAllMemories: () => void;
+  reinforceMemory: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -281,6 +282,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const reinforceMemory = useCallback((id: string) => {
+    setRawMems(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      return {
+        ...m,
+        dimensions: {
+          ...m.dimensions,
+          value: {
+            ...m.dimensions.value,
+            accessCount: m.dimensions.value.accessCount + 1,
+            cqi: Math.min(1, m.dimensions.value.cqi + 0.05),
+          },
+          temporal: {
+            ...m.dimensions.temporal,
+            timestamp: Date.now(), // Reset forgetting curve
+          },
+        },
+      };
+    }));
+  }, []);
+
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
 
@@ -319,7 +341,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
-      hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
+      hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory,
     }}>
       {children}
     </AppContext.Provider>

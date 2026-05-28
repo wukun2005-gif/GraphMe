@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
-import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory } from '../utils/valueUtils';
+import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory, computeDecayCurve } from '../utils/valueUtils';
 import { generateStory } from '../utils/storyUtils';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
 import type { RawMemory, InsightMemory } from '../types';
@@ -549,5 +549,52 @@ describe('Business Logic — Daily Memory (getDailyMemory)', () => {
     const now = mem.dimensions.temporal.timestamp + 10 * 24 * 60 * 60 * 1000; // 10 days after
     const result = getDailyMemory([mem], now);
     expect(result!.daysAgo).toBe(10);
+  });
+});
+
+describe('Business Logic — Decay Curve (computeDecayCurve)', () => {
+  it('should return theoretical and actual arrays', () => {
+    const result = computeDecayCurve(rawMemories);
+    expect(result.theoretical.length).toBeGreaterThan(0);
+    expect(result.actual.length).toBeGreaterThan(0);
+    expect(typeof result.abyssCount).toBe('number');
+  });
+
+  it('theoretical curve should start near 1.0 and decrease', () => {
+    const result = computeDecayCurve(rawMemories);
+    expect(result.theoretical[0].theoretical).toBeCloseTo(1.0, 1);
+    const last = result.theoretical[result.theoretical.length - 1];
+    expect(last.theoretical).toBeLessThan(result.theoretical[0].theoretical);
+  });
+
+  it('actual points should have valid retention between 0 and 1', () => {
+    const result = computeDecayCurve(rawMemories);
+    result.actual.forEach(p => {
+      expect(p.retention).toBeGreaterThanOrEqual(0);
+      expect(p.retention).toBeLessThanOrEqual(1);
+      expect(p.risk).toBeGreaterThanOrEqual(0);
+      expect(p.risk).toBeLessThanOrEqual(1);
+    });
+  });
+
+  it('actual points should reference valid memories', () => {
+    const result = computeDecayCurve(rawMemories);
+    result.actual.forEach(p => {
+      expect(p.memory.id).toBeTruthy();
+      expect(p.memory.label).toBeTruthy();
+    });
+  });
+
+  it('should handle empty memories', () => {
+    const result = computeDecayCurve([]);
+    expect(result.theoretical.length).toBeGreaterThan(0);
+    expect(result.actual.length).toBe(0);
+    expect(result.abyssCount).toBe(0);
+  });
+
+  it('abyssCount should count memories with risk > 0.7', () => {
+    const result = computeDecayCurve(rawMemories);
+    const expected = result.actual.filter(p => p.risk > 0.7).length;
+    expect(result.abyssCount).toBe(expected);
   });
 });
