@@ -251,6 +251,87 @@ function InsightRings({ theme }: { theme: Theme }) {
   );
 }
 
+function RippleEffect({ theme }: { theme: Theme }) {
+  const { selectedMemory, rawMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+  const ringRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
+  const [relatedPositions, setRelatedPositions] = useState<[number, number, number][]>([]);
+
+  useEffect(() => {
+    if (!selectedMemory || selectedMemory.type !== 'raw') {
+      setRelatedPositions([]);
+      return;
+    }
+    const mem = selectedMemory as RawMemory;
+    const storyline = mem.dimensions.narrative.storyline;
+    const persons = new Set(mem.dimensions.social.persons);
+
+    const related = rawMemories.filter(m => {
+      if (m.id === mem.id) return false;
+      if (storyline && m.dimensions.narrative.storyline === storyline) return true;
+      if (persons.size > 0 && m.dimensions.social.persons.some(p => persons.has(p))) return true;
+      return false;
+    }).slice(0, 8);
+
+    setRelatedPositions(related.map(m => m.positions[currentView] || m.position3D));
+  }, [selectedMemory, rawMemories, currentView]);
+
+  useFrame((_, delta) => {
+    if (!selectedMemory || selectedMemory.type !== 'raw') return;
+    timeRef.current += delta;
+
+    // Pulse the glow sphere
+    if (glowRef.current) {
+      const scale = 1 + Math.sin(timeRef.current * 3) * 0.2;
+      glowRef.current.scale.setScalar(scale);
+    }
+
+    // Expand the ring
+    if (ringRef.current) {
+      const ringScale = 1 + (timeRef.current % 2) * 0.8;
+      ringRef.current.scale.setScalar(ringScale);
+      const mat = ringRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, 0.4 - (timeRef.current % 2) * 0.2);
+    }
+  });
+
+  if (!selectedMemory || selectedMemory.type !== 'raw') return null;
+  const mem = selectedMemory as RawMemory;
+  const pos = mem.positions[currentView] || mem.position3D;
+  const position = new THREE.Vector3(pos[0], pos[1], pos[2]);
+  const color = isLight ? '#0088cc' : '#00f2ff';
+
+  return (
+    <group>
+      {/* Glow sphere at selected position */}
+      <mesh ref={glowRef} position={position}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} />
+      </mesh>
+
+      {/* Expanding ring */}
+      <mesh ref={ringRef} position={position} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.35, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.4} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Ripple dots on related memories */}
+      {relatedPositions.map((rp, i) => (
+        <mesh key={i} position={new THREE.Vector3(rp[0], rp[1], rp[2])}>
+          <sphereGeometry args={[0.08, 8, 8]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.2 + Math.sin(timeRef.current * 2 + i) * 0.15}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function InsightNetworkLines({ theme }: { theme: Theme }) {
   const { insightMemories, rawMemories, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
@@ -996,6 +1077,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <ParticleCloud theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
+        <RippleEffect theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />
