@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve } from '../utils/valueUtils';
+import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -360,11 +360,121 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
   );
 }
 
+const CAL_CELL = 11;
+const CAL_GAP = 2;
+const CAL_WEEKS = 13; // ~3 months
+
+function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+  const [hovered, setHovered] = useState<{ x: number; y: number; entry: { date: string; emotion: string; count: number; summaries: string[] } } | null>(null);
+
+  const data = useMemo(() => computeDailyEmotionMap(rawMemories, 91), [rawMemories]);
+  const dataMap = useMemo(() => {
+    const m = new Map<string, typeof data[0]>();
+    data.forEach(d => m.set(d.date, d));
+    return m;
+  }, [data]);
+
+  // Build grid: 7 rows (Sun-Sat) x CAL_WEEKS columns
+  const today = new Date();
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - (CAL_WEEKS * 7 - 1) - startDate.getDay());
+
+  const weeks: { date: Date; key: string }[][] = [];
+  const cursor = new Date(startDate);
+  for (let w = 0; w < CAL_WEEKS; w++) {
+    const week: { date: Date; key: string }[] = [];
+    for (let d = 0; d < 7; d++) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+      week.push({ date: new Date(cursor), key });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+
+  const svgW = CAL_WEEKS * (CAL_CELL + CAL_GAP) + 30;
+  const svgH = 7 * (CAL_CELL + CAL_GAP) + 20;
+
+  return (
+    <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-auto">
+        {/* Day labels */}
+        {['日', '一', '二', '三', '四', '五', '六'].map((label, i) => (
+          <text key={i} x={10} y={12 + i * (CAL_CELL + CAL_GAP) + CAL_CELL / 2}
+            textAnchor="middle" dominantBaseline="central" fontSize="7"
+            fill={isDark ? '#555' : '#999'}>{label}</text>
+        ))}
+
+        {/* Cells */}
+        {weeks.map((week, wi) => week.map((day, di) => {
+          const entry = dataMap.get(day.key);
+          const x = 22 + wi * (CAL_CELL + CAL_GAP);
+          const y = 2 + di * (CAL_CELL + CAL_GAP);
+          const color = entry ? (EMOTION_COLORS[entry.primaryEmotion as keyof typeof EMOTION_COLORS] || '#888') : 'transparent';
+          const opacity = entry ? Math.min(0.3 + entry.count * 0.2, 1) : 0;
+
+          return (
+            <rect
+              key={day.key}
+              x={x} y={y}
+              width={CAL_CELL} height={CAL_CELL}
+              rx={2}
+              fill={color}
+              fillOpacity={opacity}
+              stroke={isDark ? '#ffffff08' : '#00000008'}
+              strokeWidth="0.5"
+              className="cursor-pointer"
+              onMouseEnter={(e) => {
+                if (!entry) return;
+                const rect = (e.target as SVGRectElement).getBoundingClientRect();
+                const svgRect = (e.target as SVGRectElement).closest('svg')!.getBoundingClientRect();
+                setHovered({ x: x + CAL_CELL / 2, y, entry: { date: day.key, emotion: entry.primaryEmotion, count: entry.count, summaries: entry.summaries } });
+              }}
+              onMouseLeave={() => setHovered(null)}
+            />
+          );
+        }))}
+      </svg>
+
+      {/* Hover tooltip */}
+      {hovered && (
+        <div
+          className={`absolute z-50 px-2.5 py-1.5 rounded-lg text-[10px] pointer-events-none border shadow-lg max-w-[200px] ${
+            isDark ? 'bg-[#1a1020]/95 border-[#ffffff15] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
+          }`}
+          style={{ left: `${(hovered.x / svgW) * 100}%`, top: `${(hovered.y / svgH) * 100 - 10}%` }}
+        >
+          <div className="font-medium">{hovered.entry.date}</div>
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="w-2 h-2 rounded-full" style={{ background: EMOTION_COLORS[hovered.entry.emotion as keyof typeof EMOTION_COLORS] || '#888' }} />
+            <span>{hovered.entry.emotion} · {hovered.entry.count} 条</span>
+          </div>
+          {hovered.entry.summaries.length > 0 && (
+            <div className={`mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              {hovered.entry.summaries[0].slice(0, 40)}...
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-2 mt-2 flex-wrap">
+        {Object.entries(EMOTION_COLORS).slice(0, 8).map(([emotion, color]) => (
+          <div key={emotion} className="flex items-center gap-0.5">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: color, opacity: 0.7 }} />
+            <span className={`text-[8px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{emotion}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ValueDashboard() {
   const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -433,6 +543,16 @@ export default function ValueDashboard() {
                   }`}
                 >
                   📉 遗忘曲线
+                </button>
+                <button
+                  onClick={() => setTab('calendar')}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    tab === 'calendar'
+                      ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  🗓 情绪日历
                 </button>
               </div>
               <button
@@ -616,6 +736,17 @@ export default function ValueDashboard() {
                       }}
                       onSelect={(m) => { selectMemory(m); toggleValueDashboard(); }}
                     />
+                  </div>
+                </section>
+              )}
+
+              {tab === 'calendar' && (
+                <section>
+                  <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    🗓 情绪日历（近 3 个月）
+                  </h4>
+                  <div className="relative">
+                    <EmotionCalendar rawMemories={rawMemories} theme={theme} />
                   </div>
                 </section>
               )}

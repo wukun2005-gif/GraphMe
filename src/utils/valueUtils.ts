@@ -96,6 +96,37 @@ export interface DecayCurveResult {
   abyssCount: number; // memories with risk > 0.7
 }
 
+export interface DailyEmotionEntry {
+  date: string; // YYYY-MM-DD
+  primaryEmotion: string;
+  count: number;
+  summaries: string[];
+}
+
+export function computeDailyEmotionMap(memories: RawMemory[], days: number = 90): DailyEmotionEntry[] {
+  const now = Date.now();
+  const MILLIS_PER_DAY = 86400000;
+  const cutoff = now - days * MILLIS_PER_DAY;
+  const map = new Map<string, { emotions: Record<string, number>; summaries: string[] }>();
+
+  memories.forEach(m => {
+    const ts = m.dimensions.temporal.timestamp;
+    if (ts < cutoff) return;
+    const d = new Date(ts);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (!map.has(key)) map.set(key, { emotions: {}, summaries: [] });
+    const entry = map.get(key)!;
+    const emo = m.dimensions.emotional.primary;
+    entry.emotions[emo] = (entry.emotions[emo] || 0) + 1;
+    entry.summaries.push(m.summary);
+  });
+
+  return Array.from(map.entries()).map(([date, data]) => {
+    const primaryEmotion = Object.entries(data.emotions).sort(([, a], [, b]) => b - a)[0]?.[0] || '中性';
+    return { date, primaryEmotion, count: data.summaries.length, summaries: data.summaries.slice(0, 3) };
+  }).sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export function computeDecayCurve(memories: RawMemory[], now: number = Date.now()): DecayCurveResult {
   const maxDays = 90;
   const step = 3;

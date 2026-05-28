@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
-import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory, computeDecayCurve } from '../utils/valueUtils';
+import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory, computeDecayCurve, computeDailyEmotionMap } from '../utils/valueUtils';
 import { generateStory } from '../utils/storyUtils';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
 import type { RawMemory, InsightMemory } from '../types';
@@ -596,5 +596,42 @@ describe('Business Logic — Decay Curve (computeDecayCurve)', () => {
     const result = computeDecayCurve(rawMemories);
     const expected = result.actual.filter(p => p.risk > 0.7).length;
     expect(result.abyssCount).toBe(expected);
+  });
+});
+
+describe('Business Logic — Daily Emotion Map (computeDailyEmotionMap)', () => {
+  it('should return entries with valid date format', () => {
+    const entries = computeDailyEmotionMap(rawMemories, 365);
+    entries.forEach(e => {
+      expect(e.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+  });
+
+  it('should return entries with valid emotion and count', () => {
+    const entries = computeDailyEmotionMap(rawMemories, 365);
+    entries.forEach(e => {
+      expect(e.primaryEmotion).toBeTruthy();
+      expect(e.count).toBeGreaterThan(0);
+      expect(e.summaries.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should return sorted entries by date', () => {
+    const entries = computeDailyEmotionMap(rawMemories, 365);
+    for (let i = 1; i < entries.length; i++) {
+      expect(entries[i].date >= entries[i - 1].date).toBe(true);
+    }
+  });
+
+  it('should handle empty memories', () => {
+    const entries = computeDailyEmotionMap([], 90);
+    expect(entries.length).toBe(0);
+  });
+
+  it('should limit summaries to 3', () => {
+    const entries = computeDailyEmotionMap(rawMemories, 365);
+    entries.forEach(e => {
+      expect(e.summaries.length).toBeLessThanOrEqual(3);
+    });
   });
 });
