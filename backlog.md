@@ -460,3 +460,200 @@
 4. 悬停粒子：tooltip 出现，关联连线高亮
 5. Chrome DevTools Performance：帧率 >= 30fps
 6. 切换视图（全局/家庭/学习/情绪）：粒子布局正确更新
+
+---
+
+### 40. [UX] 记忆日签 / "那年今日" — 每日记忆触点 [✅]
+
+**问题**: 用户打开 GraphMe 后面对的是静态 3D 星云，系统被动展示记忆，从不主动"打招呼"。缺少一个温暖的每日记忆触点——像 iPhone 照片的"回忆"功能。用户可能一周不打开，打开后也没有"今天有什么特别的"的感知。
+**改动范围**:
+- 新建 `src/components/DailyMemoryCard.tsx`: 优雅的记忆日签卡片组件，展示"历史上的今天"记忆（日期匹配往年同日）或高价值但接近遗忘阈值的记忆，含照片/emoji、摘要、距今多久，5 秒后自动淡出
+- `src/App.tsx`: 集成 DailyMemoryCard，在 3D 星云上方显示
+- `src/utils/valueUtils.ts`: 新增 `getDailyMemory` 函数，按日期匹配 + 遗忘风险降级策略选取当日推荐记忆
+**验证方式**:
+1. 打开应用，如有"历史上的今天"记忆，预期顶部浮现日签卡片
+2. 如无匹配日期，预期从高遗忘风险记忆中选取一条展示
+3. 卡片 5 秒后自动淡出，用户可点击卡片进入记忆详情
+4. 刷新页面，同一天展示同一条记忆
+
+### 41. [UX] 记忆衰减可视化 / 遗忘曲线 [✅]
+
+**问题**: `valueUtils.ts` 的 `computeForgettingRisk` 能算出遗忘风险，`ValueDashboard.tsx` 仅以列表展示"即将遗忘的 3 条记忆"。PRD 强调的遗忘曲线概念完全未被可视化——用户看不到记忆随时间如何衰减，也看不到"重温"行为是否减缓了遗忘。
+**改动范围**:
+- `src/components/ValueDashboard.tsx`: 新增"遗忘曲线"SVG 图表面板，X 轴为天数、Y 轴为记忆 retained 程度，叠加艾宾浩斯理论曲线与用户实际数据点，标注"记忆深渊"（risk > 0.7 的记忆数量），每条数据点可 hover 查看具体记忆
+- `src/utils/valueUtils.ts`: 新增 `computeDecayCurve` 函数（返回理论衰减点 + 实际记忆衰减点数组）
+- `src/store/AppContext.tsx`: 新增 `reinforceMemory` 方法——调用后记忆 accessCount += 1、CQI 临时提升、遗忘曲线重置
+**验证方式**:
+1. 打开 ValueDashboard，预期看到遗忘曲线图表
+2. 鼠标悬停数据点，预期显示对应记忆标签
+3. 点击"重温"按钮，预期对应记忆的衰减曲线回升，遗忘风险降级
+4. 关闭 ValueDashboard 后再次打开，重温效果持久
+
+### 42. [UX] 情绪日历热力图 [✅]
+
+**问题**: 时间维度仅以列表或 DetailPanel 中的单条展示，用户无法在宏观层面"一眼看到"哪些天情绪好。PRD §2.2 家长视角中"孩子最近整体心情怎么样？"和"情感趋势曲线"需求未实现。MemoryBank 的趋势线是硬编码模拟数据。
+**改动范围**:
+- `src/components/ValueDashboard.tsx`: 新增 GitHub 贡献图风格的情绪日历热力图 SVG 组件，每个格子=一天，颜色=当天情绪主色调（快乐=暖金、悲伤=冷蓝、好奇=青），格子大小=记忆数量，hover 显示当天关键事件摘要，默认展示过去 3 个月
+- `src/utils/valueUtils.ts`: 新增 `computeDailyEmotionMap` 函数，按天聚合情绪数据返回 { date, primaryEmotion, count, summaries }
+**验证方式**:
+1. 打开 ValueDashboard，预期看到 3 个月的情绪日历热力图
+2. 有记忆的日期显示对应情绪颜色，无记忆的日期为空
+3. Hover 某天，出现 tooltip 显示当天记忆摘要
+4. 删除一条快乐记忆，对应日期的颜色可能变化
+
+### 43. [Features] 记忆故事编织器 [✅]
+
+**问题**: PRD 数据模型中每条记忆有 `narrative.storyline`、`previousRefs`、`nextRefs`、`isMilestone` 四个叙事字段，`storyUtils.ts` 的 `generateStory` 只生成侧栏"Story Board"的全屏 Modal 文本，没有可视化叙事线体验。
+**改动范围**:
+- 新建 `src/components/StoryWeaver.tsx`: 用户选择 story line 后，将属于该线记忆按时间排序，展示为可视化叙事时间线——每条记忆是一个节点，节点间彩色轨迹线连接（颜色=情绪变化），节点展示关键照片/文本摘要，顶部自动生成自然语言叙事段落，支持"播放"模式逐节点推进
+- `src/utils/storyUtils.ts`: 增强 `generateStory` → 新增 `weaveStoryline` 函数，返回结构化章节数据（节点数组 + 连接线 + 叙事文本）
+- `src/components/Navigation.tsx`: Story Board 入口改为打开 StoryWeaver 面板（替代全屏 Modal）
+**验证方式**:
+1. 在侧栏 Story Board 中选择"小明的编程之旅"
+2. 预期：面板展示时间线节点（从早到晚排列），节点间有彩色情绪连线
+3. 顶部有自动生成的叙事段落（如"小明从 4 月开始接触手掰编程，到 9 月已能独立完成..."）
+4. 点击"播放"，节点逐一亮起推进，叙事文本滚动跟随
+
+### 44. [Features] 时光机 / 时间轴穿梭 [✅]
+
+**问题**: 时间维度的浏览非常薄弱。`currentView` 的四种视图切换均不是基于时间的。`MemoryBank` 的周/月/季范围切换只影响统计图表，不影响 3D 星云展示。用户无法"滑动时间线"只看某个月/某段日期的记忆。
+**改动范围**:
+- 新建 `src/components/TimelineScrubber.tsx`: 水平时间轴滑块组件，覆盖全量记忆时间跨度，双滑块选择起止日期，下方显示该时间窗口内的记忆缩略列表
+- `src/components/MemCloud3D.tsx`: 新增 `timeRange` prop（[start, end]），粒子根据记忆 timestamp 过滤——窗口外粒子 opacity→0.1 + 缩小 size，窗口内粒子正常显示 + 淡入动画
+- `src/store/AppContext.tsx`: 新增 `timeRangeFilter: [number, number] | null` 状态
+**验证方式**:
+1. 拖动时间轴滑块到某月范围
+2. 预期：3D 星云中只有该月记忆粒子正常显示，其余粒子淡出
+3. 拖动起止滑块改变范围，粒子实时更新
+4. 清除时间过滤（点击"全部"），恢复全量粒子显示
+
+### 45. [UX] 记忆共振波纹 [✅]
+
+**问题**: `DetailPanel` 打开时 3D 星云完全静止——被选中的粒子无高亮反馈，相关记忆无视觉"响应"。PRD 强调"记忆不是孤岛，而是星座"，但选中=没选中（3D 效果上）。
+**改动范围**:
+- `src/components/MemCloud3D.tsx`: 新增 `RippleEffect` 逻辑——当 `selectedMemory` 为 RawMemory 时，对应粒子发光 + 脉冲；与该记忆共享 storyline / same persons 的粒子产生弱同心圆波纹扩散动画（强度随语义距离衰减）；当为 InsightMemory 时，其所有 sourceRawMemoryIds 粒子短暂高亮
+- `src/components/DetailPanel.tsx`: 选择变化时无需额外改动（已有 selectMemory → AppContext → MemCloud3D 数据流）
+**验证方式**:
+1. 点击一条"和爸爸在公园"的记忆
+2. 预期：该粒子发光脉冲，同 storyline 的其他粒子出现同心圆波纹
+3. 点击一条洞察记忆，预期其依据的原始记忆粒子短暂高亮（1-2 秒）
+4. 关闭 DetailPanel，所有波纹消失
+
+### 46. [Features] 记忆精选集 / 收藏夹升级 [✅]
+
+**问题**: 当前 `favoriteIds: string[]` 是扁平 ID 数组，收藏是二进制的。用户无法创建多个主题收藏集（如"爸爸和我"、"编程里程碑"），也无法排序或加说明。
+**改动范围**:
+- `src/types/index.ts`: 新增 `MemoryCollection` 类型 { id, name, emoji, memoryIds: string[], createdAt }
+- `src/store/AppContext.tsx`: `favoriteIds` → `collections: MemoryCollection[]`，新增 `addCollection`、`removeCollection`、`renameCollection`、`addToCollection`、`removeFromCollection` 方法，localStorage 持久化
+- `src/components/Navigation.tsx`: 侧栏新增"📁 我的精选集"区域，展示所有集合（名称+记忆数），点击展开该集合记忆列表，支持新建/重命名/删除集合
+- `src/components/DetailPanel.tsx`: 新增"添加到精选集"下拉菜单
+**验证方式**:
+1. 新建精选集"爸爸和我"，emoji=👨‍👦
+2. 打开一条记忆详情，点击"添加到精选集" → 选择"爸爸和我"
+3. 预期：侧栏"爸爸和我"集合显示计数+1，展开可见该记忆
+4. 删除集合，记忆本身不删除，仅解除关联
+
+### 47. [Features] 机缘引擎 / 意外发现 [✅]
+
+**问题**: 用户倾向于只看主动寻找或系统推荐的内容。PRD 强调"照亮深埋已久的高价值时刻"，但目前唯一的主动发现机制是"遗忘预警"（负向的"再不看来不及了"），没有正向的惊喜发现。
+**改动范围**:
+- 新建 `src/components/SerendipityModal.tsx`: 机缘卡片 Modal，展示两条表面不相关记忆的隐藏连接（共享人物、相似活动、时间间隔整数年/月、或语义向量余弦相似度 > 阈值），连接描述以自然语言呈现
+- `src/utils/navUtils.ts`: 新增 `findHiddenConnection` 函数——从 rawMemories 中随机选取 2 条不同 category 的记忆，分析共享维度，生成连接描述文本
+- `src/App.tsx`: 顶部栏新增"🎲 机缘"按钮
+**验证方式**:
+1. 点击"🎲 机缘"按钮
+2. 预期：弹出 Modal，展示 2 条记忆卡片 + 连接描述（如"你知道吗？[公园骑行] 和 [教室编程课] 都发生在周六上午，而且都有爸爸在场"）
+3. 点击卡片可跳转到对应记忆详情
+4. 再次点击得到不同的机缘组合
+
+### 48. [UX] 记忆前后对比 / Then vs Now [✅]
+
+**问题**: PRD §3.5 定义了"成长（Growth）"洞察类别，§2.2 家长视角有"成长里程碑"需求，但仅通过洞察文字描述体现。用户无法直观对比两个时间点的状态（如 3 个月前 vs 现在的编程能力）。
+**改动范围**:
+- `src/components/DetailPanel.tsx`: 新增"对比模式"按钮——点击后进入选择阶段，从时间线选两个时间点（或两条同 story line 记忆），展示并列对比卡片（早期 vs 后期：情绪、活动、知识标签、CQI、importance），中间箭头标注变化方向
+- `src/utils/valueUtils.ts`: 新增 `computeDiff` 函数，接收两条 RawMemory，返回各维度的变化方向与幅度（↑/↓/→ + 数值）
+**验证方式**:
+1. 在 DetailPanel 中点击"📊 对比"
+2. 选择两条同 story line 的记忆（如第一条编程课 vs 最近一次编程项目）
+3. 预期：并列展示两张卡片，标注变化（如 importance 0.60 → 0.90 ↑、CQI 0.65 → 0.88 ↑）
+4. 对比面板可关闭返回普通详情视图
+
+### 49. [Features] 记忆强化提醒 / 间隔复习 [✅]
+
+**问题**: `computeForgettingRisk` 已计算遗忘风险，但仅被动展示。没有主动的"建议复习"机制，也没有"复习后衰减重置"。这是一条未打通的闭环——PRD §3.4 的价值看板理念（"让 GraphMe 从记忆查看器进化为记忆理财顾问"）未完全实现。
+**改动范围**:
+- `src/components/ValueDashboard.tsx`: 新增"📌 今日推荐重温"模块，展示 2 条高价值+高遗忘风险的记忆卡片（摘要+情绪+距今几天），每条有"重温"按钮
+- `src/store/AppContext.tsx`: 新增 `reinforceMemory(id)` 方法——调用后记忆 accessCount += 1、CQI 临时提升（current + 0.05）、遗忘曲线重置（timestamp 权重刷新），3D 星云中对应粒子短暂闪亮
+- `src/utils/valueUtils.ts`: 新增 `getReviewCandidates` 函数——按遗忘风险×价值权重排序返回 Top 3
+**验证方式**:
+1. 打开 ValueDashboard，"今日推荐重温"显示 2 条记忆
+2. 点击某条的"重温"按钮，预期显示 Toast"已重温，遗忘曲线已重置"
+3. 该记忆的 accessCount 增加，CQI 提升，遗忘风险降级
+4. 3D 星云中对应粒子短暂闪亮后恢复正常
+
+### 50. [UX] 记忆导出卡片 [✅]
+
+**问题**: GraphMe 是封闭体验——记忆只能在应用内看。用户想把某条特别记忆以精美卡片形式保存、打印或分享给家人。PRD §3.2 展示了"分享"按钮但未实现。
+**改动范围**:
+- `src/components/DetailPanel.tsx`: 新增"📸 导出卡片"按钮，点击后使用 Canvas API 渲染一张 PNG 卡片（记忆照片/emoji + 日期 + 摘要 + 情绪标签 + 人物标签 + AI 生成的温暖文案），触发浏览器下载
+- 新建 `src/utils/cardUtils.ts`: `renderMemoryCard` 函数——使用 offscreen Canvas 绘制卡片布局，返回 Blob URL
+**验证方式**:
+1. 打开一条有照片的记忆详情，点击"📸 导出卡片"
+2. 预期：触发浏览器下载 PNG 文件，文件名=记忆 ID + 日期
+3. 打开下载的 PNG，预期包含所有卡片元素（照片、日期、摘要、情绪色块、人物列表）
+4. 无照片的记忆用 emoji 占位
+
+### 51. [UX] 全局快捷键系统 [✅]
+
+**问题**: 仅有 ESC 关闭面板一个快捷键。所有交互依赖鼠标。极客用户（Persona C）对键盘操作的"操控感"有明确诉求。DetailPanel/ChatPanel/MemoryBank 各有独立的 ESC 监听但分散不统一。
+**改动范围**:
+- `src/App.tsx`: 新增 `useKeyboardShortcuts` hook，统一全局键盘监听（非输入框聚焦时生效）：
+  - `Space` — 切换 Demo 模式
+  - `1/2/3/4` — 切换全局/家庭/学习/情绪视图
+  - `Ctrl/Cmd+F` — 打开搜索框
+  - `Ctrl/Cmd+Z` — 撤销（undoDelete）
+  - `R` — 重置 3D 视角
+  - `?` — 显示快捷键帮助面板
+- 移除各组件中分散的 ESC 监听，统一由全局 hook 处理
+**验证方式**:
+1. 按 `1`，预期切换为全局视图，3D 粒子布局更新
+2. 按 `Ctrl+F`，预期顶部搜索框打开并聚焦
+3. 按 `Shift+/`（即 `?`），预期弹出快捷键帮助面板
+4. 在输入框内聚焦时按 `1`，预期输入"1"而不触发视图切换
+
+### 52. [Features] 年度记忆报告 [✅]
+
+**问题**: 用户累积记忆数据后没有周期性总结。Spotify Wrapped 式年度回顾在记忆领域有强大感染力，但 GraphMe 完全没有此能力。
+**改动范围**:
+- 新建 `src/components/AnnualReport.tsx`: 全屏独立页面式报告，包含：全年记忆总数、情绪分布饼图（SVG）、最活跃月份柱状图、Top 3 高光时刻卡片、最常出现人物排行、年度关键词（从记忆摘要提取高频词）、"你的 2026 记忆人格"总结段落，支持导出为图片
+- `src/utils/valueUtils.ts`: 新增年度统计函数集（`computeAnnualStats`、`computeMonthlyActivity`、`extractAnnualKeywords`）
+- `src/App.tsx`: 顶部栏或侧栏新增"📊 记忆年报"入口
+**验证方式**:
+1. 点击"📊 记忆年报"
+2. 预期：全屏展示年度报告，情绪饼图、月度柱状图、Top 3 记忆卡片均基于真实数据
+3. 年度关键词从记忆摘要中提取（如"编程"、"爸爸"、"公园"出现频率高）
+4. 点击"导出"生成报告图片
+
+### 53. [UX] 首次引导 / Onboarding [✅]
+
+**问题**: 用户打开 GraphMe 直接面对 3D 星云+侧栏+多个浮动按钮，无任何引导。一键演示（AutoDemo）是功能演示而非循序渐进的 onboarding。PRD 定义的 5 种用户画像对新系统的理解门槛不同。
+**改动范围**:
+- 新建 `src/components/OnboardingOverlay.tsx`: 4 步交互式引导——1) "这是你的记忆星云，每颗粒子是一条记忆"（暗色遮罩+高亮粒子群）；2) "点击粒子查看记忆详情"（引导点击任意粒子）；3) "左侧是记忆分类，帮你快速定位"（高亮侧栏）；4) "右下角有小哥，随时可以提问"（高亮 Chat 按钮）。localStorage 记住已完成状态，已完成的用户不再显示
+- `src/App.tsx`: 集成 OnboardingOverlay，首次访问且未完成引导时自动展示
+**验证方式**:
+1. 首次打开应用（清除 localStorage），预期自动展示第 1 步引导
+2. 按"下一步"走完 4 步，预期引导消失，localStorage 记录已完成
+3. 刷新页面，引导不再出现
+4. 清除 localStorage 后刷新，引导重新出现
+
+### 54. [UX] 情绪轨迹线 — 3D 中的情绪流动 [✅]
+
+**问题**: 3D 星云中粒子之间无连线表示关系。PRD §3.8 洞察网络有连线（支撑/关联/因果），但那是 Insight 层面。同一天内多条记忆之间的情绪过渡（如早晨快乐→下午沮丧→晚上感激）在 3D 中完全看不到。
+**改动范围**:
+- `src/components/MemCloud3D.tsx`: 新增 `EmotionTrajectoryLines` 组件——当用户选择某一天（或默认当前聚焦天），同天内记忆粒子之间用淡色曲线连接，线颜色从起点情绪色渐变到终点情绪色（通过 vertexColors），hover 轨迹线时显示 HTML tooltip（"上午→下午情绪从好奇变为沮丧"）
+- `src/utils/valueUtils.ts`: 新增 `computeDailyTrajectories` 函数——按天分组记忆，返回当天内按时间排序的记忆对及情绪变化描述
+**验证方式**:
+1. 在 3D 星云中，同一天有多条记忆时，粒子间出现淡色轨迹线
+2. 线的颜色从起点情绪色渐变到终点
+3. Hover 任意轨迹线，预期 tooltip 显示情绪变化描述
+4. 只有 1 条记忆的日期不显示轨迹线
