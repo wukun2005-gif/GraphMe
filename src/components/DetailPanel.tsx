@@ -776,17 +776,17 @@ export default function DetailPanel() {
                 }`}>取消</button>
               </div>
             </div>
-          ) : compareMode && selectedMemory.type === 'raw' ? (
-            <CompareView
-              memory={selectedMemory}
-              compareTarget={compareTarget}
-              onSelectTarget={setCompareTarget}
-              allMemories={allRawMemories}
-              theme={theme}
-            />
           ) : (
             <>
-              {selectedMemory.type === 'raw'
+              {compareMode && selectedMemory.type === 'raw' ? (
+                <CompareView
+                  memory={selectedMemory}
+                  compareTarget={compareTarget}
+                  onSelectTarget={setCompareTarget}
+                  allMemories={allRawMemories}
+                  theme={theme}
+                />
+              ) : selectedMemory.type === 'raw'
                 ? <RawDetail memory={selectedMemory} />
                 : <InsightDetail memory={selectedMemory} />}
               <div className={`mt-6 flex gap-2 border-t pt-4 ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>

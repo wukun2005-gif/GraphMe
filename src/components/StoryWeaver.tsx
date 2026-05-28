@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { weaveStoryline, getStorylineNames } from '../utils/storyUtils';
@@ -12,6 +12,8 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
@@ -29,10 +31,24 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     return () => { if (playRef.current) clearInterval(playRef.current); };
   }, [playing, woven]);
 
+  // Auto-scroll to current node during playback
+  useEffect(() => {
+    if (!playing) return;
+    const nodeEl = nodeRefs.current.get(playIndex);
+    if (nodeEl) {
+      nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [playIndex, playing]);
+
   const handlePlay = () => {
     setPlayIndex(0);
     setPlaying(true);
   };
+
+  const setNodeRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+    if (el) nodeRefs.current.set(index, el);
+    else nodeRefs.current.delete(index);
+  }, []);
 
   return (
     <div className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -83,7 +99,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Timeline */}
-          <div className="relative pl-6">
+          <div ref={containerRef} className="relative pl-6">
             {/* Vertical line */}
             <div className={`absolute left-2.5 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-200'}`} />
 
@@ -92,7 +108,11 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
               const isCurrent = playing && i === playIndex;
 
               return (
-                <div key={node.memory.id} className="relative mb-4 last:mb-0">
+                <div
+                  key={node.memory.id}
+                  ref={setNodeRef(i)}
+                  className="relative mb-4 last:mb-0"
+                >
                   {/* Connection line segment */}
                   {i > 0 && (
                     <div
@@ -119,16 +139,14 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   />
 
                   {/* Card */}
-                  <motion.div
-                    initial={playing ? { opacity: 0, x: -10 } : false}
-                    animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
-                    transition={{ duration: 0.3 }}
+                  <div
                     onClick={() => { selectMemory(node.memory); onClose(); }}
                     className={`p-3 rounded-lg cursor-pointer transition-all border ${
                       isCurrent
                         ? isDark ? 'bg-[#ffffff08] border-[#00f2ff]/30 shadow-lg' : 'bg-white border-[#0088cc]/30 shadow-lg'
                         : isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
                     }`}
+                    style={{ opacity: isActive ? 1 : 0.3 }}
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Photo or emotion dot */}
@@ -175,7 +193,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                         ↓ {woven.connections[i].emotionTransition}
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 </div>
               );
             })}

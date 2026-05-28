@@ -14,6 +14,8 @@ export default function TimelineScrubber() {
   }, [rawMemories]);
 
   const currentFilter = timeRangeFilter || [range.min, range.max];
+  const filterRef = useRef(currentFilter);
+  filterRef.current = currentFilter;
 
   const toPercent = useCallback((ts: number) => {
     if (range.max === range.min) return 0;
@@ -36,10 +38,11 @@ export default function TimelineScrubber() {
       const rect = trackRef.current.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       const ts = fromPercent(pct);
+      const f = filterRef.current;
       if (dragging === 'start') {
-        setTimeRangeFilter([Math.min(ts, currentFilter[1]), currentFilter[1]]);
+        setTimeRangeFilter([Math.min(ts, f[1]), f[1]]);
       } else {
-        setTimeRangeFilter([currentFilter[0], Math.max(ts, currentFilter[0])]);
+        setTimeRangeFilter([f[0], Math.max(ts, f[0])]);
       }
     };
     const handleUp = () => setDragging(null);
@@ -49,7 +52,7 @@ export default function TimelineScrubber() {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-  }, [dragging, fromPercent, currentFilter, setTimeRangeFilter]);
+  }, [dragging, fromPercent, setTimeRangeFilter]);
 
   const formatDate = (ts: number) => {
     const d = new Date(ts);
