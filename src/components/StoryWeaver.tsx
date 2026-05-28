@@ -32,33 +32,51 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     playIndexRef.current = 0;
     lastTickRef.current = performance.now();
 
+    console.log('[StoryWeaver] PLAY START', {
+      nodeRefsSize: nodeRefs.current.size,
+      totalNodes: totalNodesRef.current,
+      wovenNodes: woven?.nodes.length,
+    });
+
     // Mark all nodes inactive initially
     nodeRefs.current.forEach((el, i) => {
       const card = el.querySelector('[data-card]') as HTMLElement;
       const dot = el.querySelector('[data-dot]') as HTMLElement;
+      console.log(`[StoryWeaver] init node ${i}:`, { hasCard: !!card, hasDot: !!dot, el: !!el });
       if (card) card.style.opacity = i === 0 ? '1' : '0.3';
       if (dot) dot.style.opacity = i === 0 ? '1' : '0.3';
     });
 
+    let tickCount = 0;
     const tick = (now: number) => {
       if (!playingRef.current) return;
-      if (now - lastTickRef.current >= 1500) {
+      tickCount++;
+      const elapsed = now - lastTickRef.current;
+
+      if (tickCount % 60 === 0) {
+        console.log('[StoryWeaver] tick', { tickCount, elapsed: Math.round(elapsed), playIndex: playIndexRef.current, total: totalNodesRef.current });
+      }
+
+      if (elapsed >= 1500) {
         lastTickRef.current = now;
         const nextIdx = playIndexRef.current + 1;
+        console.log('[StoryWeaver] ADVANCE', { from: playIndexRef.current, to: nextIdx, total: totalNodesRef.current });
+
         if (nextIdx >= totalNodesRef.current) {
+          console.log('[StoryWeaver] PLAY END');
           playingRef.current = false;
           setPlaying(false);
           return;
         }
         playIndexRef.current = nextIdx;
 
-        // Direct DOM update
         const el = nodeRefs.current.get(nextIdx);
+        console.log(`[StoryWeaver] updating node ${nextIdx}:`, { found: !!el });
         if (el) {
           const card = el.querySelector('[data-card]') as HTMLElement;
           const dot = el.querySelector('[data-dot]') as HTMLElement;
-          if (card) card.style.opacity = '1';
-          if (dot) dot.style.opacity = '1';
+          if (card) { card.style.opacity = '1'; console.log(`[StoryWeaver] card opacity set to 1`); }
+          if (dot) { dot.style.opacity = '1'; }
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
@@ -67,12 +85,14 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => {
+      console.log('[StoryWeaver] EFFECT CLEANUP');
       playingRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [playing]);
 
   const handlePlay = () => {
+    console.log('[StoryWeaver] handlePlay called', { nodeRefsSize: nodeRefs.current.size, playing });
     // Reset all nodes to inactive
     nodeRefs.current.forEach((el) => {
       const card = el.querySelector('[data-card]') as HTMLElement;

@@ -84,8 +84,11 @@ function ParticleCloud({ theme }: { theme: Theme }) {
     return result;
   }, [rawMemories, navCategory, navSubCategory]);
 
+  console.log('[ParticleCloud] render', { timeRangeFilter, visibleCount: visible.length });
+
   const { positions, colors, sizes } = useMemo(() => {
     const mems = visible;
+    console.log('[ParticleCloud] useMemo positions/colors/sizes', { mems: mems.length, hasFilter: !!timeRangeFilter });
     const pos = new Float32Array(mems.length * 3);
     const col = new Float32Array(mems.length * 3);
     const sz = new Float32Array(mems.length);

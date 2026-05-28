@@ -39,11 +39,11 @@ export default function TimelineScrubber() {
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       const ts = fromPercent(pct);
       const f = filterRef.current;
-      if (dragging === 'start') {
-        setTimeRangeFilter([Math.min(ts, f[1]), f[1]]);
-      } else {
-        setTimeRangeFilter([f[0], Math.max(ts, f[0])]);
-      }
+      const newRange = dragging === 'start'
+        ? [Math.min(ts, f[1]), f[1]] as [number, number]
+        : [f[0], Math.max(ts, f[0])] as [number, number];
+      console.log('[Timeline] handleMove', { dragging, pct: pct.toFixed(1), ts, newRange: [new Date(newRange[0]).toLocaleDateString(), new Date(newRange[1]).toLocaleDateString()] });
+      setTimeRangeFilter(newRange);
     };
     const handleUp = () => setDragging(null);
     window.addEventListener('mousemove', handleMove);
