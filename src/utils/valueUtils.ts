@@ -78,6 +78,96 @@ export interface DailyMemoryResult {
   daysAgo: number;
 }
 
+export interface AnnualStats {
+  totalMemories: number;
+  emotionDistribution: Record<string, number>;
+  monthlyActivity: { month: string; count: number }[];
+  topPersons: { name: string; count: number }[];
+  topLocations: { name: string; count: number }[];
+  keywords: { word: string; count: number }[];
+  milestones: RawMemory[];
+  summaryText: string;
+}
+
+export function computeAnnualStats(memories: RawMemory[]): AnnualStats {
+  const emotionDist: Record<string, number> = {};
+  const monthMap = new Map<string, number>();
+  const personMap = new Map<string, number>();
+  const locationMap = new Map<string, number>();
+  const wordMap = new Map<string, number>();
+
+  memories.forEach(m => {
+    // Emotion
+    const emo = m.dimensions.emotional.primary;
+    emotionDist[emo] = (emotionDist[emo] || 0) + 1;
+
+    // Monthly activity
+    const d = new Date(m.dimensions.temporal.timestamp);
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
+
+    // Persons
+    m.dimensions.social.persons.forEach(p => {
+      personMap.set(p, (personMap.get(p) || 0) + 1);
+    });
+
+    // Locations
+    const loc = m.dimensions.spatial.landmark || m.dimensions.spatial.placeType;
+    if (loc) locationMap.set(loc, (locationMap.get(loc) || 0) + 1);
+
+    // Keywords from summary
+    const words = m.summary.replace(/[，。！？、；：""''（）\s]+/g, ' ').split(' ').filter(w => w.length >= 2);
+    words.forEach(w => wordMap.set(w, (wordMap.get(w) || 0) + 1));
+  });
+
+  const milestones = memories.filter(m => m.dimensions.narrative.isMilestone);
+
+  const topPersons = Array.from(personMap.entries())
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  const topLocations = Array.from(locationMap.entries())
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  const keywords = Array.from(wordMap.entries())
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 8)
+    .map(([word, count]) => ({ word, count }));
+
+  const monthlyActivity = Array.from(monthMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, count]) => ({ month, count }));
+
+  // Summary text
+  const topEmotion = Object.entries(emotionDist).sort(([, a], [, b]) => b - a)[0]?.[0] || '中性';
+  const personalityMap: Record<string, string> = {
+    '快乐': '阳光开朗型',
+    '好奇': '探索发现型',
+    '骄傲': '成就驱动型',
+    '感激': '温暖感恩型',
+    '悲伤': '深度感受型',
+    '中性': '沉稳观察型',
+  };
+  const personality = personalityMap[topEmotion] || '多元体验型';
+  const summaryText = `你的记忆人格是「${personality}」——${topEmotion}是你最常出现的情绪。`
+    + `全年共 ${memories.length} 条记忆，${milestones.length} 个里程碑，`
+    + `最常出现的人是${topPersons[0]?.name || '未知'}。`;
+
+  return {
+    totalMemories: memories.length,
+    emotionDistribution: emotionDist,
+    monthlyActivity,
+    topPersons,
+    topLocations,
+    keywords,
+    milestones,
+    summaryText,
+  };
+}
+
 export interface ReviewCandidate {
   memory: RawMemory;
   risk: number;

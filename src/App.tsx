@@ -9,6 +9,7 @@ import ToastContainer from './components/Toast';
 import DailyMemoryCard from './components/DailyMemoryCard';
 import TimelineScrubber from './components/TimelineScrubber';
 import SerendipityModal from './components/SerendipityModal';
+import AnnualReport from './components/AnnualReport';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -21,6 +22,7 @@ function AppInner() {
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showSerendipity, setShowSerendipity] = useState(false);
+  const [showAnnualReport, setShowAnnualReport] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -202,6 +204,16 @@ function AppInner() {
           🔍
         </button>
         <button
+          onClick={() => setShowAnnualReport(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          📊 年报
+        </button>
+        <button
           onClick={() => setShowSerendipity(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -225,6 +237,7 @@ function AppInner() {
 
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
+      <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
   );
