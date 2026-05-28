@@ -19,19 +19,23 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   // Play animation via requestAnimationFrame with forced re-render
   useEffect(() => {
     if (!playing || !woven) return;
+    console.log('[StoryWeaver] rAF EFFECT START', { nodesLength: woven.nodes.length });
     let lastTick = performance.now();
     let currentIdx = 0;
+    let tickCount = 0;
 
     const tick = (now: number) => {
+      tickCount++;
       if (now - lastTick >= 1500) {
         lastTick = now;
         currentIdx++;
+        console.log(`[StoryWeaver] rAF ADVANCE to ${currentIdx}`, { tickCount });
         if (currentIdx >= woven.nodes.length) {
+          console.log('[StoryWeaver] rAF DONE');
           setPlaying(false);
           return;
         }
         setPlayIndex(currentIdx);
-        // Auto-scroll
         const el = nodeRefs.current.get(currentIdx);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -39,10 +43,14 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     };
 
     rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      console.log('[StoryWeaver] rAF EFFECT CLEANUP');
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [playing, woven]);
 
   const handlePlay = () => {
+    console.log('[StoryWeaver] handlePlay CLICKED', { playing, playIndex });
     setPlayIndex(0);
     setPlaying(true);
   };
@@ -135,6 +143,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
             {woven.nodes.map((node, i) => {
               const isActive = !playing || i <= playIndex;
+              console.log(`[StoryWeaver] RENDER node ${i}`, { playing, playIndex, isActive, opacity: isActive ? 1 : 0.3 });
               return (
                 <div
                   key={node.memory.id}
