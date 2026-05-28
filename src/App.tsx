@@ -24,6 +24,43 @@ function AppInner() {
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
+
+      if (e.key === 'Escape') {
+        if (showSerendipity) { setShowSerendipity(false); return; }
+        if (showSearch && searchQuery) { setSearchQuery(''); return; }
+        if (showSearch) { setShowSearch(false); return; }
+        return;
+      }
+
+      if (isInput) return;
+
+      if (e.key === '1') { setCurrentView('全局视图'); return; }
+      if (e.key === '2') { setCurrentView('家庭视图'); return; }
+      if (e.key === '3') { setCurrentView('学习视图'); return; }
+      if (e.key === '4') { setCurrentView('情绪视图'); return; }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowSearch(true);
+        return;
+      }
+
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        // Could show help panel; for now toggle theme as a demo
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
     if (!isDemoPlaying) return;
