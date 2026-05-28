@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
-import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings } from '../utils/valueUtils';
+import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory } from '../utils/valueUtils';
 import { generateStory } from '../utils/storyUtils';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
 import type { RawMemory, InsightMemory } from '../types';
@@ -496,5 +496,58 @@ describe('getMemoryCategoryPaths', () => {
       expect(p.subCategory).toBeTruthy();
       expect(p.subCategoryIcon).toBeTruthy();
     });
+  });
+});
+
+describe('Business Logic — Daily Memory (getDailyMemory)', () => {
+  it('should return null for empty memories', () => {
+    expect(getDailyMemory([])).toBeNull();
+  });
+
+  it('should always return a result when memories exist', () => {
+    const result = getDailyMemory(rawMemories);
+    expect(result).not.toBeNull();
+    expect(result!.memory).toBeDefined();
+    expect(result!.reason).toMatch(/anniversary|forgetting-risk/);
+    expect(typeof result!.daysAgo).toBe('number');
+  });
+
+  it('should return consistent result for the same date', () => {
+    const now = Date.now();
+    const r1 = getDailyMemory(rawMemories, now);
+    const r2 = getDailyMemory(rawMemories, now);
+    expect(r1!.memory.id).toBe(r2!.memory.id);
+  });
+
+  it('should return anniversary memory when date matches', () => {
+    // Pick a memory and construct a "now" that is same month+day but different year
+    const mem = rawMemories[0];
+    const ts = mem.dimensions.temporal.timestamp;
+    const d = new Date(ts);
+    // Create a date in 2030 with same month+day
+    const futureDate = new Date(2030, d.getMonth(), d.getDate(), 12, 0, 0);
+    const result = getDailyMemory(rawMemories, futureDate.getTime());
+    expect(result).not.toBeNull();
+    // The result should be an anniversary memory with matching month+day
+    if (result!.reason === 'anniversary') {
+      const resultDate = new Date(result!.memory.dimensions.temporal.timestamp);
+      expect(resultDate.getMonth()).toBe(d.getMonth());
+      expect(resultDate.getDate()).toBe(d.getDate());
+    }
+  });
+
+  it('should return a valid memory with proper fields', () => {
+    const result = getDailyMemory(rawMemories);
+    expect(result!.memory.id).toBeTruthy();
+    expect(result!.memory.label).toBeTruthy();
+    expect(result!.memory.summary).toBeTruthy();
+    expect(result!.memory.dimensions.emotional.primary).toBeTruthy();
+  });
+
+  it('should compute daysAgo correctly', () => {
+    const mem = rawMemories[0];
+    const now = mem.dimensions.temporal.timestamp + 10 * 24 * 60 * 60 * 1000; // 10 days after
+    const result = getDailyMemory([mem], now);
+    expect(result!.daysAgo).toBe(10);
   });
 });

@@ -71,3 +71,68 @@ export function getForgettingRiskWarnings(memories: RawMemory[], topN: number = 
     .sort((a, b) => b.risk - a.risk)
     .slice(0, topN);
 }
+
+export interface DailyMemoryResult {
+  memory: RawMemory;
+  reason: 'anniversary' | 'forgetting-risk';
+  daysAgo: number;
+}
+
+export function getDailyMemory(memories: RawMemory[], now: number = Date.now()): DailyMemoryResult | null {
+  if (memories.length === 0) return null;
+
+  const today = new Date(now);
+  const month = today.getMonth();
+  const day = today.getDate();
+
+  // Use date as seed for deterministic daily selection
+  const dateSeed = today.getFullYear() * 10000 + (month + 1) * 100 + day;
+
+  // Strategy 1: Find "on this day" memories (same month+day in previous years)
+  const anniversaryMems = memories.filter(m => {
+    const d = new Date(m.dimensions.temporal.timestamp);
+    return d.getMonth() === month && d.getDate() === day && d.getFullYear() !== today.getFullYear();
+  });
+
+  if (anniversaryMems.length > 0) {
+    // Deterministic pick based on date
+    const pick = anniversaryMems[dateSeed % anniversaryMems.length];
+    const daysAgo = Math.floor((now - pick.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24));
+    return { memory: pick, reason: 'anniversary', daysAgo };
+  }
+
+  // Strategy 2: Same month+day (same year, for completeness)
+  const sameDayMems = memories.filter(m => {
+    const d = new Date(m.dimensions.temporal.timestamp);
+    return d.getMonth() === month && d.getDate() === day;
+  });
+  if (sameDayMems.length > 0) {
+    const pick = sameDayMems[dateSeed % sameDayMems.length];
+    const daysAgo = Math.floor((now - pick.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24));
+    return { memory: pick, reason: 'anniversary', daysAgo };
+  }
+
+  // Strategy 3: High forgetting risk + high value
+  const riskResults = memories
+    .map(m => {
+      const risk = computeForgettingRisk(m, now);
+      const value = computeValueScore(m);
+      return { memory: m, risk: risk.risk, score: value.score };
+    })
+    .filter(r => r.risk >= 0.3)
+    .sort((a, b) => (b.risk * b.score) - (a.risk * a.score));
+
+  if (riskResults.length > 0) {
+    const pick = riskResults[dateSeed % riskResults.length];
+    const daysAgo = Math.floor((now - pick.memory.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24));
+    return { memory: pick.memory, reason: 'forgetting-risk', daysAgo };
+  }
+
+  // Fallback: random high-value memory
+  const sorted = [...memories].sort((a, b) =>
+    computeValueScore(b).score - computeValueScore(a).score
+  );
+  const pick = sorted[dateSeed % sorted.length];
+  const daysAgo = Math.floor((now - pick.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24));
+  return { memory: pick, reason: 'forgetting-risk', daysAgo };
+}

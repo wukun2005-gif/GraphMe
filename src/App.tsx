@@ -6,6 +6,7 @@ import ChatPanel from './components/ChatPanel';
 import ValueDashboard from './components/ValueDashboard';
 import MemoryBank from './components/MemoryBank';
 import ToastContainer from './components/Toast';
+import DailyMemoryCard from './components/DailyMemoryCard';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -63,6 +64,7 @@ function AppInner() {
       style={{ background: isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT }}
     >
       <MemCloud3D bgColor={isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT} theme={theme} />
+      <DailyMemoryCard />
 
       <div className={`absolute left-0 top-0 h-full z-10 backdrop-blur-sm border-r ${
         isDark ? 'bg-[#0d1525]/90 border-[#ffffff08]' : 'bg-white/90 border-gray-200'
