@@ -96,6 +96,43 @@ export interface DecayCurveResult {
   abyssCount: number; // memories with risk > 0.7
 }
 
+export interface DimensionDiff {
+  dimension: string;
+  label: string;
+  from: number;
+  to: number;
+  direction: '↑' | '↓' | '→';
+  delta: number;
+}
+
+export function computeDiff(memA: RawMemory, memB: RawMemory): DimensionDiff[] {
+  // memA = earlier, memB = later
+  const [earlier, later] = memA.dimensions.temporal.timestamp <= memB.dimensions.temporal.timestamp
+    ? [memA, memB] : [memB, memA];
+
+  const dims: { key: string; label: string; getValue: (m: RawMemory) => number }[] = [
+    { key: 'importance', label: '重要性', getValue: m => m.dimensions.value.importance },
+    { key: 'cqi', label: 'CQI', getValue: m => m.dimensions.value.cqi },
+    { key: 'intensity', label: '情感强度', getValue: m => m.dimensions.emotional.intensity },
+    { key: 'accessCount', label: '访问次数', getValue: m => Math.min(m.dimensions.value.accessCount / 10, 1) },
+    { key: 'intimacy', label: '亲密度', getValue: m => m.dimensions.social.intimacy },
+  ];
+
+  return dims.map(d => {
+    const from = d.getValue(earlier);
+    const to = d.getValue(later);
+    const delta = to - from;
+    return {
+      dimension: d.key,
+      label: d.label,
+      from: Math.round(from * 100) / 100,
+      to: Math.round(to * 100) / 100,
+      direction: delta > 0.01 ? '↑' : delta < -0.01 ? '↓' : '→',
+      delta: Math.round(delta * 100) / 100,
+    };
+  });
+}
+
 export interface DailyEmotionEntry {
   date: string; // YYYY-MM-DD
   primaryEmotion: string;

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
+import { computeDiff } from '../utils/valueUtils';
 
 interface VersionEntry {
   version: number;
@@ -288,11 +289,139 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
   );
 }
 
+function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme }: {
+  memory: RawMemory;
+  compareTarget: string | null;
+  onSelectTarget: (id: string | null) => void;
+  allMemories: RawMemory[];
+  theme: 'dark' | 'light';
+}) {
+  const isDark = theme === 'dark';
+  const target = compareTarget ? allMemories.find(m => m.id === compareTarget) : null;
+  const diffs = target ? computeDiff(memory, target) : [];
+
+  // Same storyline memories for quick selection
+  const storylineMems = allMemories.filter(m =>
+    m.id !== memory.id &&
+    m.dimensions.narrative.storyline &&
+    m.dimensions.narrative.storyline === memory.dimensions.narrative.storyline
+  );
+
+  if (!target) {
+    return (
+      <div className="space-y-3">
+        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          选择一条记忆进行对比
+        </p>
+        {storylineMems.length > 0 && (
+          <div>
+            <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              同故事线记忆
+            </p>
+            <div className="space-y-1">
+              {storylineMems.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => onSelectTarget(m.id)}
+                  className={`w-full text-left px-2.5 py-1.5 rounded text-xs flex items-center gap-2 cursor-pointer transition-colors ${
+                    isDark ? 'hover:bg-[#ffffff08] text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
+                  <span className="truncate">{m.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div>
+          <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            所有记忆
+          </p>
+          <div className="space-y-1 max-h-[200px] overflow-y-auto">
+            {allMemories.filter(m => m.id !== memory.id).slice(0, 20).map(m => (
+              <button
+                key={m.id}
+                onClick={() => onSelectTarget(m.id)}
+                className={`w-full text-left px-2.5 py-1.5 rounded text-xs flex items-center gap-2 cursor-pointer transition-colors ${
+                  isDark ? 'hover:bg-[#ffffff08] text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
+                <span className="truncate">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>对比模式</p>
+        <button
+          onClick={() => onSelectTarget(null)}
+          className={`text-[10px] cursor-pointer ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}
+        >
+          更换
+        </button>
+      </div>
+
+      {/* Two cards side by side */}
+      <div className="grid grid-cols-2 gap-2">
+        {[memory, target].map((mem, idx) => {
+          const emoColor = EMOTION_COLORS[mem.dimensions.emotional.primary] || '#888';
+          return (
+            <div key={mem.id} className={`p-2.5 rounded-lg border ${isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50 border-gray-100'}`}>
+              <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                {idx === 0 ? '早期' : '后期'}
+              </p>
+              <p className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                {mem.label}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
+                <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {mem.dimensions.emotional.primary}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Arrow */}
+      <div className={`text-center text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>→</div>
+
+      {/* Diffs */}
+      <div className="space-y-1.5">
+        {diffs.map(d => (
+          <div key={d.dimension} className={`flex items-center gap-2 px-2.5 py-1.5 rounded ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
+            <span className={`text-[10px] w-16 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{d.label}</span>
+            <span className={`text-xs font-mono ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{d.from}</span>
+            <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>→</span>
+            <span className={`text-xs font-mono ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{d.to}</span>
+            <span className={`text-xs ml-auto ${
+              d.direction === '↑' ? 'text-green-400' : d.direction === '↓' ? 'text-red-400' : 'text-gray-500'
+            }`}>
+              {d.direction} {Math.abs(d.delta).toFixed(2)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareTarget, setCompareTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (!detailOpen) return;
@@ -646,6 +775,14 @@ export default function DetailPanel() {
                 }`}>取消</button>
               </div>
             </div>
+          ) : compareMode && selectedMemory.type === 'raw' ? (
+            <CompareView
+              memory={selectedMemory}
+              compareTarget={compareTarget}
+              onSelectTarget={setCompareTarget}
+              allMemories={allRawMemories}
+              theme={theme}
+            />
           ) : (
             <>
               {selectedMemory.type === 'raw'
@@ -653,13 +790,23 @@ export default function DetailPanel() {
                 : <InsightDetail memory={selectedMemory} />}
               <div className={`mt-6 flex gap-2 border-t pt-4 ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
                 {selectedMemory.type === 'raw' && (
-                  <button
-                    id="demo-edit-btn"
-                    onClick={startEdit}
-                    className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
-                      isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
-                    }`}
-                  >✏️ 编辑</button>
+                  <>
+                    <button
+                      id="demo-edit-btn"
+                      onClick={startEdit}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >✏️ 编辑</button>
+                    <button
+                      onClick={() => { setCompareMode(!compareMode); setCompareTarget(null); }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        compareMode
+                          ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
+                          : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >📊 对比</button>
+                  </>
                 )}
                 <button
                   onClick={() => {
