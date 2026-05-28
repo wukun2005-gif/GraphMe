@@ -1,34 +1,45 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { weaveStoryline, getStorylineNames } from '../utils/storyUtils';
+import { weaveStoryline, getStorylineNames, generateStory } from '../utils/storyUtils';
 import { EMOTION_COLORS } from '../types';
 
 export default function StoryWeaver({ onClose }: { onClose: () => void }) {
-  const { rawMemories, theme, selectMemory } = useAppState();
+  const { rawMemories, insightMemories, theme, selectMemory } = useAppState();
   const isDark = theme === 'dark';
   const storylines = useMemo(() => getStorylineNames(rawMemories), [rawMemories]);
+  const storyChapters = useMemo(() => generateStory(rawMemories, insightMemories), [rawMemories, insightMemories]);
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
-  const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playingRef = useRef(false);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
+  // Recursive setTimeout for play advancement
   useEffect(() => {
     if (!playing || !woven) return;
-    playRef.current = setInterval(() => {
-      setPlayIndex(prev => {
-        if (prev >= woven.nodes.length - 1) {
-          setPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 1500);
-    return () => { if (playRef.current) clearInterval(playRef.current); };
+    playingRef.current = true;
+
+    const advance = (currentIdx: number) => {
+      if (!playingRef.current) return;
+      const nextIdx = currentIdx + 1;
+      if (nextIdx >= woven.nodes.length) {
+        playingRef.current = false;
+        setPlaying(false);
+        return;
+      }
+      setPlayIndex(nextIdx);
+      timerRef.current = setTimeout(() => advance(nextIdx), 1500);
+    };
+
+    timerRef.current = setTimeout(() => advance(playIndex), 1500);
+    return () => {
+      playingRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [playing, woven]);
 
   // Auto-scroll to current node during playback
@@ -52,6 +63,33 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
   return (
     <div className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+      {/* Story chapters - past & future */}
+      {storyChapters.length > 0 && (
+        <div className="space-y-3">
+          {storyChapters.map((chapter, ci) => (
+            <div key={ci}>
+              <div className={`text-xs uppercase tracking-widest mb-2 ${
+                chapter.type === 'past'
+                  ? isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'
+                  : isDark ? 'text-[#ffb800]/70' : 'text-[#cc8800]/70'
+              }`}>
+                {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} · {chapter.title}
+              </div>
+              {chapter.text.split('\n\n').map((paragraph, pi) => (
+                <p key={pi} className={`text-xs leading-relaxed mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Divider */}
+      {storyChapters.length > 0 && storylines.length > 0 && (
+        <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`} />
+      )}
+
       {/* Storyline selector */}
       {storylines.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

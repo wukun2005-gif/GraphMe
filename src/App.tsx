@@ -110,7 +110,7 @@ function AppInner() {
       <DailyMemoryCard />
 
       <div className={`absolute left-0 top-0 h-full z-10 backdrop-blur-sm border-r ${
-        isDark ? 'bg-[#0d1525]/90 border-[#ffffff08]' : 'bg-white/90 border-gray-200'
+        isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'
       }`}>
         <NavigationSidebar />
       </div>
@@ -178,8 +178,8 @@ function AppInner() {
               onBlur={() => { if (!searchQuery) setShowSearch(false); }}
               className={`px-3 pr-7 py-1.5 text-xs rounded-lg backdrop-blur-sm border focus:outline-none w-48 ${
                 isDark
-                  ? 'bg-[#0d1525]/90 border-[#00f2ff]/30 text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/50'
-                  : 'bg-white/90 border-gray-300 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/50'
+                  ? 'bg-[#0d1525] border-[#00f2ff]/30 text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/50'
+                  : 'bg-white border-gray-300 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/50'
               }`}
             />
             {searchQuery && (
@@ -222,7 +222,7 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎲 机缘
+          🎲 记忆碰碰对
         </button>
         <button
           onClick={toggleTheme}

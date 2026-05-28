@@ -42,7 +42,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
             exit={{ scale: 0.9, y: 20 }}
             onClick={e => e.stopPropagation()}
             className={`relative w-full max-w-md mx-4 rounded-2xl border shadow-2xl overflow-hidden ${
-              isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff10]' : 'bg-white/95 border-gray-200'
+              isDark ? 'bg-[#0d0d1a] border-[#ffffff10]' : 'bg-white border-gray-200'
             }`}
           >
             {/* Header */}

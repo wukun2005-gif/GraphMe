@@ -302,7 +302,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
       {hovered && (
         <div
           className={`absolute z-50 px-2.5 py-1.5 rounded-lg text-[10px] pointer-events-none border shadow-lg ${
-            isDark ? 'bg-[#1a1020]/95 border-[#ffffff15] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
+            isDark ? 'bg-[#1a1020] border-[#ffffff15] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
           }`}
           style={{ left: `${(hovered.x / CHART_W) * 100}%`, top: `${(hovered.y / CHART_H) * 100 - 15}%` }}
         >
@@ -440,7 +440,7 @@ function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; the
       {hovered && (
         <div
           className={`absolute z-50 px-2.5 py-1.5 rounded-lg text-[10px] pointer-events-none border shadow-lg max-w-[200px] ${
-            isDark ? 'bg-[#1a1020]/95 border-[#ffffff15] text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'
+            isDark ? 'bg-[#1a1020] border-[#ffffff15] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
           }`}
           style={{ left: `${(hovered.x / svgW) * 100}%`, top: `${(hovered.y / svgH) * 100 - 10}%` }}
         >
@@ -506,7 +506,7 @@ export default function ValueDashboard() {
             exit={{ y: 100, opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className={`fixed bottom-20 w-[380px] max-h-[520px] backdrop-blur-xl border rounded-xl p-4 z-20 shadow-2xl overflow-hidden flex flex-col ${
-              isDark ? 'bg-[#1a1020]/98 border-[#ffffff08]' : 'bg-white/98 border-gray-200'
+              isDark ? 'bg-[#1a1020] border-[#ffffff08]' : 'bg-white border-gray-200'
             } ${
               detailOpen ? 'right-[436px]' : 'right-6'
             }`}

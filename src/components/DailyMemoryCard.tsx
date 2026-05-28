@@ -66,8 +66,8 @@ export default function DailyMemoryCard() {
     >
       <div className={`relative px-5 py-3.5 rounded-xl backdrop-blur-md shadow-lg border max-w-sm ${
         isDark
-          ? 'bg-[#0d1525]/85 border-[#ffffff12]'
-          : 'bg-white/85 border-gray-200'
+          ? 'bg-[#0d1525] border-[#ffffff12]'
+          : 'bg-white border-gray-200'
       }`}>
         <button
           onClick={handleDismiss}

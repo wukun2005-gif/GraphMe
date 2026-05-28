@@ -73,7 +73,7 @@ export default function OnboardingOverlay() {
           className="absolute inset-0 flex items-center justify-center"
         >
           <div className={`w-80 p-6 rounded-2xl border shadow-2xl ${
-            'bg-[#0d0d1a]/95 border-[#ffffff15]'
+            'bg-[#0d0d1a] border-[#ffffff15]'
           }`}>
             <div className={`text-xs mb-3 ${'text-[#00f2ff]/50'}`}>
               步骤 {step + 1} / {STEPS.length}

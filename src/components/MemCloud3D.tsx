@@ -526,7 +526,7 @@ function InteractionLoop() {
   const isActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastInteractionRef = useRef(0);
-  const { currentView } = useAppState();
+  const { currentView, timeRangeFilter } = useAppState();
 
   const keepAlive = useCallback(() => {
     lastInteractionRef.current = Date.now();
@@ -539,6 +539,10 @@ function InteractionLoop() {
   useEffect(() => {
     invalidate();
   }, [currentView, invalidate]);
+
+  useEffect(() => {
+    invalidate();
+  }, [timeRangeFilter, invalidate]);
 
   useEffect(() => {
     const canvas = gl.domElement;

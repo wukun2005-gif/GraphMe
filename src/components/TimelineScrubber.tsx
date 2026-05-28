@@ -76,7 +76,7 @@ export default function TimelineScrubber() {
       detailOpen ? 'right-[436px]' : 'right-4'
     }`}>
       <div className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-lg ${
-        isDark ? 'bg-[#0d1525]/85 border-[#ffffff08]' : 'bg-white/85 border-gray-200'
+        isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'
       }`}>
         <div className="flex items-center gap-3">
           <span className={`text-[10px] flex-shrink-0 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

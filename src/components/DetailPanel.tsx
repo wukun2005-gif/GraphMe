@@ -569,7 +569,7 @@ export default function DetailPanel() {
           exit={{ x: 400, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className={`fixed right-0 top-0 h-full w-[420px] backdrop-blur-xl border-l p-6 overflow-y-auto z-20 shadow-2xl ${
-            isDark ? 'bg-[#0d0d1a]/95 border-[#ffffff08]' : 'bg-white/95 border-gray-200'
+            isDark ? 'bg-[#0d0d1a] border-[#ffffff08]' : 'bg-white border-gray-200'
           }`}
         >
           <div className="flex justify-between items-center mb-4">
@@ -597,7 +597,7 @@ export default function DetailPanel() {
                     📁
                   </button>
                   <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg border shadow-lg z-50 hidden group-hover:block ${
-                    isDark ? 'bg-[#1a1020]/95 border-[#ffffff15]' : 'bg-white/95 border-gray-200'
+                    isDark ? 'bg-[#1a1020] border-[#ffffff15]' : 'bg-white border-gray-200'
                   }`}>
                     {collections.map(col => {
                       const isIn = col.memoryIds.includes(selectedMemory.id);
@@ -806,7 +806,7 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >📊 对比</button>
+                    >{compareMode ? '📄 详情' : '📊 对比'}</button>
                     <button
                       onClick={async () => {
                         const blob = await renderMemoryCard(selectedMemory);
