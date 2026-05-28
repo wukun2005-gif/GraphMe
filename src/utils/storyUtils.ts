@@ -27,6 +27,83 @@ function citationLabel(m: RawMemory): string {
   return m.label || m.summary.slice(0, 30);
 }
 
+export interface StorylineNode {
+  memory: RawMemory;
+  index: number;
+  emotionColor: string;
+}
+
+export interface StorylineConnection {
+  from: StorylineNode;
+  to: StorylineNode;
+  emotionTransition: string; // e.g. "好奇 → 沮丧"
+}
+
+export interface WovenStoryline {
+  storyline: string;
+  nodes: StorylineNode[];
+  connections: StorylineConnection[];
+  narrative: string; // Auto-generated paragraph
+}
+
+import { EMOTION_COLORS } from '../types';
+
+export function weaveStoryline(rawMemories: RawMemory[], storylineName: string): WovenStoryline | null {
+  const members = rawMemories
+    .filter(m => m.dimensions.narrative.storyline === storylineName)
+    .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
+
+  if (members.length === 0) return null;
+
+  const nodes: StorylineNode[] = members.map((m, i) => ({
+    memory: m,
+    index: i,
+    emotionColor: EMOTION_COLORS[m.dimensions.emotional.primary] || '#888',
+  }));
+
+  const connections: StorylineConnection[] = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const from = nodes[i];
+    const to = nodes[i + 1];
+    const fromEmo = from.memory.dimensions.emotional.primary;
+    const toEmo = to.memory.dimensions.emotional.primary;
+    connections.push({
+      from,
+      to,
+      emotionTransition: fromEmo === toEmo ? fromEmo : `${fromEmo} → ${toEmo}`,
+    });
+  }
+
+  // Auto-generate narrative paragraph
+  const first = members[0];
+  const last = members[members.length - 1];
+  const emotions = [...new Set(members.map(m => m.dimensions.emotional.primary))];
+  const places = [...new Set(members.map(m => m.dimensions.spatial.landmark).filter(Boolean))];
+  const persons = [...new Set(members.flatMap(m => m.dimensions.social.persons))];
+
+  const firstDate = new Date(first.dimensions.temporal.timestamp);
+  const lastDate = new Date(last.dimensions.temporal.timestamp);
+  const monthDiff = Math.max(1, Math.round((lastDate.getTime() - firstDate.getTime()) / (30 * 86400000)));
+
+  const emotionStr = emotions.length <= 2
+    ? emotions.join('和')
+    : emotions.slice(0, 3).join('、') + '等';
+  const placeStr = places.length > 0 ? `在${places.slice(0, 2).join('和')}` : '';
+  const personStr = persons.length > 0 ? `和${persons.slice(0, 2).join('、')}` : '';
+
+  const narrative = `${storylineName}的故事跨越了 ${monthDiff} 个月，共 ${members.length} 条记忆。`
+    + `从${firstDate.getMonth() + 1}月的"${first.label}"开始，`
+    + `${placeStr}${personStr}一起经历了${emotionStr}的时刻。`
+    + `最近的一条是"${last.label}"。`;
+
+  return { storyline: storylineName, nodes, connections, narrative };
+}
+
+export function getStorylineNames(rawMemories: RawMemory[]): string[] {
+  const names = new Set(rawMemories.map(m => m.dimensions.narrative.storyline).filter(Boolean));
+  return Array.from(names);
+}
+
 export function generateStory(
   rawMemories: RawMemory[],
   insightMemories: InsightMemory[]

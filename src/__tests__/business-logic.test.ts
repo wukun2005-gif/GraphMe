@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { rawMemories, insightMemories } from '../data/demoData';
 import { computeValueScore, computeForgettingRisk, getTop5HighValue, getForgettingRiskWarnings, getDailyMemory, computeDecayCurve, computeDailyEmotionMap } from '../utils/valueUtils';
-import { generateStory } from '../utils/storyUtils';
+import { generateStory, weaveStoryline, getStorylineNames } from '../utils/storyUtils';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
 import type { RawMemory, InsightMemory } from '../types';
 
@@ -632,6 +632,52 @@ describe('Business Logic — Daily Emotion Map (computeDailyEmotionMap)', () => 
     const entries = computeDailyEmotionMap(rawMemories, 365);
     entries.forEach(e => {
       expect(e.summaries.length).toBeLessThanOrEqual(3);
+    });
+  });
+});
+
+describe('Business Logic — Storyline Weaving', () => {
+  it('getStorylineNames should return unique storyline names', () => {
+    const names = getStorylineNames(rawMemories);
+    expect(names.length).toBeGreaterThan(0);
+    const unique = new Set(names);
+    expect(names.length).toBe(unique.size);
+  });
+
+  it('weaveStoryline should return null for non-existent storyline', () => {
+    expect(weaveStoryline(rawMemories, '不存在的故事线')).toBeNull();
+  });
+
+  it('weaveStoryline should return valid structure for existing storyline', () => {
+    const names = getStorylineNames(rawMemories);
+    const result = weaveStoryline(rawMemories, names[0]);
+    expect(result).not.toBeNull();
+    expect(result!.storyline).toBe(names[0]);
+    expect(result!.nodes.length).toBeGreaterThan(0);
+    expect(result!.narrative).toBeTruthy();
+  });
+
+  it('nodes should be sorted by timestamp', () => {
+    const names = getStorylineNames(rawMemories);
+    const result = weaveStoryline(rawMemories, names[0]);
+    for (let i = 1; i < result!.nodes.length; i++) {
+      const prev = result!.nodes[i - 1].memory.dimensions.temporal.timestamp;
+      const curr = result!.nodes[i].memory.dimensions.temporal.timestamp;
+      expect(curr).toBeGreaterThanOrEqual(prev);
+    }
+  });
+
+  it('connections should be one less than nodes', () => {
+    const names = getStorylineNames(rawMemories);
+    const result = weaveStoryline(rawMemories, names[0]);
+    expect(result!.connections.length).toBe(result!.nodes.length - 1);
+  });
+
+  it('each node should have a valid emotionColor', () => {
+    const names = getStorylineNames(rawMemories);
+    const result = weaveStoryline(rawMemories, names[0]);
+    result!.nodes.forEach(n => {
+      expect(n.emotionColor).toMatch(/^#[0-9a-f]{6}$/);
     });
   });
 });
