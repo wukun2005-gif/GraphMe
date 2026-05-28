@@ -16,12 +16,10 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
-  // Play via setInterval
   const startPlay = useCallback(() => {
     if (!woven) return;
     setPlayIndex(0);
     setPlaying(true);
-
     if (intervalRef.current) clearInterval(intervalRef.current);
     let idx = 0;
     intervalRef.current = setInterval(() => {
@@ -40,11 +38,8 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     setPlaying(false);
   }, []);
 
-  useEffect(() => {
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
 
-  // Auto-scroll
   useEffect(() => {
     if (!playing) return;
     const el = nodeRefs.current.get(playIndex);
@@ -58,7 +53,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
   return (
     <div className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-      {/* Story chapters - past & future */}
+      {/* Story chapters */}
       {storyChapters.length > 0 && (
         <div className="space-y-3">
           {storyChapters.map((chapter, ci) => (
@@ -80,7 +75,6 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
         </div>
       )}
 
-      {/* Divider */}
       {storyChapters.length > 0 && storylines.length > 0 && (
         <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`} />
       )}
@@ -110,15 +104,15 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
         </p>
       ) : (
         <>
-          {/* Narrative paragraph */}
+          {/* Narrative */}
           <div className={`p-3 rounded-lg text-xs leading-relaxed ${
             isDark ? 'bg-[#00f2ff]/5 text-gray-300 border border-[#00f2ff]/10' : 'bg-blue-50 text-gray-600 border border-blue-100'
           }`}>
             {woven.narrative}
           </div>
 
-          {/* Play button */}
-          <div className="flex justify-center">
+          {/* Play controls */}
+          <div className="flex items-center justify-center gap-3">
             <button
               onClick={playing ? stopPlay : startPlay}
               className={`text-xs px-4 py-1.5 rounded-full cursor-pointer transition-all ${
@@ -129,7 +123,22 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
             >
               {playing ? '⏸ 暂停' : '▶ 播放'}
             </button>
+            {playing && (
+              <span className={`text-xs font-mono ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
+                {playIndex + 1} / {woven.nodes.length}
+              </span>
+            )}
           </div>
+
+          {/* Progress bar */}
+          {playing && (
+            <div className={`h-1 rounded-full overflow-hidden ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
+              <div
+                className="h-full bg-[#00f2ff] rounded-full"
+                style={{ width: `${((playIndex + 1) / woven.nodes.length) * 100}%`, transition: 'width 0.3s ease' }}
+              />
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="relative pl-6">
@@ -138,6 +147,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
             {woven.nodes.map((node, i) => {
               const isActive = !playing || i <= playIndex;
               const isCurrent = playing && i === playIndex;
+              const nodeColor = node.emotionColor;
 
               return (
                 <div
@@ -149,10 +159,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   {i > 0 && (
                     <div
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
-                      style={{
-                        background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${node.emotionColor})`,
-                        opacity: isActive ? 0.6 : 0.15,
-                      }}
+                      style={{ background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${nodeColor})`, opacity: isActive ? 0.6 : 0.15 }}
                     />
                   )}
 
@@ -160,35 +167,43 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   <div
                     className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2"
                     style={{
-                      backgroundColor: node.emotionColor,
+                      backgroundColor: nodeColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
                       opacity: isActive ? 1 : 0.2,
-                      boxShadow: isCurrent ? `0 0 12px ${node.emotionColor}` : 'none',
+                      boxShadow: isCurrent ? `0 0 12px 4px ${nodeColor}` : 'none',
                       transform: isCurrent ? 'scale(1.5)' : 'scale(1)',
                       transition: 'all 0.3s ease',
                     }}
                   />
 
-                  {/* Card */}
+                  {/* Card — uses inline borderLeft for guaranteed visibility */}
                   <div
                     data-card
+                    data-active={isActive ? '1' : '0'}
                     onClick={() => { selectMemory(node.memory); onClose(); }}
-                    className={`p-3 rounded-lg cursor-pointer border ${
-                      isCurrent
-                        ? isDark ? 'bg-[#00f2ff]/10 border-[#00f2ff]/40 shadow-lg shadow-[#00f2ff]/10' : 'bg-blue-50 border-[#0088cc]/40 shadow-lg'
+                    className="p-3 rounded-lg cursor-pointer border"
+                    style={{
+                      borderLeftWidth: '4px',
+                      borderLeftColor: isCurrent ? nodeColor : isActive ? `${nodeColor}80` : 'transparent',
+                      backgroundColor: isCurrent
+                        ? (isDark ? 'rgba(0,242,255,0.08)' : 'rgba(0,136,204,0.08)')
                         : isActive
-                          ? isDark ? 'bg-[#ffffff08] border-[#ffffff10]' : 'bg-white border-gray-200'
-                          : isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50 border-gray-100'
-                    }`}
-                    style={{ transition: 'all 0.3s ease' }}
+                          ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)')
+                          : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
+                      borderColor: isCurrent
+                        ? (isDark ? 'rgba(0,242,255,0.3)' : 'rgba(0,136,204,0.3)')
+                        : isActive
+                          ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)')
+                          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)'),
+                      boxShadow: isCurrent ? `0 4px 20px ${nodeColor}30` : 'none',
+                      transition: 'all 0.3s ease',
+                    }}
                   >
                     <div className="flex items-start gap-2.5">
                       {node.memory.dimensions.sensory.images.length > 0 ? (
-                        <img src={node.memory.dimensions.sensory.images[0]} alt=""
-                          className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                        <img src={node.memory.dimensions.sensory.images[0]} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded flex items-center justify-center text-base flex-shrink-0"
-                          style={{ background: `${node.emotionColor}15` }}>
+                        <div className="w-10 h-10 rounded flex items-center justify-center text-base flex-shrink-0" style={{ background: `${nodeColor}15` }}>
                           {node.memory.dimensions.emotional.primary === '快乐' ? '😊' :
                            node.memory.dimensions.emotional.primary === '骄傲' ? '🏆' :
                            node.memory.dimensions.emotional.primary === '好奇' ? '🔍' :
@@ -198,21 +213,15 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                            {node.memory.label}
-                          </span>
+                          <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{node.memory.label}</span>
                           {node.memory.dimensions.narrative.isMilestone && (
                             <span className="text-[9px] px-1 py-0.5 rounded bg-[#ffb800]/15 text-[#ffb800]">里程碑</span>
                           )}
                         </div>
-                        <p className={`text-[10px] mt-0.5 line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          {node.memory.summary}
-                        </p>
+                        <p className={`text-[10px] mt-0.5 line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{node.memory.summary}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="w-2 h-2 rounded-full" style={{ background: node.emotionColor }} />
-                          <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {node.memory.dimensions.emotional.primary}
-                          </span>
+                          <span className="w-2 h-2 rounded-full" style={{ background: nodeColor }} />
+                          <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{node.memory.dimensions.emotional.primary}</span>
                           <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                             {new Date(node.memory.dimensions.temporal.timestamp).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                           </span>
