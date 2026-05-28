@@ -4,6 +4,7 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
 import { computeDiff } from '../utils/valueUtils';
+import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
 
 interface VersionEntry {
   version: number;
@@ -806,6 +807,17 @@ export default function DetailPanel() {
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
                     >📊 对比</button>
+                    <button
+                      onClick={async () => {
+                        const blob = await renderMemoryCard(selectedMemory);
+                        const date = new Date(selectedMemory.dimensions.temporal.timestamp);
+                        const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+                        downloadBlob(blob, `${selectedMemory.id}_${dateStr}.png`);
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >📸 导出</button>
                   </>
                 )}
                 <button
