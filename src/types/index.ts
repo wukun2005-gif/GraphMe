@@ -126,6 +126,14 @@ export const CATEGORY_LABELS: Record<InsightMemory['category'], string> = {
 
 export type DimensionView = '家庭视图' | '学习视图' | '情绪视图' | '全局视图';
 
+export interface MemoryCollection {
+  id: string;
+  name: string;
+  emoji: string;
+  memoryIds: string[];
+  createdAt: number;
+}
+
 export interface DimensionViewConfig {
   id: DimensionView;
   label: string;

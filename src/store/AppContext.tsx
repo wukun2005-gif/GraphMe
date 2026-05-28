@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView, EmotionType } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -23,6 +23,7 @@ interface AppState {
   favoriteIds: string[];
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
   timeRangeFilter: [number, number] | null;
+  collections: MemoryCollection[];
 }
 
 interface AppContextType extends AppState {
@@ -70,6 +71,10 @@ interface AppContextType extends AppState {
   toggleAllMemories: () => void;
   reinforceMemory: (id: string) => void;
   setTimeRangeFilter: (range: [number, number] | null) => void;
+  addCollection: (name: string, emoji: string) => void;
+  removeCollection: (id: string) => void;
+  addToCollection: (collectionId: string, memoryId: string) => void;
+  removeFromCollection: (collectionId: string, memoryId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -94,6 +99,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     favoriteIds: [],
     toasts: [],
     timeRangeFilter: null,
+    collections: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -116,6 +122,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hiddenMemoryIds, setHiddenMemoryIds] = useState<string[]>([]);
   const [undoStack, setUndoStack] = useState<{ action: 'delete' | 'edit'; snapshot: RawMemory }[]>([]);
   const importIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [collections, setCollections] = useState<MemoryCollection[]>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-collections');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-collections', JSON.stringify(collections)); } catch {}
+  }, [collections]);
 
   useEffect(() => {
     return () => {
@@ -289,6 +306,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, timeRangeFilter: range }));
   }, []);
 
+  const addCollection = useCallback((name: string, emoji: string) => {
+    const id = `col_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    setCollections(prev => [...prev, { id, name, emoji, memoryIds: [], createdAt: Date.now() }]);
+  }, []);
+
+  const removeCollection = useCallback((id: string) => {
+    setCollections(prev => prev.filter(c => c.id !== id));
+  }, []);
+
+  const addToCollection = useCallback((collectionId: string, memoryId: string) => {
+    setCollections(prev => prev.map(c =>
+      c.id === collectionId && !c.memoryIds.includes(memoryId)
+        ? { ...c, memoryIds: [...c.memoryIds, memoryId] }
+        : c
+    ));
+  }, []);
+
+  const removeFromCollection = useCallback((collectionId: string, memoryId: string) => {
+    setCollections(prev => prev.map(c =>
+      c.id === collectionId
+        ? { ...c, memoryIds: c.memoryIds.filter(id => id !== memoryId) }
+        : c
+    ));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -349,6 +391,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       showChatGPT, toggleShowChatGPT,
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
       hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory, setTimeRangeFilter,
+      collections, addCollection, removeCollection, addToCollection, removeFromCollection,
     }}>
       {children}
     </AppContext.Provider>

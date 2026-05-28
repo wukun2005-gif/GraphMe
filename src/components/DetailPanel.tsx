@@ -289,7 +289,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -458,6 +458,36 @@ export default function DetailPanel() {
               >
                 {favoriteIds.includes(selectedMemory.id) ? '⭐' : '☆'}
               </button>
+              {collections.length > 0 && selectedMemory.type === 'raw' && (
+                <div className="relative group">
+                  <button
+                    className={`transition-colors text-sm cursor-pointer ${isDark ? 'text-gray-600 hover:text-purple-400' : 'text-gray-400 hover:text-purple-500'}`}
+                    title="添加到精选集"
+                  >
+                    📁
+                  </button>
+                  <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg border shadow-lg z-50 hidden group-hover:block ${
+                    isDark ? 'bg-[#1a1020]/95 border-[#ffffff15]' : 'bg-white/95 border-gray-200'
+                  }`}>
+                    {collections.map(col => {
+                      const isIn = col.memoryIds.includes(selectedMemory.id);
+                      return (
+                        <button
+                          key={col.id}
+                          onClick={() => isIn ? removeFromCollection(col.id, selectedMemory.id) : addToCollection(col.id, selectedMemory.id)}
+                          className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-1.5 cursor-pointer transition-colors ${
+                            isDark ? 'hover:bg-[#ffffff08] text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          <span>{col.emoji}</span>
+                          <span className="flex-1 truncate">{col.name}</span>
+                          {isIn && <span className="text-[9px] text-green-400">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <button onClick={toggleDetail} className={`transition-colors text-xl leading-none cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>
                 ✕
               </button>

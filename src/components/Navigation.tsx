@@ -60,6 +60,7 @@ export default function NavigationSidebar() {
     chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
     undoDelete, undoStackCount, undoStackAction,
+    collections, addCollection, removeCollection, addToCollection, removeFromCollection,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -69,6 +70,10 @@ export default function NavigationSidebar() {
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
   const [showStoryBoard, setShowStoryBoard] = useState(false);
+  const [expandedCollection, setExpandedCollection] = useState<string | null>(null);
+  const [showNewCollection, setShowNewCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionEmoji, setNewCollectionEmoji] = useState('📁');
 
   const connectionPaths = useMemo(
     () => selectedMemory ? getMemoryCategoryPaths(selectedMemory, allRawMemoriesRef.current) : [],
@@ -712,6 +717,53 @@ export default function NavigationSidebar() {
                           );
                         })}
                       </div>
+                    </div>
+                  )}
+
+                  {collections.length > 0 && (
+                    <div className="mb-2">
+                      <div className={`text-[10px] mb-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                        📁 精选集 ({collections.length})
+                      </div>
+                      {collections.map(col => (
+                        <div key={col.id} className="mb-1">
+                          <button
+                            onClick={() => setExpandedCollection(expandedCollection === col.id ? null : col.id)}
+                            className={`w-full text-left px-2 py-1 rounded text-xs flex items-center gap-1 cursor-pointer transition-colors ${
+                              isDark ? 'hover:bg-[#ffffff05] text-gray-400' : 'hover:bg-black/5 text-gray-600'
+                            }`}
+                          >
+                            <span>{col.emoji}</span>
+                            <span className="truncate">{col.name}</span>
+                            <span className={`text-[9px] ml-auto ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                              {col.memoryIds.length}
+                            </span>
+                          </button>
+                          {expandedCollection === col.id && (
+                            <div className="ml-4 space-y-0.5 mt-0.5">
+                              {col.memoryIds.map(id => {
+                                const mem = allRawMemories.find(m => m.id === id);
+                                if (!mem) return null;
+                                return (
+                                  <button
+                                    key={id}
+                                    onClick={() => selectMemory(mem)}
+                                    className={`w-full text-left px-2 py-1 rounded text-[10px] flex items-center gap-1 cursor-pointer transition-colors ${
+                                      isDark ? 'hover:bg-[#ffffff05] text-gray-500' : 'hover:bg-black/5 text-gray-500'
+                                    }`}
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
+                                    <span className="truncate">{mem.label}</span>
+                                  </button>
+                                );
+                              })}
+                              {col.memoryIds.length === 0 && (
+                                <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>暂无记忆</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                   <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
