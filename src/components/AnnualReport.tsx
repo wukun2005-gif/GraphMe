@@ -120,8 +120,8 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
                         className="w-full rounded-t transition-all"
                         style={{
                           height: `${(m.count / maxMonthly) * 100}%`,
-                          background: isDark ? '#00f2ff40' : '#0088cc40',
-                          minHeight: m.count > 0 ? '4px' : '0',
+                          background: isDark ? '#00f2ff' : '#0088cc',
+                          minHeight: m.count > 0 ? '8px' : '0',
                         }}
                       />
                       <span className={`text-[7px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>

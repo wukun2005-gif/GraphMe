@@ -1146,7 +1146,6 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
         dpr={[0.75, 1.5]}
         performance={{ min: 0.3 }}
-        frameloop="demand"
         style={{ background: bgColor }}
       >
         <DynamicClearColor color={bgColor} />

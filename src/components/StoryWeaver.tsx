@@ -10,10 +10,13 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const storyChapters = useMemo(() => generateStory(rawMemories, insightMemories), [rawMemories, insightMemories]);
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
-  const [playIndex, setPlayIndex] = useState(0);
+  const playIndexRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef(0);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   const totalNodesRef = useRef(0);
+  const playingRef = useRef(false);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
@@ -22,33 +25,61 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
     totalNodesRef.current = woven?.nodes.length ?? 0;
   }, [woven]);
 
-  // Play interval
+  // Play animation via requestAnimationFrame - direct DOM manipulation
   useEffect(() => {
     if (!playing) return;
-    const id = setInterval(() => {
-      setPlayIndex(prev => {
-        const next = prev + 1;
-        if (next >= totalNodesRef.current) {
+    playingRef.current = true;
+    playIndexRef.current = 0;
+    lastTickRef.current = performance.now();
+
+    // Mark all nodes inactive initially
+    nodeRefs.current.forEach((el, i) => {
+      const card = el.querySelector('[data-card]') as HTMLElement;
+      const dot = el.querySelector('[data-dot]') as HTMLElement;
+      if (card) card.style.opacity = i === 0 ? '1' : '0.3';
+      if (dot) dot.style.opacity = i === 0 ? '1' : '0.3';
+    });
+
+    const tick = (now: number) => {
+      if (!playingRef.current) return;
+      if (now - lastTickRef.current >= 1500) {
+        lastTickRef.current = now;
+        const nextIdx = playIndexRef.current + 1;
+        if (nextIdx >= totalNodesRef.current) {
+          playingRef.current = false;
           setPlaying(false);
-          return prev;
+          return;
         }
-        return next;
-      });
-    }, 1500);
-    return () => clearInterval(id);
+        playIndexRef.current = nextIdx;
+
+        // Direct DOM update
+        const el = nodeRefs.current.get(nextIdx);
+        if (el) {
+          const card = el.querySelector('[data-card]') as HTMLElement;
+          const dot = el.querySelector('[data-dot]') as HTMLElement;
+          if (card) card.style.opacity = '1';
+          if (dot) dot.style.opacity = '1';
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      playingRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [playing]);
 
-  // Auto-scroll to current node during playback
-  useEffect(() => {
-    if (!playing) return;
-    const nodeEl = nodeRefs.current.get(playIndex);
-    if (nodeEl) {
-      nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [playIndex, playing]);
-
   const handlePlay = () => {
-    setPlayIndex(0);
+    // Reset all nodes to inactive
+    nodeRefs.current.forEach((el) => {
+      const card = el.querySelector('[data-card]') as HTMLElement;
+      const dot = el.querySelector('[data-dot]') as HTMLElement;
+      if (card) card.style.opacity = '0.3';
+      if (dot) dot.style.opacity = '0.3';
+    });
     setPlaying(true);
   };
 
@@ -92,7 +123,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {storylines.map(name => (
             <button
               key={name}
-              onClick={() => { setSelected(name); setPlaying(false); setPlayIndex(0); }}
+              onClick={() => { setSelected(name); setPlaying(false); playIndexRef.current = 0; }}
               className={`text-[10px] px-2 py-1 rounded-full cursor-pointer transition-colors ${
                 selected === name
                   ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
@@ -138,9 +169,6 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
             <div className={`absolute left-2.5 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-200'}`} />
 
             {woven.nodes.map((node, i) => {
-              const isActive = !playing || i <= playIndex;
-              const isCurrent = playing && i === playIndex;
-
               return (
                 <div
                   key={node.memory.id}
@@ -153,34 +181,28 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
                       style={{
                         background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${node.emotionColor})`,
-                        opacity: isActive ? 0.6 : 0.15,
+                        opacity: 0.6,
                       }}
                     />
                   )}
 
                   {/* Node dot */}
                   <div
-                    className={`absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2 transition-all ${
-                      isCurrent ? 'scale-125 ring-2 ring-offset-1' : ''
-                    }`}
+                    data-dot
+                    className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2"
                     style={{
                       backgroundColor: node.emotionColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
-                      opacity: isActive ? 1 : 0.3,
-                      // @ts-expect-error Tailwind ring color utility
-                      '--tw-ring-color': node.emotionColor,
                     }}
                   />
 
                   {/* Card */}
                   <div
+                    data-card
                     onClick={() => { selectMemory(node.memory); onClose(); }}
-                    className={`p-3 rounded-lg cursor-pointer transition-all border ${
-                      isCurrent
-                        ? isDark ? 'bg-[#ffffff08] border-[#00f2ff]/30 shadow-lg' : 'bg-white border-[#0088cc]/30 shadow-lg'
-                        : isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
+                    className={`p-3 rounded-lg cursor-pointer border ${
+                      isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
                     }`}
-                    style={{ opacity: isActive ? 1 : 0.3 }}
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Photo or emotion dot */}
