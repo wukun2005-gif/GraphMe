@@ -911,7 +911,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>📖 小哥说我</span>
+          <span>📖 我的侧写</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
         </button>
       </div>
@@ -947,7 +947,7 @@ export default function NavigationSidebar() {
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-inherit flex-shrink-0">
             <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              📖 小哥说我
+              📖 我的侧写
             </h2>
             <button
               onClick={() => setShowStoryBoard(false)}

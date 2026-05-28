@@ -412,7 +412,7 @@ if (isCancelled) return;
       if (isCancelled) return;
 
       // P8: Story Board 叙事展示 (8s)
-      await moveAndClick('nav-storyboard', '📖 打开"小哥说我"——AGI 用记忆讲述你的故事', 3000);
+      await moveAndClick('nav-storyboard', '📖 打开"我的侧写"——AGI 用记忆讲述你的故事', 3000);
       if (isCancelled) return;
 
       await moveToCenter('📖 图文并茂的叙事：原始记忆讲述过去，洞察记忆描绘未来', 3000);
@@ -433,7 +433,7 @@ if (isCancelled) return;
 
       // Close Story Board by clicking backdrop (center of screen is covered by modal)
       // Click the close button area - near top right
-      await moveAndClick('nav-storyboard', '收起小哥说我', 1000);
+      await moveAndClick('nav-storyboard', '收起我的侧写', 1000);
       if (isCancelled) return;
 
       // OUTRO (3s)
