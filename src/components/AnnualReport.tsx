@@ -32,7 +32,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
             exit={{ scale: 0.95, y: 30 }}
             onClick={e => e.stopPropagation()}
             className={`relative w-full max-w-lg mx-4 rounded-2xl border shadow-2xl overflow-hidden ${
-              isDark ? 'bg-[#0d0d1a]/98 border-[#ffffff10]' : 'bg-white/98 border-gray-200'
+              isDark ? 'bg-[#0d0d1a] border-[#ffffff10]' : 'bg-white border-gray-200'
             }`}
           >
             {/* Header */}

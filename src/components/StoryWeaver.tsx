@@ -11,36 +11,32 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const playingRef = useRef(false);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  const totalNodesRef = useRef(0);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
-  // Recursive setTimeout for play advancement
+  // Keep totalNodes ref in sync
   useEffect(() => {
-    if (!playing || !woven) return;
-    playingRef.current = true;
+    totalNodesRef.current = woven?.nodes.length ?? 0;
+  }, [woven]);
 
-    const advance = (currentIdx: number) => {
-      if (!playingRef.current) return;
-      const nextIdx = currentIdx + 1;
-      if (nextIdx >= woven.nodes.length) {
-        playingRef.current = false;
-        setPlaying(false);
-        return;
-      }
-      setPlayIndex(nextIdx);
-      timerRef.current = setTimeout(() => advance(nextIdx), 1500);
-    };
-
-    timerRef.current = setTimeout(() => advance(playIndex), 1500);
-    return () => {
-      playingRef.current = false;
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [playing, woven]);
+  // Play interval
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setPlayIndex(prev => {
+        const next = prev + 1;
+        if (next >= totalNodesRef.current) {
+          setPlaying(false);
+          return prev;
+        }
+        return next;
+      });
+    }, 1500);
+    return () => clearInterval(id);
+  }, [playing]);
 
   // Auto-scroll to current node during playback
   useEffect(() => {

@@ -157,7 +157,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
   if (hideRawOnly) return null;
 
   return (
-    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${currentView}`} onClick={handleClick}>
+    <points key={`raw-${visible.length}-${navCategory || 'all'}-${navSubCategory || 'none'}-${currentView}-${timeRangeFilter ? 'filtered' : 'all'}`} onClick={handleClick}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
