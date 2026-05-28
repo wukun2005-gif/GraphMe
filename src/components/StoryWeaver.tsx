@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useAppState } from '../store/AppContext';
 import { weaveStoryline, getStorylineNames, generateStory } from '../utils/storyUtils';
 import { EMOTION_COLORS } from '../types';
@@ -11,42 +11,46 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
-  const rafRef = useRef<number | null>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
-  // Play animation via requestAnimationFrame with forced re-render
-  useEffect(() => {
-    if (!playing || !woven) return;
-    let lastTick = performance.now();
-    let currentIdx = 0;
-
-    const tick = (now: number) => {
-      if (now - lastTick >= 1500) {
-        lastTick = now;
-        currentIdx++;
-        if (currentIdx >= woven.nodes.length) {
-          setPlaying(false);
-          return;
-        }
-        setPlayIndex(currentIdx);
-        const el = nodeRefs.current.get(currentIdx);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [playing, woven]);
-
-  const handlePlay = () => {
+  // Play via setInterval
+  const startPlay = useCallback(() => {
+    if (!woven) return;
     setPlayIndex(0);
     setPlaying(true);
-  };
 
-  // Stable ref callback
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    let idx = 0;
+    intervalRef.current = setInterval(() => {
+      idx++;
+      if (idx >= woven.nodes.length) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setPlaying(false);
+        return;
+      }
+      setPlayIndex(idx);
+    }, 1500);
+  }, [woven]);
+
+  const stopPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (!playing) return;
+    const el = nodeRefs.current.get(playIndex);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [playIndex, playing]);
+
   const setNodeRef = (index: number) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(index, el);
     else nodeRefs.current.delete(index);
@@ -87,7 +91,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {storylines.map(name => (
             <button
               key={name}
-              onClick={() => { setSelected(name); setPlaying(false); setPlayIndex(0); }}
+              onClick={() => { setSelected(name); stopPlay(); }}
               className={`text-[10px] px-2 py-1 rounded-full cursor-pointer transition-colors ${
                 selected === name
                   ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
@@ -116,7 +120,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {/* Play button */}
           <div className="flex justify-center">
             <button
-              onClick={playing ? () => setPlaying(false) : handlePlay}
+              onClick={playing ? stopPlay : startPlay}
               className={`text-xs px-4 py-1.5 rounded-full cursor-pointer transition-all ${
                 playing
                   ? isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'
@@ -129,18 +133,19 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
           {/* Timeline */}
           <div className="relative pl-6">
-            {/* Vertical line */}
             <div className={`absolute left-2.5 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-200'}`} />
 
             {woven.nodes.map((node, i) => {
               const isActive = !playing || i <= playIndex;
+              const isCurrent = playing && i === playIndex;
+
               return (
                 <div
                   key={node.memory.id}
                   ref={setNodeRef(i)}
                   className="relative mb-4 last:mb-0"
                 >
-                  {/* Connection line segment */}
+                  {/* Connection line */}
                   {i > 0 && (
                     <div
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
@@ -153,12 +158,14 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
                   {/* Node dot */}
                   <div
-                    className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2 transition-all duration-300"
+                    className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2"
                     style={{
                       backgroundColor: node.emotionColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
                       opacity: isActive ? 1 : 0.2,
-                      boxShadow: isActive ? `0 0 8px ${node.emotionColor}` : 'none',
+                      boxShadow: isCurrent ? `0 0 12px ${node.emotionColor}` : 'none',
+                      transform: isCurrent ? 'scale(1.5)' : 'scale(1)',
+                      transition: 'all 0.3s ease',
                     }}
                   />
 
@@ -166,14 +173,16 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   <div
                     data-card
                     onClick={() => { selectMemory(node.memory); onClose(); }}
-                    className={`p-3 rounded-lg cursor-pointer border transition-all duration-300 ${
-                      isActive
-                        ? isDark ? 'bg-[#ffffff08] border-[#00f2ff]/30 shadow-lg' : 'bg-white border-[#0088cc]/30 shadow-lg'
-                        : isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50/50 border-gray-100'
+                    className={`p-3 rounded-lg cursor-pointer border ${
+                      isCurrent
+                        ? isDark ? 'bg-[#00f2ff]/10 border-[#00f2ff]/40 shadow-lg shadow-[#00f2ff]/10' : 'bg-blue-50 border-[#0088cc]/40 shadow-lg'
+                        : isActive
+                          ? isDark ? 'bg-[#ffffff08] border-[#ffffff10]' : 'bg-white border-gray-200'
+                          : isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50 border-gray-100'
                     }`}
+                    style={{ transition: 'all 0.3s ease' }}
                   >
                     <div className="flex items-start gap-2.5">
-                      {/* Photo or emotion dot */}
                       {node.memory.dimensions.sensory.images.length > 0 ? (
                         <img src={node.memory.dimensions.sensory.images[0]} alt=""
                           className="w-10 h-10 rounded object-cover flex-shrink-0" />
@@ -210,8 +219,6 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                         </div>
                       </div>
                     </div>
-
-                    {/* Connection label */}
                     {i < woven.connections.length && (
                       <div className={`mt-1.5 text-[9px] pl-12 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                         ↓ {woven.connections[i].emotionTransition}
