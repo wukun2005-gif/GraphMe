@@ -10,6 +10,7 @@ import DailyMemoryCard from './components/DailyMemoryCard';
 import TimelineScrubber from './components/TimelineScrubber';
 import SerendipityModal from './components/SerendipityModal';
 import AnnualReport from './components/AnnualReport';
+import OnboardingOverlay from './components/OnboardingOverlay';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -238,6 +239,7 @@ function AppInner() {
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
+      <OnboardingOverlay />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
   );
