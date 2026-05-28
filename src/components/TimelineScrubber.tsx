@@ -42,7 +42,6 @@ export default function TimelineScrubber() {
       const newRange = dragging === 'start'
         ? [Math.min(ts, f[1]), f[1]] as [number, number]
         : [f[0], Math.max(ts, f[0])] as [number, number];
-      console.log('[Timeline] handleMove', { dragging, pct: pct.toFixed(1), ts, newRange: [new Date(newRange[0]).toLocaleDateString(), new Date(newRange[1]).toLocaleDateString()] });
       setTimeRangeFilter(newRange);
     };
     const handleUp = () => setDragging(null);

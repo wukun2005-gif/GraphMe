@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState } from '../store/AppContext';
 import { weaveStoryline, getStorylineNames, generateStory } from '../utils/storyUtils';
 import { EMOTION_COLORS } from '../types';
@@ -10,103 +10,43 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const storyChapters = useMemo(() => generateStory(rawMemories, insightMemories), [rawMemories, insightMemories]);
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
-  const playIndexRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const lastTickRef = useRef(0);
+  const [playIndex, setPlayIndex] = useState(0);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const containerRef = useRef<HTMLDivElement>(null);
-  const totalNodesRef = useRef(0);
-  const playingRef = useRef(false);
 
   const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
 
-  // Keep totalNodes ref in sync
+  // Play interval - React state driven so re-renders preserve opacity
   useEffect(() => {
-    totalNodesRef.current = woven?.nodes.length ?? 0;
-  }, [woven]);
+    if (!playing || !woven) return;
+    const id = setInterval(() => {
+      setPlayIndex(prev => {
+        if (prev + 1 >= woven.nodes.length) {
+          setPlaying(false);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 1500);
+    return () => clearInterval(id);
+  }, [playing, woven]);
 
-  // Play animation via requestAnimationFrame - direct DOM manipulation
+  // Auto-scroll to current node
   useEffect(() => {
     if (!playing) return;
-    playingRef.current = true;
-    playIndexRef.current = 0;
-    lastTickRef.current = performance.now();
-
-    console.log('[StoryWeaver] PLAY START', {
-      nodeRefsSize: nodeRefs.current.size,
-      totalNodes: totalNodesRef.current,
-      wovenNodes: woven?.nodes.length,
-    });
-
-    // Mark all nodes inactive initially
-    nodeRefs.current.forEach((el, i) => {
-      const card = el.querySelector('[data-card]') as HTMLElement;
-      const dot = el.querySelector('[data-dot]') as HTMLElement;
-      console.log(`[StoryWeaver] init node ${i}:`, { hasCard: !!card, hasDot: !!dot, el: !!el });
-      if (card) card.style.opacity = i === 0 ? '1' : '0.3';
-      if (dot) dot.style.opacity = i === 0 ? '1' : '0.3';
-    });
-
-    let tickCount = 0;
-    const tick = (now: number) => {
-      if (!playingRef.current) return;
-      tickCount++;
-      const elapsed = now - lastTickRef.current;
-
-      if (tickCount % 60 === 0) {
-        console.log('[StoryWeaver] tick', { tickCount, elapsed: Math.round(elapsed), playIndex: playIndexRef.current, total: totalNodesRef.current });
-      }
-
-      if (elapsed >= 1500) {
-        lastTickRef.current = now;
-        const nextIdx = playIndexRef.current + 1;
-        console.log('[StoryWeaver] ADVANCE', { from: playIndexRef.current, to: nextIdx, total: totalNodesRef.current });
-
-        if (nextIdx >= totalNodesRef.current) {
-          console.log('[StoryWeaver] PLAY END');
-          playingRef.current = false;
-          setPlaying(false);
-          return;
-        }
-        playIndexRef.current = nextIdx;
-
-        const el = nodeRefs.current.get(nextIdx);
-        console.log(`[StoryWeaver] updating node ${nextIdx}:`, { found: !!el });
-        if (el) {
-          const card = el.querySelector('[data-card]') as HTMLElement;
-          const dot = el.querySelector('[data-dot]') as HTMLElement;
-          if (card) { card.style.opacity = '1'; console.log(`[StoryWeaver] card opacity set to 1`); }
-          if (dot) { dot.style.opacity = '1'; }
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      console.log('[StoryWeaver] EFFECT CLEANUP');
-      playingRef.current = false;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [playing]);
+    const el = nodeRefs.current.get(playIndex);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [playIndex, playing]);
 
   const handlePlay = () => {
-    console.log('[StoryWeaver] handlePlay called', { nodeRefsSize: nodeRefs.current.size, playing });
-    // Reset all nodes to inactive
-    nodeRefs.current.forEach((el) => {
-      const card = el.querySelector('[data-card]') as HTMLElement;
-      const dot = el.querySelector('[data-dot]') as HTMLElement;
-      if (card) card.style.opacity = '0.3';
-      if (dot) dot.style.opacity = '0.3';
-    });
+    setPlayIndex(0);
     setPlaying(true);
   };
 
-  const setNodeRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+  // Stable ref callback
+  const setNodeRef = (index: number) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(index, el);
     else nodeRefs.current.delete(index);
-  }, []);
+  };
 
   return (
     <div className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -143,7 +83,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           {storylines.map(name => (
             <button
               key={name}
-              onClick={() => { setSelected(name); setPlaying(false); playIndexRef.current = 0; }}
+              onClick={() => { setSelected(name); setPlaying(false); setPlayIndex(0); }}
               className={`text-[10px] px-2 py-1 rounded-full cursor-pointer transition-colors ${
                 selected === name
                   ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
@@ -184,11 +124,12 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Timeline */}
-          <div ref={containerRef} className="relative pl-6">
+          <div className="relative pl-6">
             {/* Vertical line */}
             <div className={`absolute left-2.5 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[#ffffff10]' : 'bg-gray-200'}`} />
 
             {woven.nodes.map((node, i) => {
+              const isActive = !playing || i <= playIndex;
               return (
                 <div
                   key={node.memory.id}
@@ -201,28 +142,28 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       className="absolute left-[-14px] top-[-16px] w-0.5 h-4"
                       style={{
                         background: `linear-gradient(${woven.connections[i - 1]?.from.emotionColor}, ${node.emotionColor})`,
-                        opacity: 0.6,
+                        opacity: isActive ? 0.6 : 0.15,
                       }}
                     />
                   )}
 
                   {/* Node dot */}
                   <div
-                    data-dot
                     className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full border-2"
                     style={{
                       backgroundColor: node.emotionColor,
                       borderColor: isDark ? '#0d0d1a' : '#fff',
+                      opacity: isActive ? 1 : 0.3,
                     }}
                   />
 
                   {/* Card */}
                   <div
-                    data-card
                     onClick={() => { selectMemory(node.memory); onClose(); }}
                     className={`p-3 rounded-lg cursor-pointer border ${
                       isDark ? 'bg-[#ffffff03] border-[#ffffff06] hover:bg-[#ffffff06]' : 'bg-gray-50/50 border-gray-100 hover:bg-gray-50'
                     }`}
+                    style={{ opacity: isActive ? 1 : 0.3 }}
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Photo or emotion dot */}
