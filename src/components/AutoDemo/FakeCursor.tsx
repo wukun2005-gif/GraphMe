@@ -40,7 +40,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
     let isCancelled = false;
 
     const SPEED_FACTOR = 1.0;
-    const TOTAL_DURATION = 180_000; // 3 minutes
+    const TOTAL_DURATION = 210_000; // 3.5 minutes
     const startTime = Date.now();
 
     // Progress tracker
@@ -204,15 +204,20 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
       try {
 
-      // ─── INTRO (8s) ───────────────────────────────
-      setTooltipText('🌌 你的记忆不是文件夹里的文字，而是一个活着的宇宙');
-      setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      await wait(3000);
+      // ─── INTRO (18s) ──────────────────────────────
+      // Phase in: 徐徐道来
+      await wait(1500); // 静默开场，让观众准备好
       if (isCancelled) return;
-      await moveToCenter('✨ 每颗粒子是一段记忆，颜色是情绪，大小是重要性', 2500);
+      setTooltipText('🌌 你的记忆不是文件夹里的文字');
+      setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      await wait(3500);
+      if (isCancelled) return;
+      await moveToCenter('✨ 而是一个活着的宇宙', 3500);
+      if (isCancelled) return;
+      await moveToCenter('🌈 每颗粒子是一段记忆，颜色是情绪，大小是重要性', 3500);
       if (isCancelled) return;
       dispatchCameraMove('rotate');
-      await moveToCenter('🔄 语义相近的记忆自动聚类，形成星座', 2500);
+      await moveToCenter('🔄 语义相近的记忆自动聚类，形成星座', 3500);
       if (isCancelled) return;
 
       // ─── P1: 核心交互 (15s) ───────────────────────
@@ -331,17 +336,21 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(800);
       if (isCancelled) return;
 
-      // ─── OUTRO (8s) ───────────────────────────────
+      // ─── OUTRO (20s) ──────────────────────────────
+      // Phase out: 缓缓退出
       setTooltipText('✅ GraphMe — 让每一段记忆都有迹可循');
       setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
       setProgress(100);
-      await wait(3000);
+      await wait(4000);
       if (isCancelled) return;
       setTooltipText('🌌 记忆不是孤岛，而是星座');
-      await wait(3000);
+      await wait(4000);
       if (isCancelled) return;
       setTooltipText('🚀 GraphMe — 你的记忆宇宙');
-      await wait(2000);
+      await wait(4000);
+      if (isCancelled) return;
+      setTooltipText('');
+      await wait(2000); // 静默收尾，让观众回味
       if (!isCancelled) stopDemo();
 
       } catch (err) {
