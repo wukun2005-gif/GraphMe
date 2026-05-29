@@ -1,4 +1,5 @@
 import type { RawMemory } from '../types';
+import { EMOTION_COLORS } from '../types';
 
 export interface ValueScoreResult {
   memory: RawMemory;
@@ -567,4 +568,62 @@ export function computeWeeklyReport(memories: RawMemory[]): WeeklyReportData {
     emotionTrend,
     emotionTrendPercent,
   };
+}
+
+// ─── Garden Plant Data (Feature #62) ───
+
+export interface GardenPlant {
+  memory: RawMemory;
+  plantType: 'flower' | 'tree' | 'wilting';
+  size: number; // 0.5 - 1.5
+  color: string;
+  emoji: string;
+  risk: number;
+}
+
+export function getGardenPlantData(memories: RawMemory[]): GardenPlant[] {
+  const now = Date.now();
+  return memories.map(m => {
+    const value = computeValueScore(m).score;
+    const risk = computeForgettingRisk(m, now).risk;
+    const access = m.dimensions.value.accessCount;
+    const emotionColor = EMOTION_COLORS[m.dimensions.emotional.primary] || '#888';
+
+    let plantType: GardenPlant['plantType'];
+    let emoji: string;
+    let size: number;
+
+    if (m.dimensions.narrative.isMilestone) {
+      plantType = 'tree';
+      emoji = '🌳';
+      size = 1.3;
+    } else if (risk >= 0.6) {
+      plantType = 'wilting';
+      emoji = '🥀';
+      size = 0.7 + (1 - risk) * 0.5;
+    } else {
+      plantType = 'flower';
+      const flowerEmojis = ['🌸', '🌺', '🌻', '🌷', '🌹', '💐'];
+      emoji = flowerEmojis[Math.abs(hashCode(m.id)) % flowerEmojis.length];
+      size = 0.6 + value / 150;
+    }
+
+    return {
+      memory: m,
+      plantType,
+      size: Math.min(Math.max(size, 0.5), 1.5),
+      color: emotionColor,
+      emoji,
+      risk,
+    };
+  });
+}
+
+function hashCode(s: string): number {
+  let hash = 0;
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
 }

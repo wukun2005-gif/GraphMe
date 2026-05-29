@@ -1,4 +1,5 @@
 import { AppProvider, useAppState } from './store/AppContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import MemCloud3D from './components/MemCloud3D';
 import NavigationSidebar from './components/Navigation';
 import DetailPanel from './components/DetailPanel';
@@ -12,6 +13,7 @@ import SerendipityModal from './components/SerendipityModal';
 import AnnualReport from './components/AnnualReport';
 import OnboardingOverlay from './components/OnboardingOverlay';
 import MemorySurprise from './components/MemorySurprise';
+import MemoryGarden from './components/MemoryGarden';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -25,6 +27,7 @@ function AppInner() {
   const [showSearch, setShowSearch] = useState(false);
   const [showSerendipity, setShowSerendipity] = useState(false);
   const [showAnnualReport, setShowAnnualReport] = useState(false);
+  const [showGarden, setShowGarden] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -238,6 +241,17 @@ function AppInner() {
           🎲 记忆碰碰对
         </button>
         <button
+          id="btn-garden"
+          onClick={() => setShowGarden(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🌻 花园
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -252,6 +266,22 @@ function AppInner() {
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
+
+      <AnimatePresence>
+        {showGarden && (
+          <motion.div
+            initial={{ x: 500, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 500, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className={`fixed right-0 top-0 h-full w-full max-w-[420px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
+              isDark ? 'bg-[#0d0d1a] border-[#ffffff08]' : 'bg-white border-gray-200'
+            }`}
+          >
+            <MemoryGarden onClose={() => setShowGarden(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <OnboardingOverlay />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
