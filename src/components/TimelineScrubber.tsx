@@ -55,7 +55,9 @@ export default function TimelineScrubber() {
 
   const formatDate = (ts: number) => {
     const d = new Date(ts);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    return `${month}月${day}日`;
   };
 
   const isFiltered = timeRangeFilter !== null;
@@ -71,8 +73,8 @@ export default function TimelineScrubber() {
   }, [rawMemories, currentFilter]);
 
   return (
-    <div className={`absolute bottom-14 left-[240px] right-4 z-10 transition-all duration-300 ${
-      detailOpen ? 'right-[436px]' : 'right-4'
+    <div className={`absolute bottom-14 left-[240px] z-10 transition-all duration-300 ${
+      detailOpen ? 'right-[436px]' : 'right-[120px]'
     }`}>
       <div className={`px-4 py-2.5 rounded-xl backdrop-blur-md border shadow-lg ${
         isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'

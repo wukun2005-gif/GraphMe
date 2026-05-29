@@ -70,7 +70,7 @@ export default function NavigationSidebar() {
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
   const allRawMemoriesRef = useRef(allRawMemories);
   allRawMemoriesRef.current = allRawMemories;
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
   const [showStoryBoard, setShowStoryBoard] = useState(false);
@@ -229,6 +229,35 @@ export default function NavigationSidebar() {
               {icon}
             </button>
           ))}
+          <div className={`w-full border-t my-1 ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`} />
+          <button
+            onClick={() => { setCollapsed(false); setShowLegend(true); }}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
+            title="图例说明"
+          >
+            🎨
+          </button>
+          <button
+            onClick={() => { setCollapsed(false); setShowStoryBoard(true); }}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
+            title="我的侧写"
+          >
+            📖
+          </button>
+          <button
+            onClick={() => { setCollapsed(false); setShowTags(true); }}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
+            title="我的标签"
+          >
+            🏷
+          </button>
+          <button
+            onClick={() => { setCollapsed(false); setShowMemoryMgr(true); }}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
+            title="记忆管理"
+          >
+            ⚙️
+          </button>
         </div>
         <div className={`p-1 border-t w-full text-center ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
           <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

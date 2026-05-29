@@ -161,7 +161,7 @@ function AppInner() {
         </div>
       </div>
 
-      <div className={`absolute bottom-6 left-[240px] z-10 text-xs ${isDark ? 'text-gray-700' : 'text-gray-400'}`}>
+      <div className={`absolute bottom-6 left-[240px] z-10 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
         <span>{rawMemories.length} 记忆原子</span>
         <span className="mx-2">·</span>
         <span>{insightMemories.length} 洞察记忆</span>
