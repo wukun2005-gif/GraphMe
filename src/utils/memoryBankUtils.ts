@@ -348,3 +348,125 @@ export function computeMemoryTypePotential(memories: RawMemory[]): PotentialItem
     suggestion: r.suggestion,
   }));
 }
+
+// ─── Persona Evolution (Feature #61) ───
+
+export interface PersonaRadarData {
+  emotionalRichness: number;
+  socialDensity: number;
+  knowledgeDepth: number;
+  narrativeCoherence: number;
+  reviewFrequency: number;
+}
+
+export interface PersonaEvolutionData {
+  current: PersonaRadarData;
+  previous: PersonaRadarData;
+  currentType: string;
+  previousType: string;
+  evolutionDescription: string;
+  suggestions: string[];
+}
+
+function computeRadarForMemories(memories: RawMemory[]): PersonaRadarData {
+  if (memories.length === 0) {
+    return { emotionalRichness: 0, socialDensity: 0, knowledgeDepth: 0, narrativeCoherence: 0, reviewFrequency: 0 };
+  }
+
+  // Emotional richness: unique emotions / total
+  const emotions = new Set(memories.map(m => m.dimensions.emotional.primary));
+  const emotionalRichness = Math.min(emotions.size / 8, 1);
+
+  // Social density: memories with persons / total
+  const withPersons = memories.filter(m => m.dimensions.social.persons.length > 0).length;
+  const socialDensity = withPersons / memories.length;
+
+  // Knowledge depth: memories with knowledge / total
+  const withKnowledge = memories.filter(m => m.dimensions.semantic.knowledge.length > 0).length;
+  const knowledgeDepth = withKnowledge / memories.length;
+
+  // Narrative coherence: memories with storyline / total
+  const withStoryline = memories.filter(m => m.dimensions.narrative.storyline).length;
+  const narrativeCoherence = withStoryline / memories.length;
+
+  // Review frequency: average accessCount normalized
+  const avgAccess = memories.reduce((sum, m) => sum + m.dimensions.value.accessCount, 0) / memories.length;
+  const reviewFrequency = Math.min(avgAccess / 5, 1);
+
+  return {
+    emotionalRichness: Math.round(emotionalRichness * 100) / 100,
+    socialDensity: Math.round(socialDensity * 100) / 100,
+    knowledgeDepth: Math.round(knowledgeDepth * 100) / 100,
+    narrativeCoherence: Math.round(narrativeCoherence * 100) / 100,
+    reviewFrequency: Math.round(reviewFrequency * 100) / 100,
+  };
+}
+
+function classifyPersona(radar: PersonaRadarData): string {
+  const { emotionalRichness, socialDensity, knowledgeDepth, narrativeCoherence, reviewFrequency } = radar;
+  const max = Math.max(emotionalRichness, socialDensity, knowledgeDepth, narrativeCoherence, reviewFrequency);
+  if (max === 0) return '记录者';
+  if (emotionalRichness === max) return '情感驱动';
+  if (socialDensity === max) return '连接者';
+  if (knowledgeDepth === max) return '探索者';
+  if (narrativeCoherence === max) return '叙事者';
+  if (reviewFrequency === max) return '守护者';
+  return '综合气质';
+}
+
+const EVOLUTION_TEMPLATES: Record<string, Record<string, string>> = {
+  '情感驱动': {
+    '连接者': '你开始更关注记忆中的人物关系了',
+    '探索者': '你对知识和新体验的渴望在增长',
+    '叙事者': '你开始用故事串联记忆',
+    '守护者': '你更频繁地回顾珍贵记忆',
+  },
+  '连接者': {
+    '情感驱动': '你对情感的感知变得更加细腻',
+    '探索者': '你的视野在拓宽，探索欲增强',
+    '叙事者': '你开始构建记忆之间的叙事线',
+  },
+  '探索者': {
+    '情感驱动': '你开始更关注内心感受',
+    '连接者': '你更重视与他人的连接',
+    '守护者': '你开始珍惜和回顾过往',
+  },
+};
+
+const PERSONA_SUGGESTIONS: Record<string, string[]> = {
+  '情感驱动': ['尝试为每条记忆标注更多情绪细节', '关注情绪变化的趋势'],
+  '连接者': ['多记录与他人的互动', '建立更多故事线连接'],
+  '探索者': ['记录学习心得和知识标签', '尝试新领域的记忆'],
+  '叙事者': ['为记忆添加前后引用', '构建完整的故事线'],
+  '守护者': ['定期回顾高价值记忆', '设置记忆强化提醒'],
+  '记录者': ['开始记录更多维度的信息', '尝试不同类型的记忆'],
+};
+
+export function computePersonaEvolution(memories: RawMemory[]): PersonaEvolutionData {
+  const now = Date.now();
+  const threeMonths = 90 * 24 * 60 * 60 * 1000;
+  const recentMemories = memories.filter(m => now - m.dimensions.temporal.timestamp < threeMonths);
+  const olderMemories = memories.filter(m => now - m.dimensions.temporal.timestamp >= threeMonths);
+
+  const current = computeRadarForMemories(recentMemories.length > 0 ? recentMemories : memories);
+  const previous = computeRadarForMemories(olderMemories.length > 0 ? olderMemories : memories);
+
+  const currentType = classifyPersona(current);
+  const previousType = classifyPersona(previous);
+
+  let evolutionDescription = '';
+  if (currentType !== previousType) {
+    evolutionDescription = EVOLUTION_TEMPLATES[previousType]?.[currentType] || `从"${previousType}"型转变为"${currentType}"型`;
+  } else {
+    evolutionDescription = `你一直是"${currentType}"型的记忆者`;
+  }
+
+  return {
+    current,
+    previous,
+    currentType,
+    previousType,
+    evolutionDescription,
+    suggestions: PERSONA_SUGGESTIONS[currentType] || PERSONA_SUGGESTIONS['记录者'],
+  };
+}

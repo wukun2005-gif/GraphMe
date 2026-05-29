@@ -2,12 +2,14 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { TimeRange } from '../utils/memoryBankUtils';
+import type { RawMemory } from '../types';
 import {
   computeDimensionData,
   computeHealthScore,
   computeAssetStats,
   computeTemperament,
   computeDimensionRates,
+  computePersonaEvolution,
   computeMemoryTypePotential,
 } from '../utils/memoryBankUtils';
 
@@ -37,6 +39,122 @@ const PREDICTION_COLORS: Record<string, { bar: string; barLight: string; text: s
     textLight: 'text-red-600',
   },
 };
+
+function PersonaEvolutionPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+  const evolution = useMemo(() => computePersonaEvolution(rawMemories), [rawMemories]);
+
+  const radarLabels: { key: keyof typeof evolution.current; label: string }[] = [
+    { key: 'emotionalRichness', label: '情感' },
+    { key: 'socialDensity', label: '社交' },
+    { key: 'knowledgeDepth', label: '知识' },
+    { key: 'narrativeCoherence', label: '叙事' },
+    { key: 'reviewFrequency', label: '回顾' },
+  ];
+
+  const size = 120;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 40;
+
+  const getPoint = (index: number, value: number) => {
+    const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
+    return {
+      x: cx + r * value * Math.cos(angle),
+      y: cy + r * value * Math.sin(angle),
+    };
+  };
+
+  const currentPath = radarLabels.map((l, i) => {
+    const p = getPoint(i, evolution.current[l.key]);
+    return `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`;
+  }).join(' ') + ' Z';
+
+  const previousPath = radarLabels.map((l, i) => {
+    const p = getPoint(i, evolution.previous[l.key]);
+    return `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`;
+  }).join(' ') + ' Z';
+
+  return (
+    <div className="mt-3">
+      {/* Radar chart */}
+      <div className="flex items-center gap-3 mb-3">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {/* Grid */}
+          {[0.25, 0.5, 0.75, 1].map(v => (
+            <polygon
+              key={v}
+              points={radarLabels.map((_, i) => {
+                const p = getPoint(i, v);
+                return `${p.x},${p.y}`;
+              }).join(' ')}
+              fill="none"
+              stroke={isDark ? '#ffffff08' : '#e5e7eb'}
+              strokeWidth="0.5"
+            />
+          ))}
+          {/* Axes */}
+          {radarLabels.map((_, i) => {
+            const p = getPoint(i, 1);
+            return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke={isDark ? '#ffffff08' : '#e5e7eb'} strokeWidth="0.5" />;
+          })}
+          {/* Previous (faded) */}
+          <path d={previousPath} fill={isDark ? '#8b5cf610' : '#8b5cf608'} stroke={isDark ? '#8b5cf640' : '#8b5cf630'} strokeWidth="1" />
+          {/* Current */}
+          <path d={currentPath} fill={isDark ? '#8b5cf620' : '#8b5cf615'} stroke={isDark ? '#8b5cf6' : '#7c3aed'} strokeWidth="1.5" />
+          {/* Labels */}
+          {radarLabels.map((l, i) => {
+            const p = getPoint(i, 1.2);
+            return (
+              <text key={i} x={p.x} y={p.y + 3} textAnchor="middle" className={`text-[8px] ${isDark ? 'fill-gray-500' : 'fill-gray-400'}`}>
+                {l.label}
+              </text>
+            );
+          })}
+        </svg>
+        <div className="flex-1 space-y-1">
+          {radarLabels.map(l => (
+            <div key={l.key} className="flex items-center gap-2">
+              <span className={`text-[10px] w-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{l.label}</span>
+              <div className={`flex-1 h-1 rounded-full ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
+                <div className="h-full rounded-full bg-purple-500" style={{ width: `${evolution.current[l.key] * 100}%` }} />
+              </div>
+              <span className={`text-[10px] w-8 text-right ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                {Math.round(evolution.current[l.key] * 100)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Evolution timeline */}
+      <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {evolution.currentType}型
+          </span>
+          {evolution.currentType !== evolution.previousType && (
+            <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              ← {evolution.previousType}型
+            </span>
+          )}
+        </div>
+        <p className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          {evolution.evolutionDescription}
+        </p>
+        {evolution.suggestions.length > 0 && (
+          <div className="mt-1.5">
+            {evolution.suggestions.map((s, i) => (
+              <div key={i} className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                💡 {s}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function MemoryBank() {
   const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories } = useAppState();
@@ -446,6 +564,9 @@ export default function MemoryBank() {
                     </button>
                   ))}
                 </div>
+
+                {/* 雷达图 + 演化时间轴 */}
+                <PersonaEvolutionPanel rawMemories={rawMemories} theme={theme} />
               </div>
 
               {/* 维度利率排名 */}
