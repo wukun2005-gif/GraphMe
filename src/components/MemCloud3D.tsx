@@ -848,6 +848,8 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
         center={!isHeld}
         distanceFactor={isHeld ? 20 : 8}
         occlude={false}
+        style={{ pointerEvents: 'none' }}
+        zIndexRange={[1, 0]}
       >
         <div style={isHeld ? {
           background: heldBg,
