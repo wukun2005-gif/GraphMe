@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
 import { isMemoryInCategory } from '../utils/navUtils';
-import { computeDailyTrajectories } from '../utils/valueUtils';
+import { computeDailyTrajectories, computeTideLevel } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 
 function createGlowTexture(): THREE.Texture {
@@ -152,7 +152,25 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       const baseSize = 0.2 + importance * 0.6;
       const jitter = 0.8 + Math.random() * 0.4;
       const similarBoost = similarMemoryIds.includes(m.id) ? 1.8 : 1;
-      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1) * similarBoost;
+
+      // Tide level effect on size
+      const tideResult = computeTideLevel(m);
+      const tideMultiplier = 0.8 + tideResult.tideLevel * 0.4; // 0.8-1.2 range
+
+      // Tide status affects color (add subtle glow for high-tide memories)
+      if (tideResult.status === 'high') {
+        // High tide: add cyan/blue glow
+        col[i * 3] = Math.min(col[i * 3] + 0.05, 1);
+        col[i * 3 + 1] = Math.min(col[i * 3 + 1] + 0.1, 1);
+        col[i * 3 + 2] = Math.min(col[i * 3 + 2] + 0.15, 1);
+      } else if (tideResult.status === 'critical') {
+        // Critical: dim slightly
+        col[i * 3] *= 0.85;
+        col[i * 3 + 1] *= 0.85;
+        col[i * 3 + 2] *= 0.85;
+      }
+
+      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1) * similarBoost * tideMultiplier;
     });
 
     return { positions: pos, colors: col, sizes: sz };

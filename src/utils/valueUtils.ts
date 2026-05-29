@@ -625,3 +625,49 @@ function hashCode(s: string): number {
   }
   return hash;
 }
+
+export interface TideLevelResult {
+  memory: RawMemory;
+  tideLevel: number; // 0-1, high = frequently accessed, low = rarely accessed
+  status: 'high' | 'medium' | 'low' | 'critical';
+}
+
+/**
+ * 计算记忆的潮汐系数
+ * 基于 accessCount + forgettingRisk 计算
+ * 高频 = 高潮位，低频 = 低潮位，濒危 = 濒危潮位
+ */
+export function computeTideLevel(memory: RawMemory, now: number = Date.now()): TideLevelResult {
+  const { accessCount } = memory.dimensions.value;
+  const riskResult = computeForgettingRisk(memory, now);
+
+  // Normalize accessCount (0-1 scale, assuming max ~20 accesses)
+  const normalizedAccess = Math.min(accessCount / 20, 1);
+
+  // Tide level: high access = high tide, high risk = low tide
+  // Formula: 60% access frequency + 40% inverse of risk
+  const tideLevel = normalizedAccess * 0.6 + (1 - riskResult.risk) * 0.4;
+
+  let status: 'high' | 'medium' | 'low' | 'critical';
+  if (tideLevel >= 0.7) status = 'high';
+  else if (tideLevel >= 0.4) status = 'medium';
+  else if (tideLevel >= 0.2) status = 'low';
+  else status = 'critical';
+
+  return {
+    memory,
+    tideLevel: Math.round(tideLevel * 100) / 100,
+    status,
+  };
+}
+
+/**
+ * 批量计算所有记忆的潮汐系数
+ */
+export function computeAllTideLevels(memories: RawMemory[], now: number = Date.now()): Map<string, TideLevelResult> {
+  const result = new Map<string, TideLevelResult>();
+  memories.forEach(m => {
+    result.set(m.id, computeTideLevel(m, now));
+  });
+  return result;
+}
