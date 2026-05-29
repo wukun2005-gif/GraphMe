@@ -35,7 +35,6 @@ interface AppState {
   boomerangMemoryIds: string[];
   boomerangDescription: string;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
-  draggedMemoryId: string | null;
   antipodeMemoryId: string | null;
   antipodeDescription: string;
 }
@@ -105,7 +104,6 @@ interface AppContextType extends AppState {
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
   clearButterflyEffect: () => void;
-  setDraggedMemoryId: (id: string | null) => void;
   findAntipode: (memoryId: string) => void;
   clearAntipode: () => void;
 }
@@ -143,7 +141,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     boomerangMemoryIds: [],
     boomerangDescription: '',
     butterflyEffect: null,
-    draggedMemoryId: null,
     antipodeMemoryId: null,
     antipodeDescription: '',
   });
@@ -564,10 +561,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, butterflyEffect: null }));
   }, []);
 
-  const setDraggedMemoryId = useCallback((id: string | null) => {
-    setState(s => ({ ...s, draggedMemoryId: id }));
-  }, []);
-
   const findAntipode = useCallback((memoryId: string) => {
     const mem = rawMems.find(m => m.id === memoryId);
     if (!mem) return;
@@ -652,7 +645,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
-      draggedMemoryId: state.draggedMemoryId, setDraggedMemoryId,
       antipodeMemoryId: state.antipodeMemoryId, antipodeDescription: state.antipodeDescription, findAntipode, clearAntipode,
     }}>
       {children}

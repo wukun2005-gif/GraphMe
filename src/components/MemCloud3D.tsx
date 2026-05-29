@@ -1269,102 +1269,6 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
   return null;
 }
 
-// Shared ref so OrbitControls can check if a drag candidate exists
-const dragCandidateRef = { current: false };
-
-function DragController() {
-  const { rawMemories, setDraggedMemoryId, navCategory, navSubCategory, currentView } = useAppState();
-  const { camera, gl } = useThree();
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isDragging = useRef(false);
-  const candidateId = useRef<string | null>(null);
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-
-    const findNearestMemory = (e: PointerEvent): RawMemory | null => {
-      const mouse = new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      );
-      raycaster.setFromCamera(mouse, camera);
-
-      let visible = rawMemories;
-      if (navCategory) {
-        visible = visible.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
-      }
-
-      let closest: RawMemory | null = null;
-      let closestDist = Infinity;
-
-      for (const mem of visible) {
-        const p = mem.positions[currentView] || mem.position3D;
-        const dist = raycaster.ray.distanceToPoint(new THREE.Vector3(...p));
-        if (dist < 0.5 && dist < closestDist) {
-          closestDist = dist;
-          closest = mem;
-        }
-      }
-      return closest;
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      // Immediately check if near a particle — if so, block OrbitControls
-      const nearest = findNearestMemory(e);
-      if (nearest) {
-        candidateId.current = nearest.id;
-        // Stop OrbitControls from receiving this event
-        e.stopImmediatePropagation();
-        e.preventDefault();
-      } else {
-        candidateId.current = null;
-        return; // Not near a particle, let OrbitControls handle it
-      }
-
-      // After 300ms hold, start the actual drag
-      holdTimer.current = setTimeout(() => {
-        if (candidateId.current) {
-          isDragging.current = true;
-          setDraggedMemoryId(candidateId.current);
-        }
-      }, 300);
-    };
-
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!isDragging.current) return;
-      // Visual feedback handled by DragRing via draggedMemoryId
-    };
-
-    const handlePointerUp = () => {
-      if (holdTimer.current) {
-        clearTimeout(holdTimer.current);
-        holdTimer.current = null;
-      }
-      dragCandidateRef.current = false;
-      candidateId.current = null;
-      if (isDragging.current) {
-        isDragging.current = false;
-        setDraggedMemoryId(null);
-      }
-    };
-
-    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointerleave', handlePointerUp);
-
-    return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true });
-      canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlePointerUp);
-      if (holdTimer.current) clearTimeout(holdTimer.current);
-    };
-  }, [gl, camera, rawMemories, navCategory, navSubCategory, currentView, setDraggedMemoryId]);
-
-  return null;
-}
 
 function DynamicClearColor({ color }: { color: string }) {
   const { gl } = useThree();
@@ -1376,8 +1280,7 @@ function DynamicClearColor({ color }: { color: string }) {
 
 function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitControls>) {
   const { invalidate } = useThree();
-  const { draggedMemoryId } = useAppState();
-  return <OrbitControls {...props} enabled={!draggedMemoryId} onChange={() => invalidate()} />;
+  return <OrbitControls {...props} onChange={() => invalidate()} />;
 }
 
 function AntipodeLines({ theme }: { theme: Theme }) {
@@ -1442,37 +1345,6 @@ function AntipodeLines({ theme }: { theme: Theme }) {
         <meshBasicMaterial color={isLight ? '#0d9488' : '#44ccaa'} transparent opacity={opacity * 0.4} />
       </mesh>
     </group>
-  );
-}
-
-function DragRing({ theme }: { theme: Theme }) {
-  const { draggedMemoryId, rawMemories, currentView } = useAppState();
-  const ringRef = useRef<THREE.Mesh>(null);
-  const isLight = theme === 'light';
-
-  const mem = draggedMemoryId ? rawMemories.find(m => m.id === draggedMemoryId) : null;
-  const pos = mem ? (mem.positions[currentView] || mem.position3D) : null;
-
-  useFrame(({ clock }) => {
-    if (ringRef.current) {
-      const t = clock.getElapsedTime();
-      const scale = 1 + Math.sin(t * 4) * 0.1;
-      ringRef.current.scale.set(scale, scale, scale);
-    }
-  });
-
-  if (!pos) return null;
-
-  return (
-    <mesh ref={ringRef} position={pos} rotation={[Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[0.4, 0.5, 32]} />
-      <meshBasicMaterial
-        color={isLight ? '#0088cc' : '#00f2ff'}
-        transparent
-        opacity={0.5}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
   );
 }
 
@@ -1606,14 +1478,12 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
         <ButterflyEffect theme={theme} />
-        <DragRing theme={theme} />
         <AntipodeLines theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />
-        <DragController />
         <DemoCameraController />
         <CameraFlyTo />
         <SearchFlyTo />
