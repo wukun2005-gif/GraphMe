@@ -55,6 +55,7 @@ export default function NavigationSidebar() {
     insightMemories, theme, selectMemory, selectedMemory,
     emotionFilter, toggleEmotionFilter,
     tagFilter, toggleTagFilter, addTag, removeTag, allTags,
+    similarMemoryIds, clearSimilar,
     favoriteIds, toggleFavorite,
     addToast,
     showChatGPT, toggleShowChatGPT,
@@ -768,6 +769,40 @@ export default function NavigationSidebar() {
                       </div>
                       <div className="space-y-0.5">
                         {favoriteIds.map(id => {
+                          const mem = allRawMemories.find(m => m.id === id);
+                          if (!mem) return null;
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => selectMemory(mem)}
+                              className={`w-full text-left px-2 py-1 rounded text-xs flex items-center gap-1 cursor-pointer transition-colors ${
+                                isDark ? 'hover:bg-[#ffffff05] text-gray-400' : 'hover:bg-black/5 text-gray-600'
+                              }`}
+                            >
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
+                              <span className="truncate">{mem.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {similarMemoryIds.length > 0 && (
+                    <div className="mb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className={`text-[10px] ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
+                          🔗 相似记忆 ({similarMemoryIds.length})
+                        </div>
+                        <button
+                          onClick={clearSimilar}
+                          className={`text-[9px] cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                          清除
+                        </button>
+                      </div>
+                      <div className="space-y-0.5">
+                        {similarMemoryIds.map(id => {
                           const mem = allRawMemories.find(m => m.id === id);
                           if (!mem) return null;
                           return (

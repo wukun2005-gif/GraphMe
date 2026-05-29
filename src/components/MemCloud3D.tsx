@@ -68,7 +68,7 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -133,14 +133,30 @@ function ParticleCloud({ theme }: { theme: Theme }) {
         }
       }
 
+      // Similar memory highlight
+      if (similarMemoryIds.length > 0) {
+        if (similarMemoryIds.includes(m.id)) {
+          // Boost similar memory
+          col[i * 3] = Math.min(col[i * 3] * 1.5, 1);
+          col[i * 3 + 1] = Math.min(col[i * 3 + 1] * 1.5, 1);
+          col[i * 3 + 2] = Math.min(col[i * 3 + 2] * 1.5, 1);
+        } else {
+          // Dim non-similar
+          col[i * 3] *= 0.15;
+          col[i * 3 + 1] *= 0.15;
+          col[i * 3 + 2] *= 0.15;
+        }
+      }
+
       const importance = m.dimensions.value.importance;
       const baseSize = 0.2 + importance * 0.6;
       const jitter = 0.8 + Math.random() * 0.4;
-      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1);
+      const similarBoost = similarMemoryIds.includes(m.id) ? 1.8 : 1;
+      sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1) * similarBoost;
     });
 
     return { positions: pos, colors: col, sizes: sz };
-  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter]);
+  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter, similarMemoryIds]);
 
   // Update visibleRef to match filtered set for click handling
   const filteredRef = useRef<RawMemory[]>([]);

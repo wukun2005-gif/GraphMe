@@ -25,6 +25,7 @@ interface AppState {
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
   timeRangeFilter: [number, number] | null;
   collections: MemoryCollection[];
+  similarMemoryIds: string[];
 }
 
 interface AppContextType extends AppState {
@@ -80,6 +81,8 @@ interface AppContextType extends AppState {
   removeCollection: (id: string) => void;
   addToCollection: (collectionId: string, memoryId: string) => void;
   removeFromCollection: (collectionId: string, memoryId: string) => void;
+  findSimilar: (memoryId: string) => void;
+  clearSimilar: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -106,6 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toasts: [],
     timeRangeFilter: null,
     collections: [],
+    similarMemoryIds: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -370,6 +374,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ));
   }, []);
 
+  const findSimilar = useCallback((memoryId: string) => {
+    const target = rawMems.find(m => m.id === memoryId);
+    if (!target) return;
+    // Lazy import to avoid circular dependency
+    import('../utils/similarityUtils').then(({ findSimilarMemories }) => {
+      const results = findSimilarMemories(target, rawMems, 5);
+      setState(s => ({ ...s, similarMemoryIds: results.map(r => r.memory.id) }));
+    });
+  }, [rawMems]);
+
+  const clearSimilar = useCallback(() => {
+    setState(s => ({ ...s, similarMemoryIds: [] }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -434,6 +452,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       chatgptImportStatus, chatgptImportProgress, startChatGPTImport,
       hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory, setTimeRangeFilter,
       collections, addCollection, removeCollection, addToCollection, removeFromCollection,
+      similarMemoryIds: state.similarMemoryIds, findSimilar, clearSimilar,
     }}>
       {children}
     </AppContext.Provider>

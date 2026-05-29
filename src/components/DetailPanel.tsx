@@ -432,7 +432,7 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -876,6 +876,21 @@ export default function DetailPanel() {
                         isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
                     >📸 导出</button>
+                    <button
+                      id="demo-find-similar-btn"
+                      onClick={() => {
+                        if (similarMemoryIds.length > 0) {
+                          clearSimilar();
+                        } else {
+                          findSimilar(selectedMemory.id);
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        similarMemoryIds.length > 0
+                          ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
+                          : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >🔗 {similarMemoryIds.length > 0 ? '清除相似' : '找相似'}</button>
                   </>
                 )}
                 <button
