@@ -4,6 +4,7 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType, FarewellRecord } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
 import { computeDiff, computeImportanceBreakdown } from '../utils/valueUtils';
+import { extractSensoryKeywords } from '../utils/sensoryUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
 import { getMemoryConnections } from '../utils/navUtils';
 import type { MemoryConnection } from '../utils/navUtils';
@@ -258,6 +259,26 @@ function RawDetail({ memory }: { memory: RawMemory }) {
           ))}
         </div>
       )}
+      {/* Sensory keywords */}
+      {(() => {
+        const sensoryWords = extractSensoryKeywords(memory.summary + ' ' + memory.label);
+        if (sensoryWords.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1.5">
+            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>👁️ 感官印象：</span>
+            {sensoryWords.map((word, i) => (
+              <span
+                key={i}
+                className={`text-[10px] px-1.5 py-0.5 rounded ${
+                  isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                {word}
+              </span>
+            ))}
+          </div>
+        );
+      })()}
       <div className={`grid grid-cols-2 gap-x-4 gap-y-1.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⏰ 时间</span> {d.temporal.dateType}</div>
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📍 地点</span> {d.spatial.landmark}</div>

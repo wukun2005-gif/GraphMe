@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
 import { computeRhythm } from '../utils/rhythmUtils';
+import { computeSensoryProfile } from '../utils/sensoryUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -715,6 +716,61 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
   );
 }
 
+function SensoryPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+  const profile = useMemo(() => computeSensoryProfile(rawMemories), [rawMemories]);
+
+  return (
+    <div className="space-y-4">
+      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+        {profile.summaryText}
+      </p>
+
+      {/* Keyword cloud */}
+      {profile.keywords.length > 0 && (
+        <section>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
+            🏷️ 感官词云
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.keywords.map((kw, i) => (
+              <span
+                key={i}
+                className={`px-2 py-1 rounded text-xs ${
+                  isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                }`}
+                style={{ fontSize: `${10 + kw.count * 2}px` }}
+              >
+                {kw.word}
+                <span className={`ml-1 text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {kw.count}
+                </span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Stats */}
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          📊 感官统计
+        </h4>
+        <div className={`grid grid-cols-2 gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>有感官记录</span>
+            <div className="text-lg font-medium">{profile.totalWithSensory}</div>
+          </div>
+          <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>最常见感官词</span>
+            <div>{profile.topKeyword}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
   const isDark = theme === 'dark';
   const rhythm = useMemo(() => computeRhythm(rawMemories), [rawMemories]);
@@ -930,7 +986,7 @@ export default function ValueDashboard() {
   const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm' | 'sensory'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -1043,6 +1099,16 @@ export default function ValueDashboard() {
                   }`}
                 >
                   ⏰ 时间指纹
+                </button>
+                <button
+                  onClick={() => setTab('sensory')}
+                  className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
+                    tab === 'sensory'
+                      ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  👁️ 感官档案
                 </button>
               </div>
               <button
@@ -1293,6 +1359,9 @@ export default function ValueDashboard() {
               )}
               {tab === 'rhythm' && (
                 <RhythmPanel rawMemories={rawMemories} theme={theme} />
+              )}
+              {tab === 'sensory' && (
+                <SensoryPanel rawMemories={rawMemories} theme={theme} />
               )}
             </div>
           </motion.div>
