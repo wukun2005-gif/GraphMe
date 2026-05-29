@@ -37,6 +37,7 @@ interface AppState {
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
   archaeologyMode: boolean;
   userPersona: '家长' | '陪伴者' | '极客';
+  draggedMemoryId: string | null;
 }
 
 interface AppContextType extends AppState {
@@ -107,6 +108,7 @@ interface AppContextType extends AppState {
   clearButterflyEffect: () => void;
   toggleArchaeologyMode: () => void;
   setUserPersona: (persona: '家长' | '陪伴者' | '极客') => void;
+  setDraggedMemoryId: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -148,6 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try { return (localStorage.getItem('graphme-userPersona') as '家长' | '陪伴者' | '极客') || '家长'; }
       catch { return '家长'; }
     })(),
+    draggedMemoryId: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -579,6 +582,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try { localStorage.setItem('graphme-userPersona', persona); } catch {}
   }, []);
 
+  const setDraggedMemoryId = useCallback((id: string | null) => {
+    setState(s => ({ ...s, draggedMemoryId: id }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -653,6 +660,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
       archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
       userPersona: state.userPersona, setUserPersona,
+      draggedMemoryId: state.draggedMemoryId, setDraggedMemoryId,
     }}>
       {children}
     </AppContext.Provider>

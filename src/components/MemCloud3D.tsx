@@ -1254,6 +1254,85 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
   return null;
 }
 
+function DragController() {
+  const { rawMemories, setDraggedMemoryId, draggedMemoryId, navCategory, navSubCategory, currentView, addToast } = useAppState();
+  const { camera, gl } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDragging = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      dragStartPos.current = { x: e.clientX, y: e.clientY };
+      holdTimer.current = setTimeout(() => {
+        // Find nearest memory
+        const mouse = new THREE.Vector2(
+          (e.clientX / window.innerWidth) * 2 - 1,
+          -(e.clientY / window.innerHeight) * 2 + 1
+        );
+        raycaster.setFromCamera(mouse, camera);
+
+        let visible = rawMemories;
+        if (navCategory) {
+          visible = visible.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+        }
+
+        let closest: RawMemory | null = null;
+        let closestDist = Infinity;
+
+        for (const mem of visible) {
+          const p = mem.positions[currentView] || mem.position3D;
+          const dist = raycaster.ray.distanceToPoint(new THREE.Vector3(...p));
+          if (dist < 0.5 && dist < closestDist) {
+            closestDist = dist;
+            closest = mem;
+          }
+        }
+
+        if (closest) {
+          isDragging.current = true;
+          setDraggedMemoryId(closest.id);
+        }
+      }, 300);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      // Visual feedback handled by ParticleCloud via draggedMemoryId
+    };
+
+    const handlePointerUp = () => {
+      if (holdTimer.current) {
+        clearTimeout(holdTimer.current);
+        holdTimer.current = null;
+      }
+      if (isDragging.current) {
+        isDragging.current = false;
+        setDraggedMemoryId(null);
+        // Spring back animation is handled by ParticleCloud
+      }
+    };
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerleave', handlePointerUp);
+
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlePointerUp);
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+    };
+  }, [gl, camera, rawMemories, navCategory, navSubCategory, currentView, setDraggedMemoryId]);
+
+  return null;
+}
+
 function DynamicClearColor({ color }: { color: string }) {
   const { gl } = useThree();
   useEffect(() => {
@@ -1265,6 +1344,37 @@ function DynamicClearColor({ color }: { color: string }) {
 function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitControls>) {
   const { invalidate } = useThree();
   return <OrbitControls {...props} onChange={() => invalidate()} />;
+}
+
+function DragRing({ theme }: { theme: Theme }) {
+  const { draggedMemoryId, rawMemories, currentView } = useAppState();
+  const ringRef = useRef<THREE.Mesh>(null);
+  const isLight = theme === 'light';
+
+  const mem = draggedMemoryId ? rawMemories.find(m => m.id === draggedMemoryId) : null;
+  const pos = mem ? (mem.positions[currentView] || mem.position3D) : null;
+
+  useFrame(({ clock }) => {
+    if (ringRef.current) {
+      const t = clock.getElapsedTime();
+      const scale = 1 + Math.sin(t * 4) * 0.1;
+      ringRef.current.scale.set(scale, scale, scale);
+    }
+  });
+
+  if (!pos) return null;
+
+  return (
+    <mesh ref={ringRef} position={pos} rotation={[Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.4, 0.5, 32]} />
+      <meshBasicMaterial
+        color={isLight ? '#0088cc' : '#00f2ff'}
+        transparent
+        opacity={0.5}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
 }
 
 function ArchaeologyLayers({ theme }: { theme: Theme }) {
@@ -1547,12 +1657,14 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
         <ButterflyEffect theme={theme} />
+        <DragRing theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
         <GravityFieldRings theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />
+        <DragController />
         <DemoCameraController />
         <CameraFlyTo />
         <SearchFlyTo />
