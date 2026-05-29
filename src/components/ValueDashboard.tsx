@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates } from '../utils/valueUtils';
+import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -470,11 +470,255 @@ function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; the
   );
 }
 
+function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
+  rawMemories: RawMemory[];
+  theme: 'dark' | 'light';
+  onSelectMemory: (m: RawMemory) => void;
+}) {
+  const isDark = theme === 'dark';
+  const [selectedStoryline, setSelectedStoryline] = useState<string | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+
+  const curveData = useMemo(() => computeEmotionCurve(rawMemories), [rawMemories]);
+
+  const filteredPoints = useMemo(() => {
+    if (!selectedStoryline) return curveData.points;
+    return curveData.points.filter(p => p.storyline === selectedStoryline);
+  }, [curveData.points, selectedStoryline]);
+
+  if (filteredPoints.length < 2) {
+    return (
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          🌊 情感旅程
+        </h4>
+        <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+          需要至少 2 条记忆才能绘制情感曲线
+        </p>
+      </section>
+    );
+  }
+
+  const width = 340;
+  const height = 180;
+  const padX = 30;
+  const padY = 20;
+  const chartW = width - padX * 2;
+  const chartH = height - padY * 2;
+
+  const tsMin = filteredPoints[0].timestamp;
+  const tsMax = filteredPoints[filteredPoints.length - 1].timestamp;
+  const tsRange = tsMax - tsMin || 1;
+
+  const getX = (ts: number) => padX + ((ts - tsMin) / tsRange) * chartW;
+  const getY = (intensity: number) => padY + (1 - intensity) * chartH;
+
+  // Build SVG path
+  const pathParts = filteredPoints.map((p, i) => {
+    const x = getX(p.timestamp);
+    const y = getY(p.intensity);
+    if (i === 0) return `M ${x} ${y}`;
+    const prev = filteredPoints[i - 1];
+    const prevX = getX(prev.timestamp);
+    const prevY = getY(prev.intensity);
+    const cpx = (prevX + x) / 2;
+    return `C ${cpx} ${prevY} ${cpx} ${y} ${x} ${y}`;
+  });
+  const pathD = pathParts.join(' ');
+
+  // Milestone markers
+  const milestones = filteredPoints.filter(p => p.isMilestone);
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-2">
+        <h4 className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          🌊 情感旅程
+        </h4>
+        <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+          {filteredPoints.length} 条记忆
+        </span>
+      </div>
+
+      {curveData.storylineFilter.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          <button
+            onClick={() => setSelectedStoryline(null)}
+            className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
+              !selectedStoryline
+                ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            全部
+          </button>
+          {curveData.storylineFilter.map(sl => (
+            <button
+              key={sl}
+              onClick={() => setSelectedStoryline(selectedStoryline === sl ? null : sl)}
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
+                selectedStoryline === sl
+                  ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                  : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {sl}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="relative">
+        <svg width={width} height={height} className="w-full" viewBox={`0 0 ${width} ${height}`}>
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(v => (
+            <line
+              key={v}
+              x1={padX}
+              y1={getY(v)}
+              x2={width - padX}
+              y2={getY(v)}
+              stroke={isDark ? '#ffffff08' : '#e5e7eb'}
+              strokeDasharray="2,4"
+            />
+          ))}
+
+          {/* Y axis labels */}
+          {[0, 0.5, 1].map(v => (
+            <text
+              key={v}
+              x={padX - 4}
+              y={getY(v) + 3}
+              textAnchor="end"
+              className={`text-[8px] ${isDark ? 'fill-gray-600' : 'fill-gray-400'}`}
+            >
+              {v.toFixed(1)}
+            </text>
+          ))}
+
+          {/* Curve */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke={isDark ? '#ffb800' : '#cc8800'}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Gradient fill under curve */}
+          <path
+            d={`${pathD} L ${getX(filteredPoints[filteredPoints.length - 1].timestamp)} ${height - padY} L ${getX(filteredPoints[0].timestamp)} ${height - padY} Z`}
+            fill={isDark ? 'url(#journeyGradDark)' : 'url(#journeyGradLight)'}
+            opacity="0.3"
+          />
+          <defs>
+            <linearGradient id="journeyGradDark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffb800" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ffb800" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="journeyGradLight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#cc8800" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#cc8800" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Data points */}
+          {filteredPoints.map((p, i) => {
+            const x = getX(p.timestamp);
+            const y = getY(p.intensity);
+            const isHovered = hoveredPoint === i;
+            return (
+              <g key={p.memoryId}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={isHovered ? 6 : p.isMilestone ? 4 : 3}
+                  fill={p.color}
+                  stroke={isDark ? '#0d0d1a' : '#fff'}
+                  strokeWidth="1.5"
+                  className="cursor-pointer"
+                  onMouseEnter={() => setHoveredPoint(i)}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                  onClick={() => {
+                    const mem = rawMemories.find(m => m.id === p.memoryId);
+                    if (mem) onSelectMemory(mem);
+                  }}
+                />
+                {p.isMilestone && (
+                  <text
+                    x={x}
+                    y={y - 8}
+                    textAnchor="middle"
+                    className="text-[8px]"
+                    fill={isDark ? '#ffb800' : '#cc8800'}
+                  >
+                    ⭐
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* X axis date labels */}
+          {filteredPoints.length > 0 && (
+            <>
+              <text
+                x={getX(filteredPoints[0].timestamp)}
+                y={height - 4}
+                textAnchor="start"
+                className={`text-[8px] ${isDark ? 'fill-gray-600' : 'fill-gray-400'}`}
+              >
+                {filteredPoints[0].date}
+              </text>
+              <text
+                x={getX(filteredPoints[filteredPoints.length - 1].timestamp)}
+                y={height - 4}
+                textAnchor="end"
+                className={`text-[8px] ${isDark ? 'fill-gray-600' : 'fill-gray-400'}`}
+              >
+                {filteredPoints[filteredPoints.length - 1].date}
+              </text>
+            </>
+          )}
+        </svg>
+
+        {/* Hover tooltip */}
+        {hoveredPoint !== null && filteredPoints[hoveredPoint] && (
+          <div
+            className={`absolute z-10 px-2 py-1.5 rounded-lg shadow-lg border text-[10px] pointer-events-none ${
+              isDark ? 'bg-[#1a1020] border-[#ffffff15] text-gray-200' : 'bg-white border-gray-200 text-gray-700'
+            }`}
+            style={{
+              left: Math.min(getX(filteredPoints[hoveredPoint].timestamp), width - 120),
+              top: getY(filteredPoints[hoveredPoint].intensity) - 50,
+            }}
+          >
+            <div className="flex items-center gap-1 mb-0.5">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: filteredPoints[hoveredPoint].color }} />
+              <span className="font-medium">{filteredPoints[hoveredPoint].emotion}</span>
+              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+                ({filteredPoints[hoveredPoint].intensity.toFixed(2)})
+              </span>
+            </div>
+            <div className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+              {filteredPoints[hoveredPoint].label}
+            </div>
+            <div className={isDark ? 'text-gray-600' : 'text-gray-400'}>
+              {filteredPoints[hoveredPoint].date}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function ValueDashboard() {
   const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -555,6 +799,17 @@ export default function ValueDashboard() {
                   }`}
                 >
                   🗓 情绪日历
+                </button>
+                <button
+                  id="val-dash-journey-tab"
+                  onClick={() => setTab('journey')}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    tab === 'journey'
+                      ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  🌊 情感旅程
                 </button>
               </div>
               <button
@@ -794,6 +1049,10 @@ export default function ValueDashboard() {
                     <EmotionCalendar rawMemories={rawMemories} theme={theme} />
                   </div>
                 </section>
+              )}
+
+              {tab === 'journey' && (
+                <EmotionJourneyPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
               )}
             </div>
           </motion.div>

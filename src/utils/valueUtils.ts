@@ -416,3 +416,57 @@ export function getDailyMemory(memories: RawMemory[], now: number = Date.now()):
   const daysAgo = Math.floor((now - pick.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24));
   return { memory: pick, reason: 'forgetting-risk', daysAgo };
 }
+
+// ─── Emotion Curve (Feature #57) ───
+
+export interface EmotionCurvePoint {
+  timestamp: number;
+  date: string;
+  emotion: string;
+  intensity: number;
+  color: string;
+  label: string;
+  isMilestone: boolean;
+  storyline: string;
+  memoryId: string;
+}
+
+export interface EmotionCurveData {
+  points: EmotionCurvePoint[];
+  storylineFilter: string[];
+}
+
+export function computeEmotionCurve(memories: RawMemory[]): EmotionCurveData {
+  const { EMOTION_COLORS } = require('../types');
+
+  const sorted = [...memories]
+    .filter(m => m.dimensions.temporal.timestamp > 0)
+    .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
+
+  const storylineSet = new Set<string>();
+  const points: EmotionCurvePoint[] = sorted.map(m => {
+    const ts = m.dimensions.temporal.timestamp;
+    const d = new Date(ts);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const emotion = m.dimensions.emotional.primary;
+    const storyline = m.dimensions.narrative.storyline;
+    if (storyline) storylineSet.add(storyline);
+
+    return {
+      timestamp: ts,
+      date: dateStr,
+      emotion,
+      intensity: m.dimensions.emotional.intensity,
+      color: EMOTION_COLORS[emotion] || '#888',
+      label: m.label,
+      isMilestone: m.dimensions.narrative.isMilestone,
+      storyline,
+      memoryId: m.id,
+    };
+  });
+
+  return {
+    points,
+    storylineFilter: Array.from(storylineSet).sort(),
+  };
+}
