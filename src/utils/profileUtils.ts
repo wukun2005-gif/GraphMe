@@ -27,6 +27,7 @@ export interface ProfileGrowth {
   area: string;
   trend: 'up' | 'stable' | 'down';
   description: string;
+  memoryIds: string[];
 }
 
 export interface UserProfileData {
@@ -156,6 +157,7 @@ export function generateUserProfile(
     area: i.statement,
     trend: i.version > 1 ? 'up' as const : 'stable' as const,
     description: i.description || i.statement,
+    memoryIds: i.sourceRawMemoryIds || [],
   }));
 
   // Summary text

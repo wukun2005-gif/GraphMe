@@ -224,6 +224,25 @@ export default function UserProfile({ open, onClose }: Props) {
                         </span>
                       </div>
                       <p className={`mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{g.description}</p>
+                      {g.memoryIds.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {g.memoryIds.slice(0, 3).map(id => {
+                            const mem = rawMemories.find(m => m.id === id);
+                            if (!mem) return null;
+                            return (
+                              <button
+                                key={id}
+                                onClick={() => selectMemory(mem)}
+                                className={`block w-full text-left text-[10px] truncate cursor-pointer ${
+                                  isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
+                                }`}
+                              >
+                                · {mem.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
