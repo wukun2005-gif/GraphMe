@@ -73,6 +73,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
         {/* Source memories */}
         <div className="relative z-10">
           <button
+            id="demo-dream-sources"
             onClick={() => setShowSources(!showSources)}
             className="w-full text-center text-white/40 text-xs cursor-pointer hover:text-white/60 transition-colors mb-2"
           >

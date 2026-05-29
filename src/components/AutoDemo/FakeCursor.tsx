@@ -303,27 +303,24 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(800);
       if (isCancelled) return;
 
-      // ─── P7: 记忆花园 (12s) ───────────────────────
-      await moveAndClick('btn-garden', '🌻 记忆花园——用植物隐喻可视化记忆衰减', 2000);
-      if (isCancelled) return;
-      await moveToCenter('🌸 盛开的花 = 高价值低风险，枯萎的花 = 快被遗忘', 2500);
-      if (isCancelled) return;
-      await moveToCenter('💧 点击枯萎的花浇水，重温记忆让它重新盛开', 2000);
-      if (isCancelled) return;
-      await moveToCenter('🌳 里程碑记忆长成大树，洞察是藤蔓连接花朵', 2000);
-      if (isCancelled) return;
-
-      // ─── P8: 记忆梦境 (10s) ───────────────────────
+      // ─── P7: 记忆梦境 (15s) ───────────────────────
       await moveAndClick('btn-dream', '🌙 记忆梦境——AI 重组记忆碎片', 2000);
       if (isCancelled) return;
       await moveToCenter('🌙 从不同时间线抽取碎片，拼接成超现实叙事', 2500);
       if (isCancelled) return;
       await moveToCenter('✨ "你梦见公园变成了教室，爸爸正在编程"', 2000);
       if (isCancelled) return;
+      await moveAndClick('demo-dream-sources', '📖 查看灵感来源——点击可跳转原始记忆', 2000);
+      if (isCancelled) return;
+      await moveToCenter('🔗 每个梦境都有迹可循，灵感来自真实记忆', 2000);
+      if (isCancelled) return;
       await moveAndClick('demo-dream-redream', '🔄 再做一个梦', 1500);
       if (isCancelled) return;
+      window.dispatchEvent(new CustomEvent('demo-close-dream'));
+      await wait(500);
+      if (isCancelled) return;
 
-      // ─── P9: 年度报告 (10s) ──────────────────────
+      // ─── P8: 年度报告 (10s) ──────────────────────
       await moveAndClick('btn-annual-report', '📊 年度记忆报告——你的 2026 记忆人格', 2000);
       if (isCancelled) return;
       await moveToCenter('📈 情绪分布、月度活跃、年度关键词', 2500);

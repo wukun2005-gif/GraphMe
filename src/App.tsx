@@ -13,7 +13,6 @@ import SerendipityModal from './components/SerendipityModal';
 import AnnualReport from './components/AnnualReport';
 import OnboardingOverlay from './components/OnboardingOverlay';
 import MemorySurprise from './components/MemorySurprise';
-import MemoryGarden from './components/MemoryGarden';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
@@ -28,7 +27,6 @@ function AppInner() {
   const [showSearch, setShowSearch] = useState(false);
   const [showSerendipity, setShowSerendipity] = useState(false);
   const [showAnnualReport, setShowAnnualReport] = useState(false);
-  const [showGarden, setShowGarden] = useState(false);
   const [showDream, setShowDream] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -92,6 +90,7 @@ function AppInner() {
     };
     const onCloseSerendipity = () => setShowSerendipity(false);
     const onCloseAnnualReport = () => setShowAnnualReport(false);
+    const onCloseDream = () => setShowDream(false);
 
     window.addEventListener('demo-select-memory', onSelectMemory);
     window.addEventListener('demo-close-detail', onCloseDetail);
@@ -100,6 +99,7 @@ function AppInner() {
     window.addEventListener('demo-chat-expand', onChatExpand);
     window.addEventListener('demo-close-serendipity', onCloseSerendipity);
     window.addEventListener('demo-close-annual-report', onCloseAnnualReport);
+    window.addEventListener('demo-close-dream', onCloseDream);
 
     return () => {
       window.removeEventListener('demo-select-memory', onSelectMemory);
@@ -109,6 +109,7 @@ function AppInner() {
       window.removeEventListener('demo-chat-expand', onChatExpand);
       window.removeEventListener('demo-close-serendipity', onCloseSerendipity);
       window.removeEventListener('demo-close-annual-report', onCloseAnnualReport);
+      window.removeEventListener('demo-close-dream', onCloseDream);
     };
   }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
 
@@ -243,17 +244,6 @@ function AppInner() {
           🎲 碰碰对
         </button>
         <button
-          id="btn-garden"
-          onClick={() => setShowGarden(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🌻 花园
-        </button>
-        <button
           id="btn-dream"
           onClick={() => setShowDream(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
@@ -279,22 +269,6 @@ function AppInner() {
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
-
-      <AnimatePresence>
-        {showGarden && (
-          <motion.div
-            initial={{ x: 500, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 500, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed right-0 top-0 h-full w-full max-w-[420px] backdrop-blur-xl border-l z-30 shadow-2xl overflow-hidden flex flex-col ${
-              isDark ? 'bg-[#0d0d1a] border-[#ffffff08]' : 'bg-white border-gray-200'
-            }`}
-          >
-            <MemoryGarden onClose={() => setShowGarden(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showDream && (
