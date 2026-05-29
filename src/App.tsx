@@ -15,7 +15,8 @@ import OnboardingOverlay from './components/OnboardingOverlay';
 import MemorySurprise from './components/MemorySurprise';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
-import { useState, useEffect, useCallback } from 'react';
+import SoundscapeToggle from './components/SoundscapeToggle';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
@@ -30,6 +31,28 @@ function AppInner() {
   const [showDream, setShowDream] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
+
+  // Compute emotion distribution for soundscape
+  const emotionDistribution = useMemo(() => {
+    const dist: Record<string, { count: number; totalIntensity: number }> = {};
+    rawMemories.forEach(m => {
+      const emotion = m.dimensions.emotional.primary;
+      if (!dist[emotion]) {
+        dist[emotion] = { count: 0, totalIntensity: 0 };
+      }
+      dist[emotion].count++;
+      dist[emotion].totalIntensity += m.dimensions.emotional.intensity;
+    });
+    // Convert to average intensity
+    const result: Record<string, { count: number; avgIntensity: number }> = {};
+    Object.entries(dist).forEach(([emotion, data]) => {
+      result[emotion] = {
+        count: data.count,
+        avgIntensity: data.totalIntensity / data.count,
+      };
+    });
+    return result;
+  }, [rawMemories]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -165,6 +188,11 @@ function AppInner() {
       </div>
 
       <TimelineScrubber />
+
+      {/* Soundscape toggle in bottom bar */}
+      <div className="absolute bottom-6 right-4 z-10">
+        <SoundscapeToggle theme={theme} emotionDistribution={emotionDistribution} />
+      </div>
 
       <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
         detailOpen ? 'right-[436px]' : 'right-4'
