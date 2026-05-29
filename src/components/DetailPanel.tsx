@@ -7,6 +7,7 @@ import { computeDiff } from '../utils/valueUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
 import { getMemoryConnections } from '../utils/navUtils';
 import type { MemoryConnection } from '../utils/navUtils';
+import { generateTraceSteps } from '../utils/insightUtils';
 
 interface VersionEntry {
   version: number;
@@ -389,6 +390,12 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
   const [noteText, setNoteText] = useState(memory.userNote || '');
   const [showCorrectionInput, setShowCorrectionInput] = useState(false);
   const [correctionText, setCorrectionText] = useState(memory.userCorrection || '');
+  const [showTrace, setShowTrace] = useState(false);
+
+  const traceSteps = useMemo(() => {
+    if (!showTrace) return [];
+    return generateTraceSteps(memory, rawMemories);
+  }, [showTrace, memory, rawMemories]);
 
   const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
     const raw = rawMemories.find(m => m.id === id);
@@ -503,6 +510,16 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           >
             💬 {memory.userNote ? '已备注' : '备注'}
           </button>
+          <button
+            onClick={() => setShowTrace(!showTrace)}
+            className={`flex-1 px-2 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+              showTrace
+                ? isDark ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-300'
+                : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            🔬 {showTrace ? '收起溯源' : '溯源'}
+          </button>
         </div>
 
         {memory.userCorrection && !showCorrectionInput && (
@@ -568,6 +585,43 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
             isDark ? 'bg-blue-500/10 text-blue-400/80' : 'bg-blue-50 text-blue-700'
           }`}>
             备注：{memory.userNote}
+          </div>
+        )}
+
+        {/* Trace steps */}
+        {showTrace && traceSteps.length > 0 && (
+          <div className={`mt-2 p-3 rounded-lg border ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}>
+            <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+              🔬 推理溯源
+            </h4>
+            <div className="space-y-2">
+              {traceSteps.map((step, i) => (
+                <div key={i} className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <div className="flex items-start gap-2">
+                    <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium ${
+                      i === traceSteps.length - 1
+                        ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
+                        : isDark ? 'bg-[#ffffff08] text-gray-500' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p>{step.description}</p>
+                      {step.metric && (
+                        <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {step.metric}
+                        </span>
+                      )}
+                      {step.memoryIds.length > 0 && (
+                        <span className={`text-[10px] ml-2 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                          ({step.memoryIds.length} 条依据)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
