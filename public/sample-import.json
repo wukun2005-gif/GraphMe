@@ -1,0 +1,69 @@
+{
+  "rawMemories": [
+    {
+      "label": "第一次骑自行车",
+      "summary": "在小区花园里学会了骑自行车，爸爸在后面扶着，摔了两次但最后成功了。",
+      "emotion": "骄傲",
+      "placeType": "公园",
+      "importance": 0.85,
+      "persons": ["爸爸"],
+      "activityType": "运动",
+      "storyline": "成长里程碑",
+      "knowledge": ["平衡技巧"]
+    },
+    {
+      "label": "生日蛋糕DIY",
+      "summary": "和妈妈一起做了草莓生日蛋糕，虽然奶油涂得不太均匀，但味道超级棒。",
+      "emotion": "快乐",
+      "placeType": "家",
+      "importance": 0.9,
+      "persons": ["妈妈"],
+      "activityType": "创作",
+      "storyline": "亲子时光",
+      "knowledge": ["烘焙基础"]
+    },
+    {
+      "label": "看《三体》有感",
+      "summary": "读完了《三体》第一部，被黑暗森林法则震撼到了，开始思考宇宙的奥秘。",
+      "emotion": "好奇",
+      "placeType": "家",
+      "importance": 0.75,
+      "persons": [],
+      "activityType": "学习",
+      "storyline": "科幻兴趣",
+      "knowledge": ["黑暗森林法则", "科幻文学"]
+    },
+    {
+      "label": "和小明吵架又和好",
+      "summary": "因为抢玩具和好朋友小明吵了一架，后来主动道歉，两人又开心地一起玩了。",
+      "emotion": "感激",
+      "placeType": "家",
+      "importance": 0.7,
+      "persons": ["小明"],
+      "activityType": "活动",
+      "storyline": "友谊故事",
+      "knowledge": ["冲突解决"]
+    },
+    {
+      "label": "编程课第一堂",
+      "summary": "在学校上了第一节Scratch编程课，用积木块让小猫走迷宫，觉得编程好神奇。",
+      "emotion": "好奇",
+      "placeType": "学校",
+      "importance": 0.8,
+      "persons": [],
+      "activityType": "学习",
+      "storyline": "编程学习之路",
+      "knowledge": ["Scratch基础", "编程思维"]
+    }
+  ],
+  "insightMemories": [
+    {
+      "statement": "对科技类活动的兴趣明显上升",
+      "description": "从骑自行车到Scratch编程，近半年的活动中科技和探索类占比增长，表明好奇心从传统游戏转向技术领域。",
+      "category": "trend",
+      "confidence": 0.78,
+      "sourceIds": ["import_9003", "import_9004"],
+      "reasoningTrace": "基于近半年活动类型统计分析"
+    }
+  ]
+}

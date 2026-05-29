@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord, TimeCapsule, Constellation, ConstellationConnection, ColorPreset } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord, TimeCapsule } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -30,11 +30,9 @@ interface AppState {
   echoDescription: string;
   farewellRecords: FarewellRecord[];
   capsules: TimeCapsule[];
-  constellations: Constellation[];
   memoryChain: { memoryId: string; connectionReason: string }[];
   boomerangMemoryIds: string[];
   boomerangDescription: string;
-  emotionColorMap: Record<EmotionType, string> | null;
 }
 
 interface AppContextType extends AppState {
@@ -97,18 +95,10 @@ interface AppContextType extends AppState {
   farewellMemory: (memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => void;
   createCapsule: (memoryId: string, unlockDate: number, note: string) => void;
   openCapsule: (capsuleId: string) => void;
-  addConstellation: (name: string) => void;
-  removeConstellation: (id: string) => void;
-  addConnection: (constellationId: string, connection: ConstellationConnection) => void;
-  removeConnection: (constellationId: string, fromId: string, toId: string) => void;
-  renameConstellation: (id: string, name: string) => void;
   buildChain: (memoryId: string) => void;
   clearChain: () => void;
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
-  updateEmotionColor: (emotion: EmotionType, color: string) => void;
-  resetEmotionColors: () => void;
-  applyColorPreset: (colors: Record<EmotionType, string>) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -140,11 +130,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     echoDescription: '',
     farewellRecords: [],
     capsules: [],
-    constellations: [],
     memoryChain: [],
     boomerangMemoryIds: [],
     boomerangDescription: '',
-    emotionColorMap: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -497,61 +485,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCapsules(prev => prev.map(c => c.id === capsuleId ? { ...c, opened: true } : c));
   }, []);
 
-  const [constellations, setConstellations] = useState<Constellation[]>(() => {
-    try {
-      const saved = localStorage.getItem('graphme-constellations');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-
-  useEffect(() => {
-    try { localStorage.setItem('graphme-constellations', JSON.stringify(constellations)); } catch {}
-  }, [constellations]);
-
-  const addConstellation = useCallback((name: string) => {
-    const constellation: Constellation = {
-      id: `constellation_${Date.now()}`,
-      name,
-      connections: [],
-      createdAt: Date.now(),
-    };
-    setConstellations(prev => [...prev, constellation]);
-  }, []);
-
-  const removeConstellation = useCallback((id: string) => {
-    setConstellations(prev => prev.filter(c => c.id !== id));
-  }, []);
-
-  const addConnection = useCallback((constellationId: string, connection: ConstellationConnection) => {
-    setConstellations(prev => prev.map(c => {
-      if (c.id !== constellationId) return c;
-      // Avoid duplicate connections
-      const exists = c.connections.some(
-        conn => (conn.fromId === connection.fromId && conn.toId === connection.toId) ||
-                (conn.fromId === connection.toId && conn.toId === connection.fromId)
-      );
-      if (exists) return c;
-      return { ...c, connections: [...c.connections, connection] };
-    }));
-  }, []);
-
-  const removeConnection = useCallback((constellationId: string, fromId: string, toId: string) => {
-    setConstellations(prev => prev.map(c => {
-      if (c.id !== constellationId) return c;
-      return {
-        ...c,
-        connections: c.connections.filter(
-          conn => !(conn.fromId === fromId && conn.toId === toId) &&
-                  !(conn.fromId === toId && conn.toId === fromId)
-        ),
-      };
-    }));
-  }, []);
-
-  const renameConstellation = useCallback((id: string, name: string) => {
-    setConstellations(prev => prev.map(c => c.id === id ? { ...c, name } : c));
-  }, []);
-
   const buildChain = useCallback((memoryId: string) => {
     const target = rawMems.find(m => m.id === memoryId);
     if (!target) return;
@@ -613,32 +546,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const [emotionColorMap, setEmotionColorMap] = useState<Record<EmotionType, string> | null>(() => {
-    try {
-      const saved = localStorage.getItem('graphme-emotionColorMap');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
-
-  useEffect(() => {
-    try { localStorage.setItem('graphme-emotionColorMap', JSON.stringify(emotionColorMap)); } catch {}
-  }, [emotionColorMap]);
-
-  const updateEmotionColor = useCallback((emotion: EmotionType, color: string) => {
-    setEmotionColorMap(prev => {
-      const base = prev || {} as Record<EmotionType, string>;
-      return { ...base, [emotion]: color };
-    });
-  }, []);
-
-  const resetEmotionColors = useCallback(() => {
-    setEmotionColorMap(null);
-  }, []);
-
-  const applyColorPreset = useCallback((colors: Record<EmotionType, string>) => {
-    setEmotionColorMap(colors);
-  }, []);
-
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
 
@@ -686,10 +593,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       echoMemoryIds: state.echoMemoryIds, echoDescription: state.echoDescription, findEcho, clearEcho,
       farewellRecords, farewellMemory,
       capsules, createCapsule, openCapsule,
-      constellations, addConstellation, removeConstellation, addConnection, removeConnection, renameConstellation,
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
-      emotionColorMap, updateEmotionColor, resetEmotionColors, applyColorPreset,
     }}>
       {children}
     </AppContext.Provider>

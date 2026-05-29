@@ -15,9 +15,7 @@ import OnboardingOverlay from './components/OnboardingOverlay';
 import MemorySurprise from './components/MemorySurprise';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
-import SoundscapeToggle from './components/SoundscapeToggle';
 import MemoryReader from './components/MemoryReader';
-import ColorStudio from './components/ColorStudio';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
@@ -33,32 +31,8 @@ function AppInner() {
   const [showDream, setShowDream] = useState(false);
   const [showReader, setShowReader] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
-  const [showColorStudio, setShowColorStudio] = useState(false);
-  const [constellationMode, setConstellationMode] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
-
-  // Compute emotion distribution for soundscape
-  const emotionDistribution = useMemo(() => {
-    const dist: Record<string, { count: number; totalIntensity: number }> = {};
-    rawMemories.forEach(m => {
-      const emotion = m.dimensions.emotional.primary;
-      if (!dist[emotion]) {
-        dist[emotion] = { count: 0, totalIntensity: 0 };
-      }
-      dist[emotion].count++;
-      dist[emotion].totalIntensity += m.dimensions.emotional.intensity;
-    });
-    // Convert to average intensity
-    const result: Record<string, { count: number; avgIntensity: number }> = {};
-    Object.entries(dist).forEach(([emotion, data]) => {
-      result[emotion] = {
-        count: data.count,
-        avgIntensity: data.totalIntensity / data.count,
-      };
-    });
-    return result;
-  }, [rawMemories]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -195,11 +169,6 @@ function AppInner() {
 
       <TimelineScrubber />
 
-      {/* Soundscape toggle - above chat button */}
-      <div className="fixed bottom-20 right-4 z-10">
-        <SoundscapeToggle theme={theme} emotionDistribution={emotionDistribution} />
-      </div>
-
       <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
         detailOpen ? 'right-[436px]' : 'right-4'
       }`}>
@@ -278,17 +247,6 @@ function AppInner() {
           🎲 碰碰对
         </button>
         <button
-          id="btn-constellation"
-          onClick={() => setConstellationMode(!constellationMode)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            constellationMode
-              ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
-              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200' : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          ✨ 星座
-        </button>
-        <button
           id="btn-dream"
           onClick={() => setShowDream(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
@@ -309,17 +267,6 @@ function AppInner() {
           }`}
         >
           📖 阅读
-        </button>
-        <button
-          id="btn-color-studio"
-          onClick={() => setShowColorStudio(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🎨 配色
         </button>
         <button
           onClick={toggleTheme}
@@ -363,7 +310,6 @@ function AppInner() {
           onMemoryChange={setReaderMemory}
         />
       )}
-      <ColorStudio open={showColorStudio} onClose={() => setShowColorStudio(false)} />
       <OnboardingOverlay />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>

@@ -1,0 +1,2 @@
+bg7: 一键演示好好调整一下，重要的功能都要演示到，而且要保证演示的时候记忆粒子的坐标不能抓错要抓准确.                                                                                                                                                                                                                          
+bg6  启动应用后，机器负载很高。performance 录的log：/Users/wukun/Downloads/Trace-20260527T225220.json.gz

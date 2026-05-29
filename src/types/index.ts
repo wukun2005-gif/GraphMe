@@ -160,22 +160,3 @@ export interface TimeCapsule {
   opened: boolean;
 }
 
-export interface ConstellationConnection {
-  fromId: string;
-  toId: string;
-  color: string;
-  label: string;
-}
-
-export interface Constellation {
-  id: string;
-  name: string;
-  connections: ConstellationConnection[];
-  createdAt: number;
-}
-
-export interface ColorPreset {
-  id: string;
-  name: string;
-  colors: Record<EmotionType, string>;
-}
