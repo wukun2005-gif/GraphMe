@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import type { RawMemory, InsightMemory, EmotionType } from '../types';
+import type { RawMemory, InsightMemory, EmotionType, FarewellRecord } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
 import { computeDiff } from '../utils/valueUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
@@ -470,12 +470,15 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, farewellMemory } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareTarget, setCompareTarget] = useState<string | null>(null);
+  const [farewellMode, setFarewellMode] = useState(false);
+  const [farewellNote, setFarewellNote] = useState('');
+  const [farewellStyle, setFarewellStyle] = useState<FarewellRecord['releaseStyle']>('深海');
 
   useEffect(() => {
     if (!detailOpen) return;
@@ -931,23 +934,109 @@ export default function DetailPanel() {
                     >🔗 {similarMemoryIds.length > 0 ? '清除相似' : '找相似'}</button>
                   </>
                 )}
-                <button
-                  onClick={() => {
-                    if (confirmDelete) {
-                      deleteMemory(selectedMemory.id);
-                      setConfirmDelete(false);
-                    } else {
-                      setConfirmDelete(true);
-                    }
-                  }}
-                  className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
-                    confirmDelete
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
-                  }`}
-                >
-                  {confirmDelete ? '确认删除？' : '🗑️ 删除'}
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (confirmDelete) {
+                        deleteMemory(selectedMemory.id);
+                        setConfirmDelete(false);
+                      } else {
+                        setConfirmDelete(true);
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setFarewellMode(true);
+                    }}
+                    className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                      confirmDelete
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
+                    }`}
+                    title="右键点击进入摆渡模式（仪式性告别）"
+                  >
+                    {confirmDelete ? '确认删除？' : '🗑️ 删除'}
+                  </button>
+                </div>
+
+                {/* Farewell mode overlay */}
+                {farewellMode && selectedMemory.type === 'raw' && (
+                  <div className={`fixed inset-0 z-50 flex items-center justify-center ${
+                    isDark ? 'bg-black/70' : 'bg-black/50'
+                  }`} onClick={(e) => { if (e.target === e.currentTarget) setFarewellMode(false); }}>
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className={`w-[360px] rounded-xl border shadow-2xl p-5 ${
+                        isDark ? 'bg-[#1a1020] border-[#ffffff15]' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      <h3 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                        🕊 记忆摆渡
+                      </h3>
+                      <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        你即将释放这段记忆。它曾在你的生命中留下痕迹，现在你选择让它自由。
+                      </p>
+
+                      <div className="mb-3">
+                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>告别语（可选）</label>
+                        <textarea
+                          value={farewellNote}
+                          onChange={e => setFarewellNote(e.target.value)}
+                          placeholder="写一段告别的话..."
+                          rows={2}
+                          className={`w-full border rounded px-2 py-1.5 text-xs resize-none ${
+                            isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
+                          }`}
+                        />
+                      </div>
+
+                      <div className="mb-4">
+                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>释放方式</label>
+                        <div className="flex gap-2">
+                          {([
+                            { value: '深海' as const, emoji: '🌊', label: '沉入深海' },
+                            { value: '星光' as const, emoji: '🔥', label: '化为星光' },
+                            { value: '微风' as const, emoji: '🌬', label: '随风飘散' },
+                          ]).map(opt => (
+                            <button
+                              key={opt.value}
+                              onClick={() => setFarewellStyle(opt.value)}
+                              className={`flex-1 py-2 rounded-lg text-xs text-center cursor-pointer transition-colors ${
+                                farewellStyle === opt.value
+                                  ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800] border border-[#ffb800]/30' : 'bg-amber-100 text-amber-700 border border-amber-300'
+                                  : isDark ? 'bg-[#ffffff05] text-gray-400 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {opt.emoji} {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            farewellMemory(selectedMemory.id, farewellNote, farewellStyle);
+                            setFarewellMode(false);
+                            setFarewellNote('');
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer transition-colors"
+                        >
+                          🕊 释放记忆
+                        </button>
+                        <button
+                          onClick={() => setFarewellMode(false)}
+                          className={`px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                            isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -141,3 +141,12 @@ export interface DimensionViewConfig {
   icon: string;
   description: string;
 }
+
+export interface FarewellRecord {
+  id: string;
+  memoryLabel: string;
+  memorySummary: string;
+  farewellNote: string;
+  releaseStyle: '深海' | '星光' | '微风';
+  releasedAt: number;
+}

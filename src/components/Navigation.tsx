@@ -56,6 +56,7 @@ export default function NavigationSidebar() {
     emotionFilter, toggleEmotionFilter,
     tagFilter, toggleTagFilter, addTag, removeTag, allTags,
     similarMemoryIds, clearSimilar,
+    farewellRecords,
     favoriteIds, toggleFavorite,
     addToast,
     showChatGPT, toggleShowChatGPT,
@@ -816,6 +817,33 @@ export default function NavigationSidebar() {
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
                               <span className="truncate">{mem.label}</span>
                             </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {farewellRecords.length > 0 && (
+                    <div className="mb-2">
+                      <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        🪦 已释放的记忆 ({farewellRecords.length})
+                      </div>
+                      <div className="space-y-0.5">
+                        {farewellRecords.map(rec => {
+                          const styleEmoji = rec.releaseStyle === '深海' ? '🌊' : rec.releaseStyle === '星光' ? '🔥' : '🌬';
+                          const date = new Date(rec.releasedAt);
+                          const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+                          return (
+                            <div
+                              key={rec.id}
+                              className={`px-2 py-1 rounded text-[10px] flex items-center gap-1 ${
+                                isDark ? 'text-gray-600' : 'text-gray-400'
+                              }`}
+                            >
+                              <span>{styleEmoji}</span>
+                              <span className="truncate">{rec.memoryLabel}</span>
+                              <span className="ml-auto flex-shrink-0">{dateStr}</span>
+                            </div>
                           );
                         })}
                       </div>

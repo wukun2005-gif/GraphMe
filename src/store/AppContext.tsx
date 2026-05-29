@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -26,6 +26,7 @@ interface AppState {
   timeRangeFilter: [number, number] | null;
   collections: MemoryCollection[];
   similarMemoryIds: string[];
+  farewellRecords: FarewellRecord[];
 }
 
 interface AppContextType extends AppState {
@@ -83,6 +84,7 @@ interface AppContextType extends AppState {
   removeFromCollection: (collectionId: string, memoryId: string) => void;
   findSimilar: (memoryId: string) => void;
   clearSimilar: () => void;
+  farewellMemory: (memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -110,6 +112,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     timeRangeFilter: null,
     collections: [],
     similarMemoryIds: [],
+    farewellRecords: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -388,6 +391,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, similarMemoryIds: [] }));
   }, []);
 
+  const [farewellRecords, setFarewellRecords] = useState<FarewellRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-farewellRecords');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-farewellRecords', JSON.stringify(farewellRecords)); } catch {}
+  }, [farewellRecords]);
+
+  const farewellMemory = useCallback((memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => {
+    const mem = rawMems.find(m => m.id === memoryId);
+    if (!mem) return;
+    const record: FarewellRecord = {
+      id: `farewell_${Date.now()}`,
+      memoryLabel: mem.label,
+      memorySummary: mem.summary,
+      farewellNote: note,
+      releaseStyle: style,
+      releasedAt: Date.now(),
+    };
+    setFarewellRecords(prev => [...prev, record]);
+    deleteMemory(memoryId);
+  }, [rawMems, deleteMemory]);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -453,6 +482,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory, setTimeRangeFilter,
       collections, addCollection, removeCollection, addToCollection, removeFromCollection,
       similarMemoryIds: state.similarMemoryIds, findSimilar, clearSimilar,
+      farewellRecords, farewellMemory,
     }}>
       {children}
     </AppContext.Provider>
