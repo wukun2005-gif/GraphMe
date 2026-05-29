@@ -65,6 +65,7 @@ export default function NavigationSidebar() {
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
     undoDelete, undoStackCount, undoStackAction,
     collections, addCollection, removeCollection, addToCollection, removeFromCollection,
+    constellations, addConstellation, removeConstellation, renameConstellation,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -75,6 +76,7 @@ export default function NavigationSidebar() {
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
   const [showStoryBoard, setShowStoryBoard] = useState(false);
   const [showTags, setShowTags] = useState(false);
+  const [showConstellations, setShowConstellations] = useState(false);
   const [expandedCollection, setExpandedCollection] = useState<string | null>(null);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -473,6 +475,114 @@ export default function NavigationSidebar() {
                   >
                     清除标签筛选
                   </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+        <button
+          id="nav-constellations"
+          onClick={() => { setShowConstellations(!showConstellations); setShowLegend(false); setShowTags(false); setShowMemoryMgr(false); setShowStoryBoard(false); }}
+          className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
+            isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
+          }`}
+        >
+          <span>🌌 我的星座 {constellations.length > 0 ? `(${constellations.length})` : ''}</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showConstellations ? '▲' : '▼'}</span>
+        </button>
+        <AnimatePresence>
+          {showConstellations && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className={`px-3 pb-3 text-xs max-h-[40vh] overflow-y-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {/* Add new constellation */}
+                <div className="mb-2">
+                  <button
+                    onClick={() => {
+                      const name = prompt('输入星座名称：');
+                      if (name?.trim()) {
+                        addConstellation(name.trim());
+                        addToast(`星座 "${name.trim()}" 已创建`, 'success');
+                      }
+                    }}
+                    className={`w-full px-2 py-1.5 rounded text-xs cursor-pointer transition-colors ${
+                      isDark ? 'bg-[#ffffff08] hover:bg-[#ffffff12] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    + 新建星座
+                  </button>
+                </div>
+
+                {constellations.length === 0 ? (
+                  <p className={`${isDark ? 'text-gray-600' : 'text-gray-400'} py-2`}>暂无星座，点击上方按钮创建</p>
+                ) : (
+                  <div className="space-y-2">
+                    {constellations.map(constellation => (
+                      <div key={constellation.id} className={`p-2 rounded-lg border ${
+                        isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {constellation.name}
+                          </span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                const newName = prompt('输入新名称：', constellation.name);
+                                if (newName?.trim() && newName !== constellation.name) {
+                                  renameConstellation(constellation.id, newName.trim());
+                                  addToast(`星座已重命名为 "${newName.trim()}"`, 'success');
+                                }
+                              }}
+                              className={`text-[10px] cursor-pointer ${isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`确定删除星座 "${constellation.name}"？`)) {
+                                  removeConstellation(constellation.id);
+                                  addToast(`星座 "${constellation.name}" 已删除`, 'info');
+                                }
+                              }}
+                              className={`text-[10px] cursor-pointer ${isDark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-600'}`}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                        <div className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {constellation.connections.length} 条连线
+                        </div>
+                        {constellation.connections.length > 0 && (
+                          <div className="mt-1 space-y-0.5">
+                            {constellation.connections.slice(0, 3).map((conn, i) => {
+                              const fromMem = allRawMemories.find(m => m.id === conn.fromId);
+                              const toMem = allRawMemories.find(m => m.id === conn.toId);
+                              return (
+                                <div key={i} className={`text-[10px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                  {fromMem?.label || conn.fromId} → {toMem?.label || conn.toId}
+                                  {conn.label && ` (${conn.label})`}
+                                </div>
+                              );
+                            })}
+                            {constellation.connections.length > 3 && (
+                              <div className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                ...还有 {constellation.connections.length - 3} 条
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </motion.div>

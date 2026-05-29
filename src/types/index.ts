@@ -159,3 +159,17 @@ export interface TimeCapsule {
   note: string;
   opened: boolean;
 }
+
+export interface ConstellationConnection {
+  fromId: string;
+  toId: string;
+  color: string;
+  label: string;
+}
+
+export interface Constellation {
+  id: string;
+  name: string;
+  connections: ConstellationConnection[];
+  createdAt: number;
+}
