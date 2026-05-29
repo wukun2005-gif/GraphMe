@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType, FarewellRecord } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
-import { computeDiff } from '../utils/valueUtils';
+import { computeDiff, computeImportanceBreakdown } from '../utils/valueUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
 import { getMemoryConnections } from '../utils/navUtils';
 import type { MemoryConnection } from '../utils/navUtils';
@@ -145,6 +145,65 @@ function ConnectionGraph({ connections, theme, onSelect }: {
   );
 }
 
+function ImportanceRadar({ memory, allMemories, theme }: { memory: RawMemory; allMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+  const breakdown = computeImportanceBreakdown(memory, allMemories);
+  const axes = [
+    { label: '情绪', value: breakdown.emotional, emoji: '😊' },
+    { label: '频率', value: breakdown.frequency, emoji: '🔄' },
+    { label: '社交', value: breakdown.social, emoji: '👥' },
+    { label: '里程碑', value: breakdown.milestone, emoji: '🏆' },
+    { label: '回顾', value: breakdown.access, emoji: '📖' },
+  ];
+
+  const cx = 40, cy = 40, r = 30;
+  const points = axes.map((axis, i) => {
+    const angle = (i / axes.length) * Math.PI * 2 - Math.PI / 2;
+    return {
+      x: cx + Math.cos(angle) * r * axis.value,
+      y: cy + Math.sin(angle) * r * axis.value,
+      labelX: cx + Math.cos(angle) * (r + 12),
+      labelY: cy + Math.sin(angle) * (r + 12),
+      ...axis,
+    };
+  });
+
+  return (
+    <div className="inline-flex items-center gap-2 ml-2">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        {/* Background pentagon */}
+        <polygon
+          points={axes.map((_, i) => {
+            const angle = (i / axes.length) * Math.PI * 2 - Math.PI / 2;
+            return `${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`;
+          }).join(' ')}
+          fill="none"
+          stroke={isDark ? '#ffffff15' : '#00000015'}
+          strokeWidth="0.5"
+        />
+        {/* Data polygon */}
+        <polygon
+          points={points.map(p => `${p.x},${p.y}`).join(' ')}
+          fill={isDark ? '#00f2ff20' : '#0088cc20'}
+          stroke={isDark ? '#00f2ff' : '#0088cc'}
+          strokeWidth="1"
+        />
+        {/* Axis dots */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="2" fill={isDark ? '#00f2ff' : '#0088cc'} />
+        ))}
+      </svg>
+      <div className="text-[9px] space-y-0.5">
+        {axes.map((axis, i) => (
+          <div key={i} className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+            {axis.emoji} {axis.label}: {Math.round(axis.value * 100)}%
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RawDetail({ memory }: { memory: RawMemory }) {
   const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
   const isDark = theme === 'dark';
@@ -211,7 +270,10 @@ function RawDetail({ memory }: { memory: RawMemory }) {
         {d.semantic.knowledge.length > 0 && (
           <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📝 知识</span> {d.semantic.knowledge.join('、')}</div>
         )}
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⭐ 重要性</span> {d.value.importance.toFixed(2)}</div>
+        <div className="col-span-2">
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⭐ 重要性</span>
+          <ImportanceRadar memory={memory} allMemories={rawMemories} theme={theme} />
+        </div>
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 CQI</span> {d.value.cqi.toFixed(2)}</div>
         <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔒 隐私</span> {d.value.privacyLevel}</div>
         {d.narrative.storyline && (

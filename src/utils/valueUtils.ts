@@ -671,3 +671,32 @@ export function computeAllTideLevels(memories: RawMemory[], now: number = Date.n
   });
   return result;
 }
+
+export interface ImportanceBreakdown {
+  emotional: number;
+  frequency: number;
+  social: number;
+  milestone: number;
+  access: number;
+  total: number;
+}
+
+export function computeImportanceBreakdown(memory: RawMemory, allMemories: RawMemory[]): ImportanceBreakdown {
+  const emotional = memory.dimensions.emotional.intensity;
+  const frequency = Math.min(1, allMemories.filter(m =>
+    m.dimensions.activity.type === memory.dimensions.activity.type
+  ).length / 10);
+  const social = Math.min(1, memory.dimensions.social.persons.length / 3);
+  const milestone = memory.dimensions.narrative.isMilestone ? 1 : 0;
+  const access = Math.min(1, memory.dimensions.value.accessCount / 10);
+  const total = emotional * 0.3 + frequency * 0.15 + social * 0.15 + milestone * 0.2 + access * 0.2;
+
+  return {
+    emotional: Math.round(emotional * 100) / 100,
+    frequency: Math.round(frequency * 100) / 100,
+    social: Math.round(social * 100) / 100,
+    milestone: Math.round(milestone * 100) / 100,
+    access: Math.round(access * 100) / 100,
+    total: Math.round(total * 100) / 100,
+  };
+}
