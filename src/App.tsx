@@ -240,7 +240,7 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎲 记忆碰碰对
+          🎲 碰碰对
         </button>
         <button
           id="btn-garden"

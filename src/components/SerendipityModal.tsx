@@ -49,7 +49,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
             <div className={`px-6 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
               <div className="flex items-center justify-between">
                 <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  🎲 机缘发现
+                  🎲 记忆碰碰对
                 </h2>
                 <button
                   onClick={onClose}
