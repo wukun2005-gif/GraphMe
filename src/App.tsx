@@ -123,7 +123,7 @@ function AppInner() {
       <DailyMemoryCard />
       <MemorySurprise />
 
-      <div className={`absolute left-0 top-0 h-full z-10 backdrop-blur-sm border-r ${
+      <div className={`absolute left-0 top-0 h-full z-20 backdrop-blur-sm border-r ${
         isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'
       }`}>
         <NavigationSidebar />
