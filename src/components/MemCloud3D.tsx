@@ -1237,6 +1237,84 @@ function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitC
   return <OrbitControls {...props} onChange={() => invalidate()} />;
 }
 
+function GravityFieldRings({ theme }: { theme: Theme }) {
+  const { rawMemories, gravityFieldMode, currentView, navCategory, navSubCategory } = useAppState();
+  const isLight = theme === 'light';
+  const groupRef = useRef<THREE.Group>(null);
+
+  const highImportanceMems = useMemo(() => {
+    if (!gravityFieldMode) return [];
+    let mems = rawMemories.filter(m => m.dimensions.value.importance >= 0.8);
+    if (navCategory) {
+      mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+    }
+    return mems;
+  }, [rawMemories, gravityFieldMode, navCategory, navSubCategory]);
+
+  // Slow orbit animation
+  useFrame(({ clock }) => {
+    if (!groupRef.current || !gravityFieldMode) return;
+    const t = clock.getElapsedTime();
+    groupRef.current.children.forEach((child, i) => {
+      if (child instanceof THREE.Mesh) {
+        // Subtle pulse
+        const scale = 1 + Math.sin(t * 1.5 + i * 0.7) * 0.05;
+        child.scale.set(scale, scale, scale);
+      }
+    });
+  });
+
+  if (!gravityFieldMode || highImportanceMems.length === 0) return null;
+
+  return (
+    <group ref={groupRef}>
+      {highImportanceMems.map((mem, i) => {
+        const pos = mem.positions[currentView] || mem.position3D;
+        const importance = mem.dimensions.value.importance;
+        const radius = 0.3 + importance * 0.5;
+        const emColor = EMOTION_COLORS[mem.dimensions.emotional.primary] || '#888';
+        const color = new THREE.Color(emColor);
+
+        return (
+          <group key={mem.id} position={pos}>
+            {/* Outer glow ring */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[radius, radius + 0.08, 48]} />
+              <meshBasicMaterial
+                color={color}
+                transparent
+                opacity={isLight ? 0.25 : 0.35}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+
+            {/* Inner glow ring */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[radius * 0.6, radius * 0.65, 48]} />
+              <meshBasicMaterial
+                color={color}
+                transparent
+                opacity={isLight ? 0.12 : 0.18}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+
+            {/* Pulsing sphere at center */}
+            <mesh>
+              <sphereGeometry args={[radius * 0.15, 16, 16]} />
+              <meshBasicMaterial
+                color={color}
+                transparent
+                opacity={0.15 + Math.sin(i * 1.3) * 0.05}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 interface MemCloud3DProps {
   bgColor: string;
   theme: Theme;
@@ -1279,6 +1357,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <RippleEffect theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
+        <GravityFieldRings theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />

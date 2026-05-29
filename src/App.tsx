@@ -23,7 +23,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, gravityFieldMode, toggleGravityFieldMode } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -281,6 +281,18 @@ function AppInner() {
           }`}
         >
           🗺️ 认知地图
+        </button>
+        <button
+          id="btn-gravity"
+          onClick={toggleGravityFieldMode}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            gravityFieldMode
+              ? isDark ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🌀 引力场
         </button>
         <button
           onClick={toggleTheme}

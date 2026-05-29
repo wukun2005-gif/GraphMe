@@ -33,6 +33,7 @@ interface AppState {
   memoryChain: { memoryId: string; connectionReason: string }[];
   boomerangMemoryIds: string[];
   boomerangDescription: string;
+  gravityFieldMode: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -99,6 +100,7 @@ interface AppContextType extends AppState {
   clearChain: () => void;
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
+  toggleGravityFieldMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -133,6 +135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     memoryChain: [],
     boomerangMemoryIds: [],
     boomerangDescription: '',
+    gravityFieldMode: false,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -525,6 +528,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
   }, []);
 
+  const toggleGravityFieldMode = useCallback(() => {
+    setState(s => ({ ...s, gravityFieldMode: !s.gravityFieldMode }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -595,6 +602,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       capsules, createCapsule, openCapsule,
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
+      gravityFieldMode: state.gravityFieldMode, toggleGravityFieldMode,
     }}>
       {children}
     </AppContext.Provider>
