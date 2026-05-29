@@ -25,6 +25,7 @@ import MemoryCinema from './components/MemoryCinema';
 import FlywheelFeedback from './components/FlywheelFeedback';
 import FlywheelView from './components/FlywheelView';
 import SessionSummary from './components/SessionSummary';
+import MorePanel from './components/MorePanel';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
 import { generateConfusionReport } from './utils/confusionUtils';
@@ -49,6 +50,7 @@ function AppInner() {
   const [showCinema, setShowCinema] = useState(false);
   const [showFlywheel, setShowFlywheel] = useState(false);
   const [showSession, setShowSession] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -65,6 +67,7 @@ function AppInner() {
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
       if (e.key === 'Escape') {
+        if (showMore) { setShowMore(false); return; }
         if (showSession) { setShowSession(false); return; }
         if (showFlywheel) { setShowFlywheel(false); return; }
         if (showCinema) { setShowCinema(false); return; }
@@ -282,54 +285,6 @@ function AppInner() {
           🔍
         </button>
         <button
-          id="btn-annual-report"
-          title="记忆年报"
-          onClick={() => setShowAnnualReport(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📊
-        </button>
-        <button
-          id="btn-serendipity"
-          title="碰碰对"
-          onClick={() => setShowSerendipity(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🎲
-        </button>
-        <button
-          id="btn-dream"
-          title="梦境"
-          onClick={() => setShowDream(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🌙
-        </button>
-        <button
-          id="btn-reader"
-          title="阅读模式"
-          onClick={() => setShowReader(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📖
-        </button>
-        <button
           id="btn-terrain"
           title="认知地图"
           onClick={() => setShowTerrain(true)}
@@ -339,43 +294,7 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🗺️
-        </button>
-        <button
-          id="btn-profile"
-          title="小哥眼中的你"
-          onClick={() => setShowProfile(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          👤
-        </button>
-        <button
-          id="btn-social"
-          title="关系星图"
-          onClick={() => setShowSocial(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🕸️
-        </button>
-        <button
-          id="btn-gap"
-          title="了解程度"
-          onClick={() => setShowGap(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🧩
+          🗺️ 认知地图
         </button>
         <button
           id="btn-cinema"
@@ -387,46 +306,40 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎬
+          🎬 微电影
         </button>
-        <button
-          id="btn-flywheel"
-          title="记忆飞轮"
-          onClick={() => setShowFlywheel(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🔄
-        </button>
-        <button
-          id="btn-session"
-          title="会话总结"
-          onClick={() => setShowSession(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          📊
-        </button>
-        {hasConfusion && (
+        <div className="relative">
           <button
-            id="btn-confusion"
-            title="困惑日记"
-            onClick={() => setShowConfusion(true)}
+            id="btn-more"
+            title="更多功能"
+            onClick={() => setShowMore(!showMore)}
             className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-              isDark
-                ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              showMore
+                ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
+                : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
                 : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
             }`}
           >
-            🤔
+            ⚙️ 更多
           </button>
-        )}
+          <MorePanel
+            theme={theme}
+            isShow={showMore}
+            onClose={() => setShowMore(false)}
+            features={[
+              { id: 'profile', emoji: '👤', label: '小哥眼中的你', description: 'AI 对你的结构化认知', onClick: () => setShowProfile(true) },
+              { id: 'social', emoji: '🕸️', label: '关系星图', description: 'AI 眼中的你的社交宇宙', onClick: () => setShowSocial(true) },
+              { id: 'gap', emoji: '🧩', label: '了解程度', description: 'AI 对你了解多少？', onClick: () => setShowGap(true) },
+              { id: 'flywheel', emoji: '🔄', label: '记忆飞轮', description: '小哥是怎么越来越懂你的', onClick: () => setShowFlywheel(true) },
+              { id: 'session', emoji: '📊', label: '会话总结', description: '本次会话的变化摘要', onClick: () => setShowSession(true) },
+              { id: 'annual', emoji: '📈', label: '记忆年报', description: '你的年度记忆报告', onClick: () => setShowAnnualReport(true) },
+              { id: 'serendipity', emoji: '🎲', label: '碰碰对', description: '发现记忆之间的隐藏联系', onClick: () => setShowSerendipity(true) },
+              { id: 'dream', emoji: '🌙', label: '记忆梦境', description: 'AI 重组记忆碎片', onClick: () => setShowDream(true) },
+              { id: 'reader', emoji: '📖', label: '阅读模式', description: '沉浸式翻阅记忆', onClick: () => setShowReader(true) },
+              ...(hasConfusion ? [{ id: 'confusion', emoji: '🤔', label: '困惑日记', description: 'AI 还有哪些不解', onClick: () => setShowConfusion(true) }] : []),
+            ]}
+          />
+        </div>
         <button
           onClick={toggleTheme}
           title={isDark ? '切换亮色' : '切换暗色'}
