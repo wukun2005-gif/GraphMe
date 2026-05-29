@@ -16,6 +16,7 @@ import MemorySurprise from './components/MemorySurprise';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import MemoryReader from './components/MemoryReader';
+import CognitiveTerrain from './components/CognitiveTerrain';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
@@ -30,6 +31,7 @@ function AppInner() {
   const [showAnnualReport, setShowAnnualReport] = useState(false);
   const [showDream, setShowDream] = useState(false);
   const [showReader, setShowReader] = useState(false);
+  const [showTerrain, setShowTerrain] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -41,6 +43,7 @@ function AppInner() {
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
       if (e.key === 'Escape') {
+        if (showTerrain) { setShowTerrain(false); return; }
         if (showSerendipity) { setShowSerendipity(false); return; }
         if (showSearch && searchQuery) { setSearchQuery(''); return; }
         if (showSearch) { setShowSearch(false); return; }
@@ -69,7 +72,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -269,6 +272,17 @@ function AppInner() {
           📖 阅读
         </button>
         <button
+          id="btn-terrain"
+          onClick={() => setShowTerrain(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🗺️ 认知地图
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -283,6 +297,7 @@ function AppInner() {
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
+      <CognitiveTerrain open={showTerrain} onClose={() => setShowTerrain(false)} />
 
       <AnimatePresence>
         {showDream && (
