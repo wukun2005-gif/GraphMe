@@ -1269,54 +1269,71 @@ function HoldTagController({ onHoldChange }: { onHoldChange: (id: string | null)
   return null;
 }
 
+// Shared ref so OrbitControls can check if a drag candidate exists
+const dragCandidateRef = { current: false };
+
 function DragController() {
-  const { rawMemories, setDraggedMemoryId, draggedMemoryId, navCategory, navSubCategory, currentView, addToast } = useAppState();
+  const { rawMemories, setDraggedMemoryId, navCategory, navSubCategory, currentView } = useAppState();
   const { camera, gl } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDragging = useRef(false);
-  const dragStartPos = useRef({ x: 0, y: 0 });
+  const candidateId = useRef<string | null>(null);
 
   useEffect(() => {
     const canvas = gl.domElement;
 
+    const findNearestMemory = (e: PointerEvent): RawMemory | null => {
+      const mouse = new THREE.Vector2(
+        (e.clientX / window.innerWidth) * 2 - 1,
+        -(e.clientY / window.innerHeight) * 2 + 1
+      );
+      raycaster.setFromCamera(mouse, camera);
+
+      let visible = rawMemories;
+      if (navCategory) {
+        visible = visible.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+      }
+
+      let closest: RawMemory | null = null;
+      let closestDist = Infinity;
+
+      for (const mem of visible) {
+        const p = mem.positions[currentView] || mem.position3D;
+        const dist = raycaster.ray.distanceToPoint(new THREE.Vector3(...p));
+        if (dist < 0.5 && dist < closestDist) {
+          closestDist = dist;
+          closest = mem;
+        }
+      }
+      return closest;
+    };
+
     const handlePointerDown = (e: PointerEvent) => {
-      dragStartPos.current = { x: e.clientX, y: e.clientY };
+      // Immediately check if near a particle — if so, block OrbitControls
+      const nearest = findNearestMemory(e);
+      if (nearest) {
+        candidateId.current = nearest.id;
+        // Stop OrbitControls from receiving this event
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      } else {
+        candidateId.current = null;
+        return; // Not near a particle, let OrbitControls handle it
+      }
+
+      // After 300ms hold, start the actual drag
       holdTimer.current = setTimeout(() => {
-        // Find nearest memory
-        const mouse = new THREE.Vector2(
-          (e.clientX / window.innerWidth) * 2 - 1,
-          -(e.clientY / window.innerHeight) * 2 + 1
-        );
-        raycaster.setFromCamera(mouse, camera);
-
-        let visible = rawMemories;
-        if (navCategory) {
-          visible = visible.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
-        }
-
-        let closest: RawMemory | null = null;
-        let closestDist = Infinity;
-
-        for (const mem of visible) {
-          const p = mem.positions[currentView] || mem.position3D;
-          const dist = raycaster.ray.distanceToPoint(new THREE.Vector3(...p));
-          if (dist < 0.5 && dist < closestDist) {
-            closestDist = dist;
-            closest = mem;
-          }
-        }
-
-        if (closest) {
+        if (candidateId.current) {
           isDragging.current = true;
-          setDraggedMemoryId(closest.id);
+          setDraggedMemoryId(candidateId.current);
         }
       }, 300);
     };
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!isDragging.current) return;
-      // Visual feedback handled by ParticleCloud via draggedMemoryId
+      // Visual feedback handled by DragRing via draggedMemoryId
     };
 
     const handlePointerUp = () => {
@@ -1324,20 +1341,21 @@ function DragController() {
         clearTimeout(holdTimer.current);
         holdTimer.current = null;
       }
+      dragCandidateRef.current = false;
+      candidateId.current = null;
       if (isDragging.current) {
         isDragging.current = false;
         setDraggedMemoryId(null);
-        // Spring back animation is handled by ParticleCloud
       }
     };
 
-    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerup', handlePointerUp);
     canvas.addEventListener('pointerleave', handlePointerUp);
 
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true });
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerup', handlePointerUp);
       canvas.removeEventListener('pointerleave', handlePointerUp);
