@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
+import { computeRhythm } from '../utils/rhythmUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -714,6 +715,101 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
   );
 }
 
+function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+  const rhythm = useMemo(() => computeRhythm(rawMemories), [rawMemories]);
+  const maxCount = Math.max(...rhythm.heatmap.map(c => c.count), 1);
+
+  return (
+    <div className="space-y-4">
+      {/* Heatmap */}
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          ⏰ 24h × 7d 热力网格
+        </h4>
+        <div className="overflow-x-auto">
+          <div className="inline-grid grid-cols-[auto_repeat(24,1fr)] gap-0.5 text-[8px]">
+            {/* Header row */}
+            <div />
+            {Array.from({ length: 24 }, (_, h) => (
+              <div key={h} className={`text-center ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                {h % 6 === 0 ? `${h}` : ''}
+              </div>
+            ))}
+            {/* Data rows */}
+            {['一', '二', '三', '四', '五', '六', '日'].map((dayLabel, d) => (
+              <>
+                <div key={`label-${d}`} className={`pr-1 flex items-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {dayLabel}
+                </div>
+                {Array.from({ length: 24 }, (_, h) => {
+                  const cell = rhythm.heatmap.find(c => c.day === d && c.hour === h);
+                  const count = cell?.count || 0;
+                  const opacity = count > 0 ? 0.2 + (count / maxCount) * 0.8 : 0;
+                  return (
+                    <div
+                      key={`${d}-${h}`}
+                      className={`w-3 h-3 rounded-sm ${isDark ? 'bg-[#00f2ff]' : 'bg-[#0088cc]'}`}
+                      style={{ opacity }}
+                      title={count > 0 ? `${['周一','周二','周三','周四','周五','周六','周日'][d]} ${h}:00\n${count} 条记忆\n${cell?.topActivity} · ${cell?.topEmotion}` : ''}
+                    />
+                  );
+                })}
+              </>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Insights */}
+      {rhythm.insights.length > 0 && (
+        <section>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
+            🔍 AI 发现的节律
+          </h4>
+          <div className="space-y-1.5">
+            {rhythm.insights.map((insight, i) => (
+              <div
+                key={i}
+                className={`p-2 rounded-lg border text-xs ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}
+              >
+                <span className="mr-1">{insight.emoji}</span>
+                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{insight.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Monthly activity */}
+      {rhythm.monthly.length > 0 && (
+        <section>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            📅 月份活跃度
+          </h4>
+          <div className="space-y-1">
+            {rhythm.monthly.map((m, i) => {
+              const maxMonthly = Math.max(...rhythm.monthly.map(x => x.count), 1);
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <span className={`w-8 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{m.month}月</span>
+                  <div className={`flex-1 h-2 rounded-full ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
+                    <div
+                      className={`h-full rounded-full ${isDark ? 'bg-[#44ccaa]' : 'bg-teal-500'}`}
+                      style={{ width: `${(m.count / maxMonthly) * 100}%` }}
+                    />
+                  </div>
+                  <span className={`w-6 text-[10px] text-right ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{m.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
 function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
   rawMemories: RawMemory[];
   theme: 'dark' | 'light';
@@ -834,7 +930,7 @@ export default function ValueDashboard() {
   const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -937,6 +1033,16 @@ export default function ValueDashboard() {
                   }`}
                 >
                   📋 本周回顾
+                </button>
+                <button
+                  onClick={() => setTab('rhythm')}
+                  className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
+                    tab === 'rhythm'
+                      ? isDark ? 'bg-[#44ccaa]/15 text-[#44ccaa]' : 'bg-teal-100 text-teal-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  ⏰ 时间指纹
                 </button>
               </div>
               <button
@@ -1184,6 +1290,9 @@ export default function ValueDashboard() {
 
               {tab === 'weekly' && (
                 <WeeklyReportPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
+              )}
+              {tab === 'rhythm' && (
+                <RhythmPanel rawMemories={rawMemories} theme={theme} />
               )}
             </div>
           </motion.div>
