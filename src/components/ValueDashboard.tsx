@@ -865,7 +865,7 @@ export default function ValueDashboard() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 100, opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed bottom-20 w-[380px] max-h-[520px] backdrop-blur-xl border rounded-xl p-4 z-20 shadow-2xl overflow-hidden flex flex-col ${
+            className={`fixed bottom-20 w-[380px] max-h-[520px] backdrop-blur-xl border rounded-xl p-4 z-30 shadow-2xl overflow-hidden flex flex-col ${
               isDark ? 'bg-[#1a1020] border-[#ffffff08]' : 'bg-white border-gray-200'
             } ${
               detailOpen ? 'right-[436px]' : 'right-6'

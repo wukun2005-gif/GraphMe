@@ -438,8 +438,6 @@ export interface EmotionCurveData {
 }
 
 export function computeEmotionCurve(memories: RawMemory[]): EmotionCurveData {
-  const { EMOTION_COLORS } = require('../types');
-
   const sorted = [...memories]
     .filter(m => m.dimensions.temporal.timestamp > 0)
     .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
