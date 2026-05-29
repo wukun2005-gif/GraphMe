@@ -115,7 +115,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     navCategory: null,
     navSubCategory: null,
     crudOpen: false,
-    theme: 'light',
+    theme: 'dark',
     memoryBankOpen: false,
     valueDashboardOpen: false,
     searchQuery: '',
