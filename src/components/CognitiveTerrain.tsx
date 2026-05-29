@@ -29,6 +29,12 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
   const [letterIndex, setLetterIndex] = useState(0);
   const [letterText, setLetterText] = useState('');
 
+  // Drag (pan) state
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const panStart = useRef({ x: 0, y: 0 });
+
   // Reset state when opening
   useEffect(() => {
     if (open) {
@@ -37,6 +43,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
       setLetter(null);
       setLetterIndex(0);
       setLetterText('');
+      setPanOffset({ x: 0, y: 0 });
     }
   }, [open, zoomLevels]);
 
@@ -44,15 +51,54 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
     const zl = zoomLevels.find(z => z.id === node.id);
     if (zl) setCurrentZoom(zl);
     else setCurrentZoom({ id: node.id, label: node.label, cx: node.x, cy: node.y, scale: 2 });
+    setPanOffset({ x: 0, y: 0 });
   }, [zoomLevels]);
 
   const handleResetZoom = useCallback(() => {
     setCurrentZoom(zoomLevels[0]);
+    setPanOffset({ x: 0, y: 0 });
   }, [zoomLevels]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+
+    // Handle drag pan
+    if (isDragging.current) {
+      const dx = (e.clientX - dragStart.current.x) / currentZoom.scale;
+      const dy = (e.clientY - dragStart.current.y) / currentZoom.scale;
+      setPanOffset({
+        x: panStart.current.x - dx,
+        y: panStart.current.y - dy,
+      });
+    }
+  }, [currentZoom.scale]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only start drag on left button and not on interactive elements
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'button' || target.closest('button')) return;
+
+    isDragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    panStart.current = { ...panOffset };
+    (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
+  }, [panOffset]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    isDragging.current = false;
+    (e.currentTarget as HTMLElement).style.cursor = 'grab';
+  }, []);
+
+  // Wheel zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    setCurrentZoom(prev => {
+      const newScale = Math.max(0.5, Math.min(4, prev.scale + delta));
+      return { ...prev, scale: newScale };
+    });
   }, []);
 
   // Letter generation
@@ -99,14 +145,14 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
     URL.revokeObjectURL(url);
   }, []);
 
-  // Compute viewBox based on zoom
+  // Compute viewBox based on zoom and pan
   const viewBox = useMemo(() => {
     const w = terrain.width / currentZoom.scale;
     const h = terrain.height / currentZoom.scale;
-    const x = currentZoom.cx - w / 2;
-    const y = currentZoom.cy - h / 2;
+    const x = currentZoom.cx - w / 2 + panOffset.x;
+    const y = currentZoom.cy - h / 2 + panOffset.y;
     return `${x} ${y} ${w} ${h}`;
-  }, [currentZoom, terrain]);
+  }, [currentZoom, terrain, panOffset]);
 
   const renderableNodes = terrain.nodes.filter(n => n.type !== 'insight-ruin' || currentZoom.scale < 1.5);
 
@@ -179,7 +225,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                 }`}
               >
-                💾 保存
+                💾 导出地图
               </button>
 
               <button
@@ -192,7 +238,13 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
           </div>
 
           {/* Main content */}
-          <div className="relative flex-1 overflow-hidden">
+          <div
+            className="relative flex-1 overflow-hidden cursor-grab"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+          >
             {/* SVG Terrain */}
             <svg
               ref={svgRef}
@@ -572,22 +624,68 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                     <div className={`px-6 py-5 max-h-[60vh] overflow-y-auto ${
                       isDark ? 'text-gray-300' : 'text-gray-700'
                     }`}>
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap font-serif">
-                        {letterText.split('\n').map((line, i) => {
-                          // Check if this line is a memory link
-                          const isMemoryLine = line.startsWith('· "') || line.startsWith('· ');
-                          return (
-                            <p key={i} className={isMemoryLine ? `ml-4 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}` : ''}>
-                              {line}
-                            </p>
-                          );
-                        })}
-                        {letterIndex < [
+                      <div className="text-sm leading-relaxed font-serif">
+                        {/* Greeting */}
+                        <p className="mb-3">{letter.greeting}</p>
+
+                        {/* Segments with memory links */}
+                        <div className="whitespace-pre-wrap">
+                          {(() => {
+                            // Calculate cumulative text for typewriter effect
+                            let charCount = 0;
+                            const allText = letter.segments.map(s => s.text).join('');
+                            const revealed = letterIndex - (letter.greeting + '\n\n').length;
+
+                            return letter.segments.map((seg, i) => {
+                              const segStart = charCount;
+                              charCount += seg.text.length;
+                              const segEnd = charCount;
+
+                              // How much of this segment is revealed
+                              const revealedInSeg = Math.max(0, Math.min(seg.text.length, revealed - segStart));
+                              if (revealedInSeg <= 0) return null;
+
+                              const visibleText = seg.text.slice(0, revealedInSeg);
+
+                              if (seg.type === 'memory-link' && seg.memoryId) {
+                                return (
+                                  <span
+                                    key={i}
+                                    onClick={() => {
+                                      const mem = rawMemories.find(m => m.id === seg.memoryId);
+                                      if (mem) {
+                                        selectMemory(mem);
+                                        setShowLetter(false);
+                                      }
+                                    }}
+                                    className={`cursor-pointer underline decoration-dotted underline-offset-2 transition-colors ${
+                                      isDark ? 'text-[#00f2ff] hover:text-[#00f2ff]/80' : 'text-blue-600 hover:text-blue-500'
+                                    }`}
+                                    title={`点击查看: ${seg.memoryLabel || seg.memoryId}`}
+                                  >
+                                    {visibleText}
+                                  </span>
+                                );
+                              }
+
+                              return <span key={i}>{visibleText}</span>;
+                            });
+                          })()}
+                          {letterIndex < [
+                            letter.greeting + '\n\n',
+                            ...letter.segments.map(s => s.text),
+                            '\n\n' + letter.closing,
+                          ].join('').length && (
+                            <span className="inline-block w-0.5 h-4 bg-current animate-pulse ml-0.5" />
+                          )}
+                        </div>
+
+                        {/* Closing */}
+                        {letterIndex >= [
                           letter.greeting + '\n\n',
                           ...letter.segments.map(s => s.text),
-                          '\n\n' + letter.closing,
                         ].join('').length && (
-                          <span className="inline-block w-0.5 h-4 bg-current animate-pulse ml-0.5" />
+                          <p className="mt-3 text-right">{letter.closing}</p>
                         )}
                       </div>
                     </div>

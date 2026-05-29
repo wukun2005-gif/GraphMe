@@ -125,9 +125,26 @@ export function generateLetter(
   if (oldest && newest) {
     const days = daysBetween(oldest.dimensions.temporal.timestamp, newest.dimensions.temporal.timestamp);
     segments.push({
-      text: `我看到了跨越 ${days} 天的时光——从${formatDate(oldest.dimensions.temporal.timestamp)}到${formatDate(newest.dimensions.temporal.timestamp)}。`,
+      text: `我看到了跨越 ${days} 天的时光——从`,
       type: 'text',
     });
+    segments.push({
+      text: `${formatDate(oldest.dimensions.temporal.timestamp)}的"${oldest.label}"`,
+      type: 'memory-link',
+      memoryId: oldest.id,
+      memoryLabel: oldest.label,
+    });
+    segments.push({
+      text: `到`,
+      type: 'text',
+    });
+    segments.push({
+      text: `${formatDate(newest.dimensions.temporal.timestamp)}的"${newest.label}"`,
+      type: 'memory-link',
+      memoryId: newest.id,
+      memoryLabel: newest.label,
+    });
+    segments.push({ text: '。', type: 'text' });
   }
 
   // --- Top emotion ---
@@ -170,9 +187,19 @@ export function generateLetter(
   if (milestones.length > 0) {
     segments.push({ text: '\n', type: 'text' });
     segments.push({
-      text: `你有 ${milestones.length} 个里程碑时刻：${milestones.slice(0, 3).map(getMilestoneLabel).join('、')}。`,
+      text: `你有 ${milestones.length} 个里程碑时刻：`,
       type: 'text',
     });
+    milestones.slice(0, 3).forEach((m, i) => {
+      if (i > 0) segments.push({ text: '、', type: 'text' });
+      segments.push({
+        text: m.label,
+        type: 'memory-link',
+        memoryId: m.id,
+        memoryLabel: m.label,
+      });
+    });
+    segments.push({ text: '。', type: 'text' });
   }
 
   // --- Changes over time ---

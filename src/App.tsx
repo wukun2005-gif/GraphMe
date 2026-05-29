@@ -226,6 +226,7 @@ function AppInner() {
         {!isDemoPlaying && (
           <button
             id="btn-auto-demo"
+            title="一键演示"
             onClick={() => setIsDemoPlaying(true)}
             className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all font-medium cursor-pointer ${
               isDark
@@ -233,7 +234,7 @@ function AppInner() {
                 : 'bg-gradient-to-r from-[#0088cc]/10 to-[#cc8800]/10 hover:from-[#0088cc]/20 hover:to-[#cc8800]/20 text-[#0088cc] border border-[#0088cc]/20 hover:border-[#0088cc]/40'
             }`}
           >
-            ▶ 一键演示
+            ▶
           </button>
         )}
         {showSearch && (

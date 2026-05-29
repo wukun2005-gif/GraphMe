@@ -68,7 +68,7 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds, archaeologyMode } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds, archaeologyMode, userPersona } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -141,7 +141,27 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       pos[i * 3 + 1] = p[1];
       pos[i * 3 + 2] = p[2];
 
-      const c = new THREE.Color(m.color);
+      let c = new THREE.Color(m.color);
+
+      // Persona-based color adjustments
+      if (userPersona === '陪伴者') {
+        // Warm/cool emotional temperature
+        const intensity = m.dimensions.emotional.intensity;
+        const emotion = m.dimensions.emotional.primary;
+        const warmEmotions = ['快乐', '感激', '骄傲', '好奇'];
+        const coolEmotions = ['悲伤', '沮丧', '恐惧'];
+        if (warmEmotions.includes(emotion)) {
+          c = new THREE.Color('#ffb800').lerp(c, 0.4);
+        } else if (coolEmotions.includes(emotion)) {
+          c = new THREE.Color('#4488ff').lerp(c, 0.4);
+        }
+        // Boost intensity
+        c.multiplyScalar(0.8 + intensity * 0.4);
+      } else if (userPersona === '极客') {
+        // Data layer: slight green/cyan tint, more technical look
+        c = c.lerp(new THREE.Color('#00ff88'), 0.15);
+      }
+
       if (isLight) {
         c.multiplyScalar(0.7);
         col[i * 3] = Math.min(c.r, 0.9);
@@ -218,7 +238,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
     });
 
     return { positions: pos, colors: col, sizes: sz };
-  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter, similarMemoryIds]);
+  }, [visible, navCategory, navSubCategory, isLight, currentView, searchQuery, timeRangeFilter, similarMemoryIds, userPersona, archaeologyMode]);
 
   // Update visibleRef to match filtered set for click handling
   const filteredRef = useRef<RawMemory[]>([]);

@@ -518,7 +518,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>{userPersona === '陪伴者' ? '💝 你的记忆' : '⚙️ 记忆管理'}</span>
+          <span>{userPersona === '陪伴者' ? '💝 你的记忆' : userPersona === '极客' ? '🔬 数据视图' : '⚙️ 记忆管理'}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showMemoryMgr ? '▲' : '▼'}</span>
         </button>
         <AnimatePresence>
