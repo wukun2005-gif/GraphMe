@@ -17,6 +17,7 @@ import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import SoundscapeToggle from './components/SoundscapeToggle';
 import MemoryReader from './components/MemoryReader';
+import ColorStudio from './components/ColorStudio';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
@@ -32,6 +33,7 @@ function AppInner() {
   const [showDream, setShowDream] = useState(false);
   const [showReader, setShowReader] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
+  const [showColorStudio, setShowColorStudio] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -297,6 +299,17 @@ function AppInner() {
           📖 阅读
         </button>
         <button
+          id="btn-color-studio"
+          onClick={() => setShowColorStudio(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🎨 配色
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -338,6 +351,7 @@ function AppInner() {
           onMemoryChange={setReaderMemory}
         />
       )}
+      <ColorStudio open={showColorStudio} onClose={() => setShowColorStudio(false)} />
       <OnboardingOverlay />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>

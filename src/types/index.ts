@@ -173,3 +173,9 @@ export interface Constellation {
   connections: ConstellationConnection[];
   createdAt: number;
 }
+
+export interface ColorPreset {
+  id: string;
+  name: string;
+  colors: Record<EmotionType, string>;
+}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord, TimeCapsule, Constellation, ConstellationConnection } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord, TimeCapsule, Constellation, ConstellationConnection, ColorPreset } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -34,6 +34,7 @@ interface AppState {
   memoryChain: { memoryId: string; connectionReason: string }[];
   boomerangMemoryIds: string[];
   boomerangDescription: string;
+  emotionColorMap: Record<EmotionType, string> | null;
 }
 
 interface AppContextType extends AppState {
@@ -105,6 +106,9 @@ interface AppContextType extends AppState {
   clearChain: () => void;
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
+  updateEmotionColor: (emotion: EmotionType, color: string) => void;
+  resetEmotionColors: () => void;
+  applyColorPreset: (colors: Record<EmotionType, string>) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -140,6 +144,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     memoryChain: [],
     boomerangMemoryIds: [],
     boomerangDescription: '',
+    emotionColorMap: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -608,6 +613,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const [emotionColorMap, setEmotionColorMap] = useState<Record<EmotionType, string> | null>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-emotionColorMap');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-emotionColorMap', JSON.stringify(emotionColorMap)); } catch {}
+  }, [emotionColorMap]);
+
+  const updateEmotionColor = useCallback((emotion: EmotionType, color: string) => {
+    setEmotionColorMap(prev => {
+      const base = prev || {} as Record<EmotionType, string>;
+      return { ...base, [emotion]: color };
+    });
+  }, []);
+
+  const resetEmotionColors = useCallback(() => {
+    setEmotionColorMap(null);
+  }, []);
+
+  const applyColorPreset = useCallback((colors: Record<EmotionType, string>) => {
+    setEmotionColorMap(colors);
+  }, []);
+
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
 
@@ -658,6 +689,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       constellations, addConstellation, removeConstellation, addConnection, removeConnection, renameConstellation,
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
+      emotionColorMap, updateEmotionColor, resetEmotionColors, applyColorPreset,
     }}>
       {children}
     </AppContext.Provider>
