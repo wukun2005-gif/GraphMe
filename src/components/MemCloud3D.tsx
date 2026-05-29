@@ -1358,7 +1358,8 @@ function DynamicClearColor({ color }: { color: string }) {
 
 function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitControls>) {
   const { invalidate } = useThree();
-  return <OrbitControls {...props} onChange={() => invalidate()} />;
+  const { draggedMemoryId } = useAppState();
+  return <OrbitControls {...props} enabled={!draggedMemoryId} onChange={() => invalidate()} />;
 }
 
 function AntipodeLines({ theme }: { theme: Theme }) {
