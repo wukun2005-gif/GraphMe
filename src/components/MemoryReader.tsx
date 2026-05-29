@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RawMemory } from '../types';
 import { EMOTION_COLORS } from '../types';
+import { generateFirstPersonNarrative } from '../utils/narrativeUtils';
 
 interface MemoryReaderProps {
   memories: RawMemory[];
@@ -13,6 +14,7 @@ interface MemoryReaderProps {
 export default function MemoryReader({ memories, theme, onClose, onMemoryChange }: MemoryReaderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // -1 for left, 1 for right
+  const [firstPerson, setFirstPerson] = useState(false);
   const isDark = theme === 'dark';
 
   // Sort by time (newest first)
@@ -116,6 +118,16 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
             第 {currentIndex + 1} 页 / 共 {sortedMemories.length} 页
           </span>
           <button
+            onClick={() => setFirstPerson(!firstPerson)}
+            className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+              firstPerson
+                ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                : isDark ? 'bg-[#ffffff08] hover:bg-[#ffffff12] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+            }`}
+          >
+            💬 {firstPerson ? '第三人称' : '第一人称'}
+          </button>
+          <button
             onClick={onClose}
             className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
               isDark ? 'bg-[#ffffff08] hover:bg-[#ffffff12] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
@@ -174,7 +186,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
 
             {/* Summary */}
             <p className={`text-base leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              {currentMemory.summary}
+              {firstPerson ? generateFirstPersonNarrative(currentMemory) : currentMemory.summary}
             </p>
 
             {/* Metadata */}
