@@ -12,6 +12,7 @@ import {
   computePersonaEvolution,
   computeMemoryTypePotential,
 } from '../utils/memoryBankUtils';
+import { buildPreferenceTrees } from '../utils/preferenceUtils';
 
 const TREND_ICON: Record<string, string> = {
   up: '↗',
@@ -157,7 +158,7 @@ function PersonaEvolutionPanel({ rawMemories, theme }: { rawMemories: RawMemory[
 }
 
 export default function MemoryBank() {
-  const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories } = useAppState();
+  const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories, insightMemories } = useAppState();
   const isDark = theme === 'dark';
   const [timeRange, setTimeRange] = useState<TimeRange>('月');
   const [expandedDim, setExpandedDim] = useState<string | null>(null);
@@ -177,6 +178,7 @@ export default function MemoryBank() {
   const temperament = useMemo(() => computeTemperament(rawMemories), [rawMemories]);
   const dimensionRates = useMemo(() => computeDimensionRates(rawMemories, timeRange), [rawMemories, timeRange]);
   const memoryTypePotential = useMemo(() => computeMemoryTypePotential(rawMemories), [rawMemories]);
+  const preferenceTrees = useMemo(() => buildPreferenceTrees(rawMemories, insightMemories), [rawMemories, insightMemories]);
 
   const topImproving = useMemo(() => {
     return [...dimensionData].sort((a, b) => {
@@ -670,6 +672,49 @@ export default function MemoryBank() {
                   ))}
                 </div>
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Preference Trees */}
+        {memoryBankOpen && preferenceTrees.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className={`p-4 rounded-xl border ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}
+          >
+            <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#cc44ff]' : 'text-purple-600'}`}>
+              🌿 偏好演化
+            </h4>
+            <div className="space-y-3">
+              {preferenceTrees.slice(0, 3).map((tree, i) => (
+                <div key={i}>
+                  <div className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {tree.domain}
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      isDark ? 'bg-[#cc44ff]/10 text-[#cc44ff]' : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {tree.root.label}
+                    </span>
+                    {tree.root.children.map((child, j) => (
+                      <span key={j} className="flex items-center gap-0.5">
+                        <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>→</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          isDark ? 'bg-[#ffffff08] text-gray-400' : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {child.label}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                  <p className={`text-[9px] mt-0.5 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                    {tree.description} · 置信度 {Math.round(tree.root.confidence * 100)}%
+                  </p>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
