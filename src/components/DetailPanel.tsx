@@ -147,6 +147,8 @@ function ConnectionGraph({ connections, theme, onSelect }: {
 function RawDetail({ memory }: { memory: RawMemory }) {
   const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription } = useAppState();
   const isDark = theme === 'dark';
+  const [showPrivateContent, setShowPrivateContent] = useState(false);
+  const isPrivate = memory.dimensions.value.privacyLevel === '仅自己' || memory.dimensions.value.privacyLevel === '加密';
   const d = memory.dimensions;
 
   const echoMemories = useMemo(
@@ -164,7 +166,23 @@ function RawDetail({ memory }: { memory: RawMemory }) {
         <span className="text-lg">🧠</span>
         <span className={isDark ? 'text-[#00f2ff] font-medium' : 'text-[#0088cc] font-medium'}>{memory.id}</span>
       </div>
-      <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memory.summary}</p>
+      {isPrivate && !showPrivateContent ? (
+        <div className="space-y-2">
+          <p className={`leading-relaxed blur-sm select-none ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {memory.summary}
+          </p>
+          <button
+            onClick={() => setShowPrivateContent(true)}
+            className={`text-xs px-3 py-1.5 rounded cursor-pointer ${
+              isDark ? 'bg-[#ffffff08] text-gray-400 hover:text-gray-200' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            🔓 显示内容
+          </button>
+        </div>
+      ) : (
+        <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memory.summary}</p>
+      )}
       {d.sensory.images.length > 0 && (
         <div className="flex gap-2 py-2 overflow-x-auto">
           {d.sensory.images.map((img, i) => (

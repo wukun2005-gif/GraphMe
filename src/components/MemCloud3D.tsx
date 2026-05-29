@@ -200,6 +200,20 @@ function ParticleCloud({ theme }: { theme: Theme }) {
         col[i * 3 + 2] *= 0.85;
       }
 
+      // Privacy level visual effects
+      const privacy = m.dimensions.value.privacyLevel;
+      if (privacy === '仅自己') {
+        // Frosted glass effect: dim and desaturate
+        col[i * 3] = col[i * 3] * 0.5 + 0.3;
+        col[i * 3 + 1] = col[i * 3 + 1] * 0.5 + 0.3;
+        col[i * 3 + 2] = col[i * 3 + 2] * 0.5 + 0.3;
+      } else if (privacy === '加密') {
+        // Encrypted: very dim, almost invisible
+        col[i * 3] *= 0.15;
+        col[i * 3 + 1] *= 0.15;
+        col[i * 3 + 2] *= 0.15;
+      }
+
       sz[i] = baseSize * jitter * (m.dimensions.narrative.isMilestone ? 1.5 : 1) * similarBoost * tideMultiplier;
     });
 

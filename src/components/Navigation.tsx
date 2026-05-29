@@ -1028,7 +1028,10 @@ export default function NavigationSidebar() {
                               <div className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{mem.id}</span>
                                 <span className="mx-1">·</span>
-                                <span>{mem.label}</span>
+                                {(mem.dimensions.value.privacyLevel === '仅自己' || mem.dimensions.value.privacyLevel === '加密') && (
+                                  <span className="mr-1">🔒</span>
+                                )}
+                                <span className={mem.dimensions.value.privacyLevel === '仅自己' ? 'blur-[3px] select-none' : ''}>{mem.label}</span>
                               </div>
                               {mem.tags && mem.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-0.5 mt-0.5">
