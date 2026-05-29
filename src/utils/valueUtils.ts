@@ -499,3 +499,72 @@ export function getSurpriseCandidate(memories: RawMemory[]): RawMemory | null {
   }
   return scored[scored.length - 1].memory;
 }
+
+// ─── Weekly Report (Feature #59) ───
+
+export interface WeeklyReportData {
+  thisWeekCount: number;
+  lastWeekCount: number;
+  emotionDistribution: Record<string, number>;
+  happiestMemory: RawMemory | null;
+  noteworthyMemory: RawMemory | null;
+  emotionTrend: 'up' | 'down' | 'stable';
+  emotionTrendPercent: number;
+}
+
+export function computeWeeklyReport(memories: RawMemory[]): WeeklyReportData {
+  const now = Date.now();
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
+  const weekStart = now - oneWeek;
+  const twoWeekStart = now - 2 * oneWeek;
+
+  const thisWeek = memories.filter(m => m.dimensions.temporal.timestamp >= weekStart);
+  const lastWeek = memories.filter(m =>
+    m.dimensions.temporal.timestamp >= twoWeekStart && m.dimensions.temporal.timestamp < weekStart
+  );
+
+  // Emotion distribution this week
+  const emotionDist: Record<string, number> = {};
+  for (const m of thisWeek) {
+    const e = m.dimensions.emotional.primary;
+    emotionDist[e] = (emotionDist[e] || 0) + 1;
+  }
+
+  // Happiest memory this week
+  const happiest = thisWeek.length > 0
+    ? thisWeek.reduce((best, m) =>
+        (m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > (best?.dimensions.emotional.intensity || 0))
+          ? m : best, null as RawMemory | null)
+    : null;
+
+  // Noteworthy: highest importance this week
+  const noteworthy = thisWeek.length > 0
+    ? thisWeek.reduce((best, m) =>
+        m.dimensions.value.importance > (best?.dimensions.value.importance || 0) ? m : best, thisWeek[0])
+    : null;
+
+  // Emotion trend: compare positive emotions ratio
+  const positiveEmotions = new Set(['快乐', '好奇', '骄傲', '感激']);
+  const thisWeekPositive = thisWeek.filter(m => positiveEmotions.has(m.dimensions.emotional.primary)).length;
+  const lastWeekPositive = lastWeek.filter(m => positiveEmotions.has(m.dimensions.emotional.primary)).length;
+  const thisRatio = thisWeek.length > 0 ? thisWeekPositive / thisWeek.length : 0;
+  const lastRatio = lastWeek.length > 0 ? lastWeekPositive / lastWeek.length : 0;
+  const diff = thisRatio - lastRatio;
+
+  let emotionTrend: 'up' | 'down' | 'stable' = 'stable';
+  let emotionTrendPercent = 0;
+  if (Math.abs(diff) > 0.05) {
+    emotionTrend = diff > 0 ? 'up' : 'down';
+    emotionTrendPercent = Math.round(Math.abs(diff) * 100);
+  }
+
+  return {
+    thisWeekCount: thisWeek.length,
+    lastWeekCount: lastWeek.length,
+    emotionDistribution: emotionDist,
+    happiestMemory: happiest,
+    noteworthyMemory: noteworthy,
+    emotionTrend,
+    emotionTrendPercent,
+  };
+}

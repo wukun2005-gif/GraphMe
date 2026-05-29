@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
-import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve } from '../utils/valueUtils';
+import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
 
@@ -714,11 +714,127 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
   );
 }
 
+function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
+  rawMemories: RawMemory[];
+  theme: 'dark' | 'light';
+  onSelectMemory: (m: RawMemory) => void;
+}) {
+  const isDark = theme === 'dark';
+  const report = useMemo(() => computeWeeklyReport(rawMemories), [rawMemories]);
+
+  const emotionEntries = Object.entries(report.emotionDistribution)
+    .sort((a, b) => b[1] - a[1]);
+
+  const trendIcon = report.emotionTrend === 'up' ? '↑' : report.emotionTrend === 'down' ? '↓' : '→';
+  const trendColor = report.emotionTrend === 'up' ? 'text-green-400' : report.emotionTrend === 'down' ? 'text-red-400' : 'text-gray-400';
+
+  return (
+    <section>
+      <h4 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+        📋 本周回顾
+      </h4>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className={`p-2.5 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+          <div className={`text-lg font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+            {report.thisWeekCount}
+          </div>
+          <div className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            本周新增记忆
+          </div>
+        </div>
+        <div className={`p-2.5 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+          <div className={`text-lg font-medium ${trendColor}`}>
+            {trendIcon} {report.emotionTrendPercent > 0 ? `${report.emotionTrendPercent}%` : '持平'}
+          </div>
+          <div className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            情绪趋势（vs 上周）
+          </div>
+        </div>
+      </div>
+
+      {/* Emotion distribution */}
+      {emotionEntries.length > 0 && (
+        <div className="mb-3">
+          <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            情绪分布
+          </div>
+          <div className="flex gap-1 flex-wrap">
+            {emotionEntries.map(([emotion, count]) => (
+              <div
+                key={emotion}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] ${
+                  isDark ? 'bg-[#ffffff08]' : 'bg-gray-100'
+                }`}
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#888' }}
+                />
+                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{emotion}</span>
+                <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Happiest moment */}
+      {report.happiestMemory && (
+        <div className="mb-2">
+          <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            😊 本周最快乐的时刻
+          </div>
+          <button
+            onClick={() => onSelectMemory(report.happiestMemory!)}
+            className={`w-full text-left p-2 rounded-lg text-xs transition-colors cursor-pointer ${
+              isDark ? 'hover:bg-[#ffffff08] bg-[#ffffff03]' : 'hover:bg-black/5 bg-black/[0.02]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: EMOTION_COLORS[report.happiestMemory.dimensions.emotional.primary] }} />
+              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{report.happiestMemory.label}</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Noteworthy memory */}
+      {report.noteworthyMemory && report.noteworthyMemory.id !== report.happiestMemory?.id && (
+        <div className="mb-2">
+          <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            ⭐ 本周值得关注的记忆
+          </div>
+          <button
+            onClick={() => onSelectMemory(report.noteworthyMemory!)}
+            className={`w-full text-left p-2 rounded-lg text-xs transition-colors cursor-pointer ${
+              isDark ? 'hover:bg-[#ffffff08] bg-[#ffffff03]' : 'hover:bg-black/5 bg-black/[0.02]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: EMOTION_COLORS[report.noteworthyMemory.dimensions.emotional.primary] }} />
+              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{report.noteworthyMemory.label}</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {report.thisWeekCount === 0 && (
+        <div className={`text-xs py-4 text-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+          本周暂无新记忆，去看看过去的回忆吧
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function ValueDashboard() {
   const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -810,6 +926,17 @@ export default function ValueDashboard() {
                   }`}
                 >
                   🌊 情感旅程
+                </button>
+                <button
+                  id="val-dash-weekly-tab"
+                  onClick={() => setTab('weekly')}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    tab === 'weekly'
+                      ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  📋 本周回顾
                 </button>
               </div>
               <button
@@ -1053,6 +1180,10 @@ export default function ValueDashboard() {
 
               {tab === 'journey' && (
                 <EmotionJourneyPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
+              )}
+
+              {tab === 'weekly' && (
+                <WeeklyReportPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
               )}
             </div>
           </motion.div>
