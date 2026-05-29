@@ -1,46 +1,47 @@
 /**
- * Web Audio API 合成器 — 根据情绪分布实时合成声音
+ * Web Audio API 合成器 — 根据情绪分布实时合成环境音
  *
- * 快乐 = 明亮谐波/C大调音阶
- * 悲伤 = 柔和低频/小调
- * 好奇 = 上升琶音
- * 粒子密度 = 音量
- * 情绪强度 = 声音丰富度
- * 空白区域 = 低沉宇宙背景嗡鸣
+ * 设计原则：
+ * - 柔和的环境音，不是刺耳的噪音
+ * - 根据情绪分布动态变化
+ * - 使用低频嗡鸣 + 和弦叠加
  */
 
 export type EmotionDistribution = {
   [key: string]: { count: number; avgIntensity: number };
 };
 
-// C 大调音阶频率 (Hz)
-const C_MAJOR = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
-// A 小调音阶频率 (Hz)
-const A_MINOR = [220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+// 和弦频率（低频，柔和）
+const CHORDS = {
+  major: [130.81, 164.81, 196.00], // C3, E3, G3
+  minor: [130.81, 155.56, 196.00], // C3, Eb3, G3
+  ambient: [110.00, 146.83, 174.61], // A2, D3, F3
+};
 
-// 情绪到声音参数的映射
-const EMOTION_SOUND_MAP: Record<string, { type: OscillatorType; baseFreq: number; scale: number[] }> = {
-  '快乐': { type: 'sine', baseFreq: 261.63, scale: C_MAJOR },
-  '悲伤': { type: 'sine', baseFreq: 220.00, scale: A_MINOR },
-  '好奇': { type: 'triangle', baseFreq: 329.63, scale: C_MAJOR },
-  '惊讶': { type: 'square', baseFreq: 392.00, scale: C_MAJOR },
-  '愤怒': { type: 'sawtooth', baseFreq: 196.00, scale: A_MINOR },
-  '恐惧': { type: 'sine', baseFreq: 174.61, scale: A_MINOR },
-  '厌恶': { type: 'triangle', baseFreq: 196.00, scale: A_MINOR },
-  '期待': { type: 'sine', baseFreq: 349.23, scale: C_MAJOR },
-  '信任': { type: 'sine', baseFreq: 293.66, scale: C_MAJOR },
-  '平静': { type: 'sine', baseFreq: 261.63, scale: C_MAJOR },
-  '感激': { type: 'triangle', baseFreq: 329.63, scale: C_MAJOR },
-  '困惑': { type: 'triangle', baseFreq: 246.94, scale: A_MINOR },
+// 情绪到和弦类型的映射
+const EMOTION_CHORD_MAP: Record<string, keyof typeof CHORDS> = {
+  '快乐': 'major',
+  '好奇': 'major',
+  '感激': 'major',
+  '骄傲': 'major',
+  '悲伤': 'minor',
+  '愤怒': 'minor',
+  '恐惧': 'minor',
+  '厌恶': 'minor',
+  '沮丧': 'minor',
+  '惊讶': 'ambient',
+  '中性': 'ambient',
+  '思念': 'ambient',
 };
 
 export class SoundscapeEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private oscillators: OscillatorNode[] = [];
-  private lfoOscillators: OscillatorNode[] = [];
+  private gains: GainNode[] = [];
   private isPlaying = false;
   private currentDistribution: EmotionDistribution = {};
+  private updateTimer: ReturnType<typeof setInterval> | null = null;
 
   async start() {
     if (this.isPlaying) return;
@@ -56,15 +57,31 @@ export class SoundscapeEngine {
     }
 
     this.isPlaying = true;
-    this.createAmbientDrone();
+
+    // Fade in master volume
+    this.masterGain.gain.linearRampToValueAtTime(0.15, this.ctx.currentTime + 2);
+
+    // Create initial ambient sounds
+    this.createAmbientLayer();
+
+    // Start periodic update
+    this.updateTimer = setInterval(() => {
+      this.updateSounds();
+    }, 3000); // Update every 3 seconds
   }
 
   stop() {
     if (!this.isPlaying || !this.ctx) return;
 
+    // Stop update timer
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
+    }
+
     // Fade out
     if (this.masterGain) {
-      this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+      this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1);
     }
 
     // Clean up oscillators after fade
@@ -72,97 +89,102 @@ export class SoundscapeEngine {
       this.oscillators.forEach(osc => {
         try { osc.stop(); } catch {}
       });
-      this.lfoOscillators.forEach(osc => {
-        try { osc.stop(); } catch {}
-      });
       this.oscillators = [];
-      this.lfoOscillators = [];
+      this.gains = [];
       this.ctx?.close();
       this.ctx = null;
       this.masterGain = null;
       this.isPlaying = false;
-    }, 600);
+    }, 1100);
   }
 
   updateDistribution(distribution: EmotionDistribution) {
     this.currentDistribution = distribution;
-    if (!this.isPlaying || !this.ctx || !this.masterGain) return;
+  }
 
-    const totalParticles = Object.values(distribution).reduce((sum, d) => sum + d.count, 0);
+  private createAmbientLayer() {
+    if (!this.ctx || !this.masterGain) return;
 
-    // Volume based on particle density (more particles = louder)
-    const targetVolume = Math.min(0.3, totalParticles * 0.02);
-    this.masterGain.gain.linearRampToValueAtTime(targetVolume, this.ctx.currentTime + 0.3);
+    // Create 3 oscillators for a soft ambient chord
+    const baseFreqs = CHORDS.ambient;
 
-    // Clear existing emotion oscillators
-    this.oscillators.forEach(osc => {
-      try { osc.stop(); } catch {}
-    });
-    this.oscillators = [];
-
-    // Create new oscillators based on dominant emotions
-    const dominantEmotions = Object.entries(distribution)
-      .filter(([_, d]) => d.count > 0)
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 3); // Top 3 emotions
-
-    dominantEmotions.forEach(([emotion, data], index) => {
-      const soundParams = EMOTION_SOUND_MAP[emotion] || EMOTION_SOUND_MAP['平静'];
-      const intensity = data.avgIntensity;
-
-      // Create oscillator
+    baseFreqs.forEach((freq, i) => {
       const osc = this.ctx!.createOscillator();
       const gain = this.ctx!.createGain();
+      const filter = this.ctx!.createBiquadFilter();
 
-      osc.type = soundParams.type;
+      osc.type = 'sine';
+      osc.frequency.value = freq;
 
-      // Frequency based on emotion and some randomness
-      const freqIndex = Math.floor(Math.random() * soundParams.scale.length);
-      osc.frequency.value = soundParams.scale[freqIndex];
+      // Very soft gain
+      gain.gain.value = 0.03 / (i + 1);
 
-      // Gain based on emotion count and intensity
-      const emotionGain = (data.count / totalParticles) * intensity * 0.3;
-      gain.gain.value = emotionGain / (index + 1); // Reduce volume for secondary emotions
+      // Low pass filter for warmth
+      filter.type = 'lowpass';
+      filter.frequency.value = 400;
+      filter.Q.value = 0.5;
 
-      // Add LFO for subtle vibrato
-      const lfo = this.ctx!.createOscillator();
-      const lfoGain = this.ctx!.createGain();
-      lfo.frequency.value = 0.5 + Math.random() * 2; // 0.5-2.5 Hz
-      lfoGain.gain.value = 2; // 2 Hz vibrato depth
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfo.start();
-
-      osc.connect(gain);
+      osc.connect(filter);
+      filter.connect(gain);
       gain.connect(this.masterGain!);
+
       osc.start();
 
       this.oscillators.push(osc);
-      this.lfoOscillators.push(lfo);
+      this.gains.push(gain);
     });
+
+    // Add a subtle LFO for movement
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.1; // Very slow
+    lfoGain.gain.value = 5; // Subtle frequency modulation
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(this.oscillators[0].frequency);
+    lfo.start();
+    this.oscillators.push(lfo);
   }
 
-  private createAmbientDrone() {
-    if (!this.ctx || !this.masterGain) return;
+  private updateSounds() {
+    if (!this.ctx || !this.isPlaying) return;
 
-    // Low frequency ambient drone
-    const drone = this.ctx.createOscillator();
-    const droneGain = this.ctx.createGain();
-    const filter = this.ctx.createBiquadFilter();
+    const totalParticles = Object.values(this.currentDistribution).reduce((sum, d) => sum + d.count, 0);
 
-    drone.type = 'sine';
-    drone.frequency.value = 55; // Low A
-    droneGain.gain.value = 0.05;
+    if (totalParticles === 0) {
+      // No particles visible - very quiet ambient
+      this.gains.forEach((gain, i) => {
+        gain.gain.linearRampToValueAtTime(0.01 / (i + 1), this.ctx!.currentTime + 1);
+      });
+      return;
+    }
 
-    filter.type = 'lowpass';
-    filter.frequency.value = 200;
+    // Find dominant emotion
+    const dominantEntry = Object.entries(this.currentDistribution)
+      .filter(([_, d]) => d.count > 0)
+      .sort((a, b) => b[1].count - a[1].count)[0];
 
-    drone.connect(filter);
-    filter.connect(droneGain);
-    droneGain.connect(this.masterGain);
-    drone.start();
+    if (!dominantEntry) return;
 
-    this.oscillators.push(drone);
+    const [emotion, data] = dominantEntry;
+    const chordType = EMOTION_CHORD_MAP[emotion] || 'ambient';
+    const targetFreqs = CHORDS[chordType];
+
+    // Smoothly transition to new chord
+    this.oscillators.slice(0, 3).forEach((osc, i) => {
+      osc.frequency.linearRampToValueAtTime(
+        targetFreqs[i],
+        this.ctx!.currentTime + 2
+      );
+    });
+
+    // Adjust volume based on particle count and emotion intensity
+    const volumeFactor = Math.min(1, totalParticles / 20) * data.avgIntensity;
+    this.gains.forEach((gain, i) => {
+      const targetGain = 0.02 + volumeFactor * 0.04 / (i + 1);
+      gain.gain.linearRampToValueAtTime(targetGain, this.ctx!.currentTime + 1);
+    });
   }
 }
 

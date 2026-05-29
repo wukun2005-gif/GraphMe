@@ -194,8 +194,8 @@ function AppInner() {
 
       <TimelineScrubber />
 
-      {/* Soundscape toggle in bottom bar */}
-      <div className="absolute bottom-6 right-4 z-10">
+      {/* Soundscape toggle - above chat button */}
+      <div className="fixed bottom-20 right-4 z-10">
         <SoundscapeToggle theme={theme} emotionDistribution={emotionDistribution} />
       </div>
 
