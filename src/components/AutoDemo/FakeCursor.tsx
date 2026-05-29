@@ -381,18 +381,6 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         />
       </div>
 
-      {/* Stop button */}
-      <button
-        onClick={stopDemo}
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4 py-2 rounded-full
-          bg-red-500/20 hover:bg-red-500/40 text-red-300 text-xs font-medium backdrop-blur-sm
-          border border-red-500/30 transition-all cursor-pointer shadow-lg
-          flex items-center gap-2"
-      >
-        <span className="w-2 h-2 rounded-sm bg-red-400 inline-block" />
-        停止演示 (ESC)
-      </button>
-
       {/* Tooltip */}
       <Tooltip text={tooltipText} position={position} />
 
