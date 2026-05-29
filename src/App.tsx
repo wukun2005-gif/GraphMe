@@ -25,7 +25,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, gravityFieldMode, toggleGravityFieldMode, archaeologyMode, toggleArchaeologyMode } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, gravityFieldMode, toggleGravityFieldMode, archaeologyMode, toggleArchaeologyMode, userPersona, setUserPersona } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -165,6 +165,23 @@ function AppInner() {
               }`}
             >
               {view === '全局视图' ? '🌐 全局' : view === '家庭视图' ? '🏠 家庭' : view === '学习视图' ? '🎓 学习' : '😊 情绪'}
+            </button>
+          ))}
+        </div>
+        <div className={`flex rounded-lg p-0.5 text-xs backdrop-blur-sm ${
+          isDark ? 'bg-[#ffffff08]' : 'bg-black/5'
+        }`}>
+          {(['家长', '陪伴者', '极客'] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => setUserPersona(p)}
+              className={`px-2 py-1 rounded-md text-xs transition-all cursor-pointer ${
+                userPersona === p
+                  ? isDark ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                  : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {p === '家长' ? '👨‍👩‍👧 家长' : p === '陪伴者' ? '🤗 陪伴者' : '🔧 极客'}
             </button>
           ))}
         </div>

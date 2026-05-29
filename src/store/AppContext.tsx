@@ -36,6 +36,7 @@ interface AppState {
   gravityFieldMode: boolean;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
   archaeologyMode: boolean;
+  userPersona: '家长' | '陪伴者' | '极客';
 }
 
 interface AppContextType extends AppState {
@@ -105,6 +106,7 @@ interface AppContextType extends AppState {
   toggleGravityFieldMode: () => void;
   clearButterflyEffect: () => void;
   toggleArchaeologyMode: () => void;
+  setUserPersona: (persona: '家长' | '陪伴者' | '极客') => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -142,6 +144,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     gravityFieldMode: false,
     butterflyEffect: null,
     archaeologyMode: false,
+    userPersona: (() => {
+      try { return (localStorage.getItem('graphme-userPersona') as '家长' | '陪伴者' | '极客') || '家长'; }
+      catch { return '家长'; }
+    })(),
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -568,6 +574,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, archaeologyMode: !s.archaeologyMode }));
   }, []);
 
+  const setUserPersona = useCallback((persona: '家长' | '陪伴者' | '极客') => {
+    setState(s => ({ ...s, userPersona: persona }));
+    try { localStorage.setItem('graphme-userPersona', persona); } catch {}
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -641,6 +652,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       gravityFieldMode: state.gravityFieldMode, toggleGravityFieldMode,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
       archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
+      userPersona: state.userPersona, setUserPersona,
     }}>
       {children}
     </AppContext.Provider>

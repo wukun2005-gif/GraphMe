@@ -65,6 +65,7 @@ export default function NavigationSidebar() {
     hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories,
     undoDelete, undoStackCount, undoStackAction,
     collections, addCollection, removeCollection, addToCollection, removeFromCollection,
+    userPersona,
   } = useAppState();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
@@ -517,7 +518,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>⚙️ 记忆管理</span>
+          <span>{userPersona === '陪伴者' ? '💝 你的记忆' : '⚙️ 记忆管理'}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showMemoryMgr ? '▲' : '▼'}</span>
         </button>
         <AnimatePresence>
