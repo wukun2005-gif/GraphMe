@@ -24,6 +24,7 @@ import KnowledgeGap from './components/KnowledgeGap';
 import MemoryCinema from './components/MemoryCinema';
 import FlywheelFeedback from './components/FlywheelFeedback';
 import FlywheelView from './components/FlywheelView';
+import SessionSummary from './components/SessionSummary';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
 import { generateConfusionReport } from './utils/confusionUtils';
@@ -47,6 +48,7 @@ function AppInner() {
   const [showGap, setShowGap] = useState(false);
   const [showCinema, setShowCinema] = useState(false);
   const [showFlywheel, setShowFlywheel] = useState(false);
+  const [showSession, setShowSession] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -63,6 +65,7 @@ function AppInner() {
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
       if (e.key === 'Escape') {
+        if (showSession) { setShowSession(false); return; }
         if (showFlywheel) { setShowFlywheel(false); return; }
         if (showCinema) { setShowCinema(false); return; }
         if (showGap) { setShowGap(false); return; }
@@ -98,7 +101,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showFlywheel, showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showSession, showFlywheel, showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -398,6 +401,18 @@ function AppInner() {
         >
           🔄
         </button>
+        <button
+          id="btn-session"
+          title="会话总结"
+          onClick={() => setShowSession(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          📊
+        </button>
         {hasConfusion && (
           <button
             id="btn-confusion"
@@ -435,6 +450,7 @@ function AppInner() {
       <MemoryCinema open={showCinema} onClose={() => setShowCinema(false)} memories={rawMemories} theme={theme} />
       <FlywheelFeedback />
       <FlywheelView open={showFlywheel} onClose={() => setShowFlywheel(false)} />
+      <SessionSummary open={showSession} onClose={() => setShowSession(false)} />
 
       <AnimatePresence>
         {showDream && (
