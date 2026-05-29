@@ -6,6 +6,12 @@ export interface SimilarMemory {
   reasons: string[];
 }
 
+export interface EchoMemory {
+  memory: RawMemory;
+  description: string;
+  sharedFeatures: string[];
+}
+
 export function findSimilarMemories(
   target: RawMemory,
   allMemories: RawMemory[],
@@ -111,4 +117,131 @@ export function findSimilarMemories(
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+}
+
+/**
+ * 查找跨时间呼应的记忆（记忆回声）
+ * 条件：不同 storyline、不同日期（间隔>7天）、但共享3+维度特征
+ */
+export function findEcho(
+  target: RawMemory,
+  allMemories: RawMemory[],
+  limit = 2,
+): EchoMemory[] {
+  const candidates = allMemories.filter(m => {
+    if (m.id === target.id) return false;
+    // 不同 storyline
+    if (target.dimensions.narrative.storyline &&
+        target.dimensions.narrative.storyline === m.dimensions.narrative.storyline) {
+      return false;
+    }
+    // 间隔 > 7 天
+    const timeDiff = Math.abs(
+      target.dimensions.temporal.timestamp - m.dimensions.temporal.timestamp,
+    );
+    const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+    if (daysDiff <= 7) return false;
+    return true;
+  });
+
+  const scored = candidates.map(candidate => {
+    let sharedCount = 0;
+    const sharedFeatures: string[] = [];
+
+    // 相同地点类型
+    if (target.dimensions.spatial.placeType === candidate.dimensions.spatial.placeType) {
+      sharedCount++;
+      sharedFeatures.push(`同在${target.dimensions.spatial.placeType}`);
+    }
+
+    // 相同情绪
+    if (target.dimensions.emotional.primary === candidate.dimensions.emotional.primary) {
+      sharedCount++;
+      sharedFeatures.push(`同为${target.dimensions.emotional.primary}情绪`);
+    }
+
+    // 相同人物
+    const sharedPersons = target.dimensions.social.persons.filter(p =>
+      candidate.dimensions.social.persons.includes(p),
+    );
+    if (sharedPersons.length > 0) {
+      sharedCount++;
+      sharedFeatures.push(`都有${sharedPersons.join('、')}`);
+    }
+
+    // 相同活动类型
+    if (target.dimensions.activity.type === candidate.dimensions.activity.type) {
+      sharedCount++;
+      sharedFeatures.push(`同类型活动`);
+    }
+
+    // 相同知识标签
+    const sharedKnowledge = target.dimensions.semantic.knowledge.filter(k =>
+      candidate.dimensions.semantic.knowledge.includes(k),
+    );
+    if (sharedKnowledge.length > 0) {
+      sharedCount++;
+      sharedFeatures.push(`共享知识"${sharedKnowledge.join('、')}"`);
+    }
+
+    // 相同季节
+    if (target.dimensions.temporal.season === candidate.dimensions.temporal.season) {
+      sharedCount++;
+    }
+
+    return { memory: candidate, sharedCount, sharedFeatures };
+  });
+
+  // 只返回共享 3+ 维度特征的记忆
+  const echoes = scored
+    .filter(s => s.sharedCount >= 3)
+    .sort((a, b) => b.sharedCount - a.sharedCount)
+    .slice(0, limit)
+    .map(s => {
+      const timeDiff = Math.abs(
+        target.dimensions.temporal.timestamp - s.memory.dimensions.temporal.timestamp,
+      );
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const timeDesc = daysDiff > 30
+        ? `${Math.floor(daysDiff / 30)} 个月前`
+        : `${daysDiff} 天前`;
+
+      const description = generateEchoDescription(target, s.memory, timeDesc, s.sharedFeatures);
+
+      return {
+        memory: s.memory,
+        description,
+        sharedFeatures: s.sharedFeatures,
+      };
+    });
+
+  return echoes;
+}
+
+function generateEchoDescription(
+  target: RawMemory,
+  echo: RawMemory,
+  timeDesc: string,
+  sharedFeatures: string[],
+): string {
+  const targetPlace = target.dimensions.spatial.landmark || target.dimensions.spatial.placeType;
+  const echoPlace = echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType;
+  const emotion = target.dimensions.emotional.primary;
+  const persons = target.dimensions.social.persons;
+
+  // 根据共享特征生成自然语言描述
+  if (sharedFeatures.includes(`同在${target.dimensions.spatial.placeType}`) &&
+      sharedFeatures.includes(`同为${emotion}情绪`)) {
+    return `${timeDesc}，你也在${echoPlace}度过了${emotion}的时光——记忆在时空中产生了奇妙的共鸣`;
+  }
+
+  if (persons.length > 0 && sharedFeatures.includes(`都有${persons.join('、')}`)) {
+    return `${timeDesc}，你和${persons.join('、')}也在${echoPlace}留下了足迹——同样的人，不同的时光`;
+  }
+
+  if (sharedFeatures.includes(`同类型活动`)) {
+    return `${timeDesc}的${echoPlace}，一段相似的${emotion}记忆在远处回响`;
+  }
+
+  return `${timeDesc}的记忆在远处回响——${sharedFeatures.slice(0, 2).join('、')}`;
 }

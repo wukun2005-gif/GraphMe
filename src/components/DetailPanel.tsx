@@ -145,9 +145,14 @@ function ConnectionGraph({ connections, theme, onSelect }: {
 }
 
 function RawDetail({ memory }: { memory: RawMemory }) {
-  const { theme, rawMemories, insightMemories, selectMemory } = useAppState();
+  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription } = useAppState();
   const isDark = theme === 'dark';
   const d = memory.dimensions;
+
+  const echoMemories = useMemo(
+    () => echoMemoryIds.map(id => rawMemories.find(m => m.id === id)).filter(Boolean) as RawMemory[],
+    [echoMemoryIds, rawMemories]
+  );
 
   const connections = useMemo(
     () => getMemoryConnections(memory.id, rawMemories, insightMemories),
@@ -219,6 +224,53 @@ function RawDetail({ memory }: { memory: RawMemory }) {
             theme={theme}
             onSelect={(conn) => selectMemory(conn.memory)}
           />
+        </div>
+      )}
+
+      {echoMemories.length > 0 && (
+        <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            🔮 记忆回声
+          </h4>
+          {echoDescription && (
+            <p className={`text-xs italic mb-2 ${isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'}`}>
+              "{echoDescription}"
+            </p>
+          )}
+          <div className="space-y-2">
+            {echoMemories.map(echo => {
+              const emoColor = EMOTION_COLORS[echo.dimensions.emotional.primary] || '#888';
+              return (
+                <button
+                  key={echo.id}
+                  onClick={() => selectMemory(echo)}
+                  className={`w-full text-left p-2 rounded-lg border transition-colors cursor-pointer ${
+                    isDark
+                      ? 'bg-[#ffffff03] border-[#ffffff08] hover:border-[#00f2ff]/30 hover:bg-[#00f2ff]/5'
+                      : 'bg-gray-50 border-gray-200 hover:border-[#0088cc]/30 hover:bg-blue-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
+                    <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {echo.label}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    {echo.summary}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {echo.dimensions.temporal.dateType}
+                    </span>
+                    <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      📍 {echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -546,7 +598,7 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, farewellMemory, createCapsule } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -575,6 +627,16 @@ export default function DetailPanel() {
   }, [confirmDelete]);
 
   useEffect(() => { setConfirmDelete(false); }, [selectedMemory?.id]);
+
+  // Auto-find echo when memory changes
+  useEffect(() => {
+    if (selectedMemory && selectedMemory.type === 'raw') {
+      findEcho(selectedMemory.id);
+    } else {
+      clearEcho();
+    }
+    return () => clearEcho();
+  }, [selectedMemory?.id, findEcho, clearEcho]);
   const [edit, setEdit] = useState<EditData>({
     label: '',
     summary: '',

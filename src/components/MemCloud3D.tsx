@@ -433,6 +433,81 @@ function EmotionTrajectoryLines({ theme }: { theme: Theme }) {
   );
 }
 
+function EchoLines({ theme }: { theme: Theme }) {
+  const { echoMemoryIds, rawMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+  const [opacity, setOpacity] = useState(1);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset opacity when echo changes
+  useEffect(() => {
+    if (echoMemoryIds.length >= 2) {
+      setOpacity(1);
+      // Fade out after 2 seconds
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setOpacity(0);
+      }, 2000);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [echoMemoryIds]);
+
+  const lineData = useMemo(() => {
+    if (echoMemoryIds.length < 2) return [];
+    const mems = echoMemoryIds
+      .map(id => rawMemories.find(m => m.id === id))
+      .filter(Boolean) as RawMemory[];
+    if (mems.length < 2) return [];
+
+    const lines: { from: [number, number, number]; to: [number, number, number] }[] = [];
+    // Connect first echo to selected memory (which is the one being viewed)
+    // We need the selected memory position
+    const from = mems[0].positions[currentView] || mems[0].position3D;
+    const to = mems[1].positions[currentView] || mems[1].position3D;
+    lines.push({ from, to });
+
+    return lines;
+  }, [echoMemoryIds, rawMemories, currentView]);
+
+  if (lineData.length === 0 || opacity <= 0) return null;
+
+  return (
+    <group>
+      {lineData.map((line, i) => {
+        const points = [
+          new THREE.Vector3(...line.from),
+          new THREE.Vector3(
+            (line.from[0] + line.to[0]) / 2,
+            (line.from[1] + line.to[1]) / 2 + 0.3,
+            (line.from[2] + line.to[2]) / 2,
+          ),
+          new THREE.Vector3(...line.to),
+        ];
+        const curve = new THREE.QuadraticBezierCurve3(...points);
+        const curvePoints = curve.getPoints(20);
+        const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+
+        // Dashed line effect
+        const material = new THREE.LineDashedMaterial({
+          color: isLight ? '#0088cc' : '#00f2ff',
+          transparent: true,
+          opacity: opacity * 0.8,
+          dashSize: 0.3,
+          gapSize: 0.2,
+          linewidth: 1,
+        });
+
+        const lineObj = new THREE.Line(geometry, material);
+        lineObj.computeLineDistances();
+
+        return <primitive key={i} object={lineObj} />;
+      })}
+    </group>
+  );
+}
+
 function InsightNetworkLines({ theme }: { theme: Theme }) {
   const { insightMemories, rawMemories, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
@@ -1185,6 +1260,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
+        <EchoLines theme={theme} />
         <ClusterTags theme={theme} heldMemoryId={heldClusterId} />
         <HoldTagController onHoldChange={handleHoldChange} />
         <HoverDetector onHover={handleHover} />

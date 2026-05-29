@@ -26,6 +26,8 @@ interface AppState {
   timeRangeFilter: [number, number] | null;
   collections: MemoryCollection[];
   similarMemoryIds: string[];
+  echoMemoryIds: string[];
+  echoDescription: string;
   farewellRecords: FarewellRecord[];
   capsules: TimeCapsule[];
 }
@@ -85,6 +87,8 @@ interface AppContextType extends AppState {
   removeFromCollection: (collectionId: string, memoryId: string) => void;
   findSimilar: (memoryId: string) => void;
   clearSimilar: () => void;
+  findEcho: (memoryId: string) => void;
+  clearEcho: () => void;
   farewellMemory: (memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => void;
   createCapsule: (memoryId: string, unlockDate: number, note: string) => void;
   openCapsule: (capsuleId: string) => void;
@@ -115,6 +119,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     timeRangeFilter: null,
     collections: [],
     similarMemoryIds: [],
+    echoMemoryIds: [],
+    echoDescription: '',
     farewellRecords: [],
     capsules: [],
   });
@@ -395,6 +401,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, similarMemoryIds: [] }));
   }, []);
 
+  const findEcho = useCallback((memoryId: string) => {
+    const target = rawMems.find(m => m.id === memoryId);
+    if (!target) return;
+    import('../utils/similarityUtils').then(({ findEcho: findEchoFn }) => {
+      const results = findEchoFn(target, rawMems, 2);
+      if (results.length > 0) {
+        setState(s => ({
+          ...s,
+          echoMemoryIds: results.map(r => r.memory.id),
+          echoDescription: results[0].description,
+        }));
+      } else {
+        setState(s => ({ ...s, echoMemoryIds: [], echoDescription: '' }));
+      }
+    });
+  }, [rawMems]);
+
+  const clearEcho = useCallback(() => {
+    setState(s => ({ ...s, echoMemoryIds: [], echoDescription: '' }));
+  }, []);
+
   const [farewellRecords, setFarewellRecords] = useState<FarewellRecord[]>(() => {
     try {
       const saved = localStorage.getItem('graphme-farewellRecords');
@@ -513,6 +540,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hiddenMemoryIds, allRawMemories, toggleMemoryVisibility, toggleAllMemories, reinforceMemory, setTimeRangeFilter,
       collections, addCollection, removeCollection, addToCollection, removeFromCollection,
       similarMemoryIds: state.similarMemoryIds, findSimilar, clearSimilar,
+      echoMemoryIds: state.echoMemoryIds, echoDescription: state.echoDescription, findEcho, clearEcho,
       farewellRecords, farewellMemory,
       capsules, createCapsule, openCapsule,
     }}>
