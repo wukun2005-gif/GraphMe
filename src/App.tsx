@@ -11,6 +11,7 @@ import TimelineScrubber from './components/TimelineScrubber';
 import SerendipityModal from './components/SerendipityModal';
 import AnnualReport from './components/AnnualReport';
 import OnboardingOverlay from './components/OnboardingOverlay';
+import MemorySurprise from './components/MemorySurprise';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -114,6 +115,7 @@ function AppInner() {
     >
       <MemCloud3D bgColor={isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT} theme={theme} />
       <DailyMemoryCard />
+      <MemorySurprise />
 
       <div className={`absolute left-0 top-0 h-full z-10 backdrop-blur-sm border-r ${
         isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'

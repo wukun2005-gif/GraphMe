@@ -470,3 +470,32 @@ export function computeEmotionCurve(memories: RawMemory[]): EmotionCurveData {
     storylineFilter: Array.from(storylineSet).sort(),
   };
 }
+
+// ─── Surprise Candidate (Feature #58) ───
+
+export function getSurpriseCandidate(memories: RawMemory[]): RawMemory | null {
+  if (memories.length === 0) return null;
+  const now = Date.now();
+
+  // Score by value × forgetting risk (high value + low access = best surprise)
+  const scored = memories.map(m => {
+    const value = computeValueScore(m).score;
+    const risk = computeForgettingRisk(m, now).risk;
+    const accessPenalty = Math.min(m.dimensions.value.accessCount / 5, 1);
+    return {
+      memory: m,
+      score: value * risk * (1 - accessPenalty * 0.5),
+    };
+  });
+
+  // Weighted random: higher score = higher chance
+  const totalScore = scored.reduce((sum, s) => sum + s.score, 0);
+  if (totalScore === 0) return memories[Math.floor(Math.random() * memories.length)];
+
+  let r = Math.random() * totalScore;
+  for (const s of scored) {
+    r -= s.score;
+    if (r <= 0) return s.memory;
+  }
+  return scored[scored.length - 1].memory;
+}
