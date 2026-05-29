@@ -68,21 +68,23 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
   const visible = useMemo(() => {
+    let result: RawMemory[];
     if (!navCategory) {
-      const result = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
-      visibleRef.current = result;
-      return result;
+      result = rawMemories.filter(m => m.type === 'raw') as RawMemory[];
+    } else {
+      result = rawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory) && m.type === 'raw') as RawMemory[];
     }
-    let filtered = rawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
-    const result = filtered.filter(m => m.type === 'raw') as RawMemory[];
+    if (tagFilter.length > 0) {
+      result = result.filter(m => m.tags && tagFilter.some(t => m.tags!.includes(t)));
+    }
     visibleRef.current = result;
     return result;
-  }, [rawMemories, navCategory, navSubCategory]);
+  }, [rawMemories, navCategory, navSubCategory, tagFilter]);
 
   const { positions, colors, sizes } = useMemo(() => {
     // Filter by timeRangeFilter first

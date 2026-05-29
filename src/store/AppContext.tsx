@@ -20,6 +20,7 @@ interface AppState {
   valueDashboardOpen: boolean;
   searchQuery: string;
   emotionFilter: EmotionType[];
+  tagFilter: string[];
   favoriteIds: string[];
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
   timeRangeFilter: [number, number] | null;
@@ -40,6 +41,10 @@ interface AppContextType extends AppState {
   toggleValueDashboard: () => void;
   setSearchQuery: (query: string) => void;
   toggleEmotionFilter: (emotion: EmotionType) => void;
+  toggleTagFilter: (tag: string) => void;
+  addTag: (memoryId: string, tag: string) => void;
+  removeTag: (memoryId: string, tag: string) => void;
+  allTags: string[];
   toggleFavorite: (id: string) => void;
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
@@ -96,6 +101,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     valueDashboardOpen: false,
     searchQuery: '',
     emotionFilter: [],
+    tagFilter: [],
     favoriteIds: [],
     toasts: [],
     timeRangeFilter: null,
@@ -245,6 +251,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const toggleTagFilter = useCallback((tag: string) => {
+    setState(s => ({
+      ...s,
+      tagFilter: s.tagFilter.includes(tag)
+        ? s.tagFilter.filter(t => t !== tag)
+        : [...s.tagFilter, tag],
+    }));
+  }, []);
+
+  const addTag = useCallback((memoryId: string, tag: string) => {
+    setRawMems(prev => prev.map(m => {
+      if (m.id !== memoryId) return m;
+      const tags = m.tags || [];
+      if (tags.includes(tag)) return m;
+      return { ...m, tags: [...tags, tag] };
+    }));
+  }, []);
+
+  const removeTag = useCallback((memoryId: string, tag: string) => {
+    setRawMems(prev => prev.map(m => {
+      if (m.id !== memoryId) return m;
+      return { ...m, tags: (m.tags || []).filter(t => t !== tag) };
+    }));
+  }, []);
+
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const m of rawMems) {
+      if (m.tags) m.tags.forEach(t => tagSet.add(t));
+    }
+    return Array.from(tagSet).sort();
+  }, [rawMems]);
+
   const toggleFavorite = useCallback((id: string) => {
     setState(s => ({
       ...s,
@@ -368,8 +407,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (state.emotionFilter.length > 0) {
       result = result.filter(m => state.emotionFilter.includes(m.dimensions.emotional.primary));
     }
+    if (state.tagFilter.length > 0) {
+      result = result.filter(m => m.tags && state.tagFilter.some(t => m.tags!.includes(t)));
+    }
     return result;
-  }, [mergedRawMemories, hiddenMemoryIds, state.emotionFilter]);
+  }, [mergedRawMemories, hiddenMemoryIds, state.emotionFilter, state.tagFilter]);
 
   const mergedInsightMemories = useMemo(() =>
     showChatGPT ? [...insightMems, ...chatgptInsightMemories] : insightMems,
@@ -384,7 +426,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleTagFilter, addTag, removeTag, allTags, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,

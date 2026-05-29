@@ -45,6 +45,7 @@ type EditData = {
   persons: string;
   knowledge: string;
   privacyLevel: '公开' | '家庭可见' | '仅自己' | '加密';
+  tags: string[];
 };
 
 function RawDetail({ memory }: { memory: RawMemory }) {
@@ -92,6 +93,20 @@ function RawDetail({ memory }: { memory: RawMemory }) {
           <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔗 故事线</span> {d.narrative.storyline}</div>
         )}
       </div>
+      {memory.tags && memory.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {memory.tags.map(tag => (
+            <span
+              key={tag}
+              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
+              }`}
+            >
+              🏷 {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -452,6 +467,7 @@ export default function DetailPanel() {
     persons: '',
     knowledge: '',
     privacyLevel: '家庭可见',
+    tags: [],
   });
 
   useEffect(() => {
@@ -469,6 +485,7 @@ export default function DetailPanel() {
         persons: m.dimensions.social.persons.join('、'),
         knowledge: m.dimensions.semantic.knowledge.join('、'),
         privacyLevel: m.dimensions.value.privacyLevel,
+        tags: m.tags || [],
       });
       setEditMode(false);
     }
@@ -489,6 +506,7 @@ export default function DetailPanel() {
       persons: m.dimensions.social.persons.join('、'),
       knowledge: m.dimensions.semantic.knowledge.join('、'),
       privacyLevel: m.dimensions.value.privacyLevel,
+      tags: m.tags || [],
     });
     setEditMode(true);
   };
@@ -500,6 +518,7 @@ export default function DetailPanel() {
       label: edit.label,
       summary: edit.summary,
       color: EMOTION_COLORS[edit.emotion],
+      tags: edit.tags,
       dimensions: {
         ...memory.dimensions,
         emotional: {
@@ -766,6 +785,42 @@ export default function DetailPanel() {
                     <option value="仅自己">🔒 仅自己</option>
                     <option value="加密">🔐 加密</option>
                   </select>
+                </div>
+                <div>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>标签</label>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {edit.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors ${
+                          isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-red-500/20 hover:text-red-400' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-red-100 hover:text-red-600'
+                        }`}
+                        onClick={() => setEdit(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }))}
+                        title={`删除标签 "${tag}"`}
+                      >
+                        {tag} ×
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      placeholder="输入标签，回车添加"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val && !edit.tags.includes(val)) {
+                            setEdit(prev => ({ ...prev, tags: [...prev.tags, val] }));
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }
+                      }}
+                      className={`flex-1 border rounded px-2 py-1 text-xs focus:outline-none ${
+                        isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
               <div className={`flex gap-2 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>

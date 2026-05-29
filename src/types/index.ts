@@ -69,6 +69,7 @@ export interface RawMemory {
   positions: Record<string, [number, number, number]>;
   color: string;
   size: number;
+  tags?: string[];
 }
 
 export interface InsightMemory {

@@ -54,6 +54,7 @@ export default function NavigationSidebar() {
     hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
     insightMemories, theme, selectMemory, selectedMemory,
     emotionFilter, toggleEmotionFilter,
+    tagFilter, toggleTagFilter, addTag, removeTag, allTags,
     favoriteIds, toggleFavorite,
     addToast,
     showChatGPT, toggleShowChatGPT,
@@ -70,10 +71,13 @@ export default function NavigationSidebar() {
   const [showLegend, setShowLegend] = useState(false);
   const [showMemoryMgr, setShowMemoryMgr] = useState(false);
   const [showStoryBoard, setShowStoryBoard] = useState(false);
+  const [showTags, setShowTags] = useState(false);
   const [expandedCollection, setExpandedCollection] = useState<string | null>(null);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionEmoji, setNewCollectionEmoji] = useState('📁');
+  const [tagInputId, setTagInputId] = useState<string | null>(null);
+  const [tagInputValue, setTagInputValue] = useState('');
 
   const connectionPaths = useMemo(
     () => selectedMemory ? getMemoryCategoryPaths(selectedMemory, allRawMemoriesRef.current) : [],
@@ -413,8 +417,70 @@ export default function NavigationSidebar() {
 
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
+          id="nav-tags"
+          onClick={() => { setShowTags(!showTags); setShowLegend(false); setShowMemoryMgr(false); setShowStoryBoard(false); }}
+          className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
+            isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
+          }`}
+        >
+          <span>🏷 我的标签 {allTags.length > 0 ? `(${allTags.length})` : ''}</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showTags ? '▲' : '▼'}</span>
+        </button>
+        <AnimatePresence>
+          {showTags && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className={`px-3 pb-3 text-xs max-h-[40vh] overflow-y-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {allTags.length === 0 ? (
+                  <p className={`${isDark ? 'text-gray-600' : 'text-gray-400'} py-2`}>暂无标签，在记忆详情中添加</p>
+                ) : (
+                  <div className="space-y-1">
+                    {allTags.map(tag => {
+                      const isActive = tagFilter.includes(tag);
+                      const count = rawMemories.filter(m => m.tags?.includes(tag)).length;
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTagFilter(tag)}
+                          className={`w-full text-left px-2 py-1.5 rounded flex items-center gap-2 cursor-pointer transition-colors ${
+                            isActive
+                              ? isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
+                              : isDark ? 'hover:bg-[#ffffff05] text-gray-400' : 'hover:bg-black/5 text-gray-600'
+                          } ${tagFilter.length > 0 && !isActive ? 'opacity-30' : ''}`}
+                        >
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isDark ? 'bg-[#ffffff10]' : 'bg-gray-200'
+                          }`}>{tag}</span>
+                          <span className={`ml-auto text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {tagFilter.length > 0 && (
+                  <button
+                    onClick={() => tagFilter.forEach(t => toggleTagFilter(t))}
+                    className={`w-full py-1 mt-2 rounded text-[10px] cursor-pointer ${
+                      isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
+                  >
+                    清除标签筛选
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+        <button
           id="nav-memory-mgr"
-          onClick={() => { setShowMemoryMgr(!showMemoryMgr); setShowLegend(false); setShowStoryBoard(false); }}
+          onClick={() => { setShowMemoryMgr(!showMemoryMgr); setShowLegend(false); setShowTags(false); setShowStoryBoard(false); }}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
@@ -832,7 +898,29 @@ export default function NavigationSidebar() {
                                 <span className="mx-1">·</span>
                                 <span>{mem.label}</span>
                               </div>
+                              {mem.tags && mem.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-0.5 mt-0.5">
+                                  {mem.tags.map(tag => (
+                                    <span
+                                      key={tag}
+                                      className={`inline-flex items-center gap-0.5 px-1 py-0 rounded text-[9px] font-medium ${
+                                        isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
+                                      }`}
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
+                            <button
+                              id={`mem-item-tag-trigger-${i}`}
+                              onClick={() => { setTagInputId(tagInputId === mem.id ? null : mem.id); setTagInputValue(''); }}
+                              className={`text-xs cursor-pointer ${isDark ? 'text-gray-600 hover:text-[#00f2ff]' : 'text-gray-400 hover:text-[#0088cc]'}`}
+                              title="添加标签"
+                            >
+                              🏷
+                            </button>
                             <button
                               id={`mem-item-edit-trigger-${i}`}
                               onClick={() => startEdit(mem)}
@@ -880,6 +968,66 @@ export default function NavigationSidebar() {
                                 <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
                                   📍 {mem.dimensions.spatial.placeType}
                                 </div>
+                                {mem.tags && mem.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-0.5 mt-1.5">
+                                    {mem.tags.map(tag => (
+                                      <span key={tag} className={`px-1 py-0.5 rounded text-[9px] ${isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'}`}>{tag}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {tagInputId === mem.id && (
+                              <div className={`absolute left-0 top-full mt-1 z-[9999] w-48 p-2 rounded-lg shadow-2xl border ${
+                                isDark ? 'bg-[#0d1525] border-[#ffffff20]' : 'bg-white border-gray-200'
+                              }`}>
+                                <div className="flex gap-1 mb-1.5">
+                                  <input
+                                    type="text"
+                                    value={tagInputValue}
+                                    onChange={e => setTagInputValue(e.target.value)}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter' && tagInputValue.trim()) {
+                                        addTag(mem.id, tagInputValue.trim());
+                                        setTagInputValue('');
+                                      }
+                                    }}
+                                    placeholder="输入标签，回车确认"
+                                    autoFocus
+                                    className={`flex-1 border rounded px-2 py-1 text-[10px] ${
+                                      isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+                                    }`}
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      if (tagInputValue.trim()) {
+                                        addTag(mem.id, tagInputValue.trim());
+                                        setTagInputValue('');
+                                      }
+                                    }}
+                                    className={`px-1.5 py-1 rounded text-[10px] cursor-pointer ${
+                                      isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
+                                    }`}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                {mem.tags && mem.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-0.5">
+                                    {mem.tags.map(tag => (
+                                      <button
+                                        key={tag}
+                                        onClick={() => removeTag(mem.id, tag)}
+                                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] cursor-pointer transition-colors ${
+                                          isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-red-500/20 hover:text-red-400' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-red-100 hover:text-red-600'
+                                        }`}
+                                        title={`删除标签 "${tag}"`}
+                                      >
+                                        {tag} ×
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
