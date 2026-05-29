@@ -1,11 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import type { RawMemory, InsightMemory } from '../types';
 import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
 import { computeRhythm } from '../utils/rhythmUtils';
 import { computeSensoryProfile } from '../utils/sensoryUtils';
 import { EMOTION_COLORS } from '../types';
-import type { RawMemory } from '../types';
 
 const RISK_COLORS: Record<string, string> = {
   high: '#ff4444',
@@ -716,6 +716,111 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
   );
 }
 
+function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: RawMemory[]; insightMemories: InsightMemory[]; theme: 'dark' | 'light' }) {
+  const isDark = theme === 'dark';
+
+  const stats = useMemo(() => {
+    const activeInsights = insightMemories.filter(i => !i.deprecatedAt);
+    const confirmed = activeInsights.filter(i => i.userConfirmed).length;
+    const avgConf = activeInsights.length > 0
+      ? activeInsights.reduce((s, i) => s + i.confidence, 0) / activeInsights.length
+      : 0;
+    const highAccess = rawMemories.filter(m => m.dimensions.value.accessCount > 2).length;
+    const totalAccess = rawMemories.reduce((s, m) => s + m.dimensions.value.accessCount, 0);
+
+    return {
+      totalMemories: rawMemories.length,
+      totalInsights: activeInsights.length,
+      confirmed,
+      avgConfidence: Math.round(avgConf * 100),
+      highAccess,
+      totalAccess,
+    };
+  }, [rawMemories, insightMemories]);
+
+  return (
+    <div className="space-y-4">
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
+          🔄 飞轮指标
+        </h4>
+        <div className={`grid grid-cols-2 gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>记忆总数</span>
+            <div className="text-lg font-medium">{stats.totalMemories}</div>
+          </div>
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>活跃洞察</span>
+            <div className="text-lg font-medium">{stats.totalInsights}</div>
+          </div>
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>已确认洞察</span>
+            <div className="text-lg font-medium">{stats.confirmed}</div>
+          </div>
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>平均置信度</span>
+            <div className="text-lg font-medium">{stats.avgConfidence}%</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
+          ⭐ 记忆活跃度
+        </h4>
+        <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff03] border border-[#ffffff08]' : 'bg-gray-50 border border-gray-200'}`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              被多次回顾的记忆
+            </span>
+            <span className={`text-xs font-medium ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
+              {stats.highAccess}
+            </span>
+          </div>
+          <div className={`h-2 rounded-full ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
+            <div
+              className={`h-full rounded-full ${isDark ? 'bg-[#ffb800]' : 'bg-amber-500'}`}
+              style={{ width: `${Math.min(100, (stats.highAccess / Math.max(stats.totalMemories, 1)) * 100)}%` }}
+            />
+          </div>
+          <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            总回顾次数：{stats.totalAccess}
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
+          📊 洞察质量
+        </h4>
+        <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff03] border border-[#ffffff08]' : 'bg-gray-50 border border-gray-200'}`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              确认率
+            </span>
+            <span className={`text-xs font-medium ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
+              {stats.totalInsights > 0 ? Math.round((stats.confirmed / stats.totalInsights) * 100) : 0}%
+            </span>
+          </div>
+          <div className={`h-2 rounded-full ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
+            <div
+              className={`h-full rounded-full ${isDark ? 'bg-[#44ccaa]' : 'bg-teal-500'}`}
+              style={{ width: `${stats.totalInsights > 0 ? (stats.confirmed / stats.totalInsights) * 100 : 0}%` }}
+            />
+          </div>
+          <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            {stats.confirmed} / {stats.totalInsights} 条洞察已被确认
+          </p>
+        </div>
+      </section>
+
+      <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+        每一次互动，都在让这个记忆星云更懂你。
+      </p>
+    </div>
+  );
+}
+
 function SensoryPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
   const isDark = theme === 'dark';
   const profile = useMemo(() => computeSensoryProfile(rawMemories), [rawMemories]);
@@ -983,10 +1088,10 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
 }
 
 export default function ValueDashboard() {
-  const { rawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
-  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm' | 'sensory'>('value');
+  const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm' | 'sensory' | 'flywheel'>('value');
 
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
@@ -1109,6 +1214,16 @@ export default function ValueDashboard() {
                   }`}
                 >
                   👁️ 感官档案
+                </button>
+                <button
+                  onClick={() => setTab('flywheel')}
+                  className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
+                    tab === 'flywheel'
+                      ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-blue-100 text-blue-700'
+                      : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  🔄 飞轮
                 </button>
               </div>
               <button
@@ -1362,6 +1477,9 @@ export default function ValueDashboard() {
               )}
               {tab === 'sensory' && (
                 <SensoryPanel rawMemories={rawMemories} theme={theme} />
+              )}
+              {tab === 'flywheel' && (
+                <FlywheelPanel rawMemories={rawMemories} insightMemories={insightMemories} theme={theme} />
               )}
             </div>
           </motion.div>
