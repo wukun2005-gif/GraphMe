@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 
@@ -66,11 +66,31 @@ function getSuggestedQuestions(input: string): string[] {
 }
 
 export default function ChatPanel() {
-  const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme } = useAppState();
+  const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme, lastAction } = useAppState();
   const isDark = theme === 'dark';
   const [activeQA, setActiveQA] = useState<number | null>(null);
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Dynamic greeting based on lastAction
+  const greeting = useMemo(() => {
+    if (!lastAction) {
+      return `你好，我是小哥。我记住了关于你的 ${rawMemories.length} 个瞬间，想从哪里开始？`;
+    }
+    const { type, context } = lastAction;
+    switch (type) {
+      case 'confirm':
+        return `谢谢你告诉我。我刚才重新看了"${context.statement?.slice(0, 15)}…"相关的所有记忆，更确信这个结论。`;
+      case 'correct':
+        return `谢谢你纠正我。我会重新审视这个结论。你的反馈让我更准确了。`;
+      case 'reinforce':
+        return `那条"${context.label}"已经等待你很久了。它现在重新亮起来了。`;
+      case 'addTag':
+        return `你正在亲手编织自己的记忆星座。我会根据你的分类更精准地推荐相似记忆。`;
+      default:
+        return `你好，我是小哥。我记住了关于你的 ${rawMemories.length} 个瞬间，想从哪里开始？`;
+    }
+  }, [lastAction, rawMemories.length]);
 
   useEffect(() => {
     if (!chatOpen) return;
@@ -135,6 +155,14 @@ export default function ChatPanel() {
             </div>
 
             <div className="space-y-2 overflow-y-auto flex-1">
+              {/* Dynamic greeting */}
+              {messages.length === 0 && (
+                <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
+                  isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
+                }`}>
+                  {greeting}
+                </div>
+              )}
               {messages.map((msg, i) => (
                 <div key={`msg-${i}`} className={msg.role === 'user' ? 'flex justify-end' : ''}>
                   {msg.suggestions ? (
