@@ -696,9 +696,31 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                         </span>
                       )}
                       {step.memoryIds.length > 0 && (
-                        <span className={`text-[10px] ml-2 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                          ({step.memoryIds.length} 条依据)
-                        </span>
+                        <div className="mt-1 space-y-0.5">
+                          <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                            依据 ({step.memoryIds.length} 条):
+                          </span>
+                          {step.memoryIds.slice(0, 3).map(id => {
+                            const mem = rawMemories.find(m => m.id === id);
+                            if (!mem) return null;
+                            return (
+                              <button
+                                key={id}
+                                onClick={() => selectMemory(mem)}
+                                className={`block w-full text-left text-[10px] truncate cursor-pointer ${
+                                  isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
+                                }`}
+                              >
+                                · {mem.label}
+                              </button>
+                            );
+                          })}
+                          {step.memoryIds.length > 3 && (
+                            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                              ... 还有 {step.memoryIds.length - 3} 条
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
