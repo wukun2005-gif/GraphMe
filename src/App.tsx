@@ -220,7 +220,7 @@ function AppInner() {
 
       <TimelineScrubber />
 
-      <div className={`absolute top-4 z-20 flex items-center gap-2 transition-all duration-300 ${
+      <div className={`absolute top-4 z-20 flex flex-wrap items-center justify-end gap-1.5 max-w-[520px] transition-all duration-300 ${
         detailOpen ? 'right-[436px]' : 'right-4'
       }`}>
         {!isDemoPlaying && (
@@ -277,6 +277,7 @@ function AppInner() {
         </button>
         <button
           id="btn-annual-report"
+          title="记忆年报"
           onClick={() => setShowAnnualReport(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -284,10 +285,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          📊 年报
+          📊
         </button>
         <button
           id="btn-serendipity"
+          title="碰碰对"
           onClick={() => setShowSerendipity(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -295,10 +297,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎲 碰碰对
+          🎲
         </button>
         <button
           id="btn-dream"
+          title="梦境"
           onClick={() => setShowDream(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -306,10 +309,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🌙 梦境
+          🌙
         </button>
         <button
           id="btn-reader"
+          title="阅读模式"
           onClick={() => setShowReader(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -317,10 +321,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          📖 阅读
+          📖
         </button>
         <button
           id="btn-terrain"
+          title="认知地图"
           onClick={() => setShowTerrain(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -328,10 +333,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🗺️ 认知地图
+          🗺️
         </button>
         <button
           id="btn-gravity"
+          title="引力场"
           onClick={toggleGravityFieldMode}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             gravityFieldMode
@@ -340,10 +346,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🌀 引力场
+          🌀
         </button>
         <button
           id="btn-confusion"
+          title="困惑日记"
           onClick={() => setShowConfusion(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -351,10 +358,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🤔 困惑
+          🤔
         </button>
         <button
           id="btn-archaeology"
+          title="考古模式"
           onClick={toggleArchaeologyMode}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             archaeologyMode
@@ -363,10 +371,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🏺 考古
+          🏺
         </button>
         <button
           id="btn-second-brain"
+          title="第二大脑"
           onClick={() => setShowSecondBrain(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -374,7 +383,7 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🧠 第二大脑
+          🧠
         </button>
         <button
           onClick={toggleTheme}
@@ -384,7 +393,7 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          {isDark ? '☀️ 亮色' : '🌙 暗色'}
+          {isDark ? '☀️' : '🌙'}
         </button>
       </div>
 
