@@ -36,6 +36,7 @@ interface AppState {
   boomerangDescription: string;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
   antipodeMemoryId: string | null;
+  lastAction: { type: string; context: any; timestamp: number } | null;
   antipodeDescription: string;
 }
 
@@ -106,6 +107,7 @@ interface AppContextType extends AppState {
   clearButterflyEffect: () => void;
   findAntipode: (memoryId: string) => void;
   clearAntipode: () => void;
+  setLastAction: (type: string, context: any) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -143,6 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     butterflyEffect: null,
     antipodeMemoryId: null,
     antipodeDescription: '',
+    lastAction: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -271,6 +274,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateInsight = useCallback((id: string, updates: Partial<InsightMemory>) => {
     setInsightMems(prev => {
       const updated = prev.map(m => m.id === id ? { ...m, ...updates } : m);
+      // Track last action for flywheel feedback
+      if (updates.userConfirmed) {
+        const insight = updated.find(m => m.id === id);
+        if (insight) setLastAction('confirm', { id, statement: insight.statement, confidence: insight.confidence, sourceCount: insight.sourceRawMemoryIds.length });
+      }
+      if (updates.userCorrection) {
+        const insight = updated.find(m => m.id === id);
+        if (insight) setLastAction('correct', { id, statement: insight.statement, correction: updates.userCorrection });
+      }
       // If userCorrection is set, calculate butterfly effect (affected insights)
       if (updates.userCorrection) {
         const corrected = updated.find(m => m.id === id);
@@ -319,6 +331,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const setLastAction = useCallback((type: string, context: any) => {
+    setState(s => ({ ...s, lastAction: { type, context, timestamp: Date.now() } }));
+  }, []);
+
   const addTag = useCallback((memoryId: string, tag: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== memoryId) return m;
@@ -326,7 +342,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (tags.includes(tag)) return m;
       return { ...m, tags: [...tags, tag] };
     }));
-  }, []);
+    setLastAction('addTag', { memoryId, tag });
+  }, [setLastAction]);
 
   const removeTag = useCallback((memoryId: string, tag: string) => {
     setRawMems(prev => prev.map(m => {
@@ -575,25 +592,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const reinforceMemory = useCallback((id: string) => {
-    setRawMems(prev => prev.map(m => {
-      if (m.id !== id) return m;
-      return {
-        ...m,
-        dimensions: {
-          ...m.dimensions,
-          value: {
-            ...m.dimensions.value,
-            accessCount: m.dimensions.value.accessCount + 1,
-            cqi: Math.min(1, m.dimensions.value.cqi + 0.05),
+    setRawMems(prev => {
+      const mem = prev.find(m => m.id === id);
+      if (mem) setLastAction('reinforce', { id, label: mem.label, accessCount: mem.dimensions.value.accessCount });
+      return prev.map(m => {
+        if (m.id !== id) return m;
+        return {
+          ...m,
+          dimensions: {
+            ...m.dimensions,
+            value: {
+              ...m.dimensions.value,
+              accessCount: m.dimensions.value.accessCount + 1,
+              cqi: Math.min(1, m.dimensions.value.cqi + 0.05),
+            },
+            temporal: {
+              ...m.dimensions.temporal,
+              timestamp: Date.now(), // Reset forgetting curve
+            },
           },
-          temporal: {
-            ...m.dimensions.temporal,
-            timestamp: Date.now(), // Reset forgetting curve
-          },
-        },
-      };
-    }));
-  }, []);
+        };
+      });
+    });
+  }, [setLastAction]);
 
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
@@ -646,6 +667,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
       antipodeMemoryId: state.antipodeMemoryId, antipodeDescription: state.antipodeDescription, findAntipode, clearAntipode,
+      lastAction: state.lastAction, setLastAction,
     }}>
       {children}
     </AppContext.Provider>

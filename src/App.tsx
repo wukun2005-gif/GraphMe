@@ -22,6 +22,7 @@ import UserProfile from './components/UserProfile';
 import SocialGraph from './components/SocialGraph';
 import KnowledgeGap from './components/KnowledgeGap';
 import MemoryCinema from './components/MemoryCinema';
+import FlywheelFeedback from './components/FlywheelFeedback';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
 import { generateConfusionReport } from './utils/confusionUtils';
@@ -417,6 +418,7 @@ function AppInner() {
       <SocialGraph open={showSocial} onClose={() => setShowSocial(false)} />
       <KnowledgeGap open={showGap} onClose={() => setShowGap(false)} />
       <MemoryCinema open={showCinema} onClose={() => setShowCinema(false)} memories={rawMemories} theme={theme} />
+      <FlywheelFeedback />
 
       <AnimatePresence>
         {showDream && (
