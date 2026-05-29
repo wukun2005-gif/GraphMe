@@ -34,6 +34,7 @@ function AppInner() {
   const [showReader, setShowReader] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
   const [showColorStudio, setShowColorStudio] = useState(false);
+  const [constellationMode, setConstellationMode] = useState(false);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -275,6 +276,17 @@ function AppInner() {
           }`}
         >
           🎲 碰碰对
+        </button>
+        <button
+          id="btn-constellation"
+          onClick={() => setConstellationMode(!constellationMode)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            constellationMode
+              ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
+              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200' : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          ✨ 星座
         </button>
         <button
           id="btn-dream"
