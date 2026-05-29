@@ -661,11 +661,29 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
 
 function SceneLights({ theme }: { theme: Theme }) {
   const isLight = theme === 'light';
+  const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  // Compute dominant emotion color
+  const dominantColor = useMemo(() => {
+    let mems = rawMemories;
+    if (navCategory) mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+    if (mems.length === 0) return isLight ? '#ffffff' : '#4488ff';
+
+    const counts: Record<string, number> = {};
+    for (const m of mems) {
+      const e = m.dimensions.emotional.primary;
+      counts[e] = (counts[e] || 0) + 1;
+    }
+    const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0];
+    return EMOTION_COLORS[top as keyof typeof EMOTION_COLORS] || (isLight ? '#ffffff' : '#4488ff');
+  }, [rawMemories, navCategory, navSubCategory, isLight]);
+
   return (
     <>
       <ambientLight intensity={isLight ? 0.9 : 0.6} />
       <pointLight position={[10, 10, 10]} intensity={isLight ? 0.6 : 0.8} color="#ffffff" />
-      <pointLight position={[-8, -4, -6]} intensity={isLight ? 0.3 : 0.4} color="#4488ff" />
+      <pointLight ref={lightRef} position={[-8, -4, -6]} intensity={isLight ? 0.3 : 0.4} color={dominantColor} />
     </>
   );
 }
@@ -1114,6 +1132,7 @@ function HoverDetector({ onHover }: { onHover: (info: HoverInfo) => void }) {
 
 function DustParticles({ theme }: { theme: Theme }) {
   const isLight = theme === 'light';
+  const { rawMemories, navCategory, navSubCategory } = useAppState();
 
   const { positions, colors, sizes } = useMemo(() => {
     const count = 100;
@@ -1121,21 +1140,32 @@ function DustParticles({ theme }: { theme: Theme }) {
     const col = new Float32Array(count * 3);
     const sz = new Float32Array(count);
 
+    // Get dominant emotion color for dust
+    let mems = rawMemories;
+    if (navCategory) mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+    const counts: Record<string, number> = {};
+    for (const m of mems) {
+      counts[m.dimensions.emotional.primary] = (counts[m.dimensions.emotional.primary] || 0) + 1;
+    }
+    const topEmotion = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] || '中性';
+    const emColor = new THREE.Color(EMOTION_COLORS[topEmotion as keyof typeof EMOTION_COLORS] || '#888');
+
     for (let i = 0; i < count; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 20;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 16;
 
       const brightness = isLight ? 0.6 : 0.3;
-      col[i * 3] = brightness;
-      col[i * 3 + 1] = brightness;
-      col[i * 3 + 2] = brightness + (isLight ? 0.1 : 0.2);
+      // Mix with dominant emotion color
+      col[i * 3] = brightness * 0.5 + emColor.r * 0.5;
+      col[i * 3 + 1] = brightness * 0.5 + emColor.g * 0.5;
+      col[i * 3 + 2] = (brightness + (isLight ? 0.1 : 0.2)) * 0.5 + emColor.b * 0.5;
 
       sz[i] = 0.02 + Math.random() * 0.03;
     }
 
     return { positions: pos, colors: col, sizes: sz };
-  }, [isLight]);
+  }, [isLight, rawMemories, navCategory, navSubCategory]);
 
   const ref = useRef<THREE.Points>(null);
 

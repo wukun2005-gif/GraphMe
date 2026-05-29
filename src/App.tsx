@@ -20,6 +20,7 @@ import CognitiveTerrain from './components/CognitiveTerrain';
 import ConfusionDiary from './components/ConfusionDiary';
 import SecondBrain from './components/SecondBrain';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { EMOTION_COLORS } from './types';
 
 const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
@@ -134,6 +135,30 @@ function AppInner() {
       <MemCloud3D bgColor={isDark ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT} theme={theme} />
       <DailyMemoryCard />
       <MemorySurprise />
+
+      {/* Ambient atmosphere indicator bar */}
+      {(() => {
+        const counts: Record<string, number> = {};
+        rawMemories.forEach(m => {
+          const e = m.dimensions.emotional.primary;
+          counts[e] = (counts[e] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0];
+        const topEmotion = top?.[0] || '中性';
+        const topColor = EMOTION_COLORS[topEmotion as keyof typeof EMOTION_COLORS] || '#888';
+        const topPct = rawMemories.length > 0 ? Math.round((top?.[1] || 0) / rawMemories.length * 100) : 0;
+
+        return (
+          <div className="absolute top-0 left-0 right-0 z-30 h-1" title={`${topEmotion} ${topPct}%`}>
+            <div
+              className="h-full transition-all duration-2000"
+              style={{
+                background: `linear-gradient(90deg, transparent 0%, ${topColor}40 ${topPct}%, transparent 100%)`,
+              }}
+            />
+          </div>
+        );
+      })()}
 
       <div className={`absolute left-0 top-0 h-full z-20 backdrop-blur-sm border-r ${
         isDark ? 'bg-[#0d1525] border-[#ffffff08]' : 'bg-white border-gray-200'
