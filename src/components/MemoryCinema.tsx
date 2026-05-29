@@ -81,12 +81,12 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex flex-col"
-          style={{ background: emotionColor + '15' }}
+          style={{ background: isDark ? '#0a0a1a' : '#f0f0f5' }}
         >
           {/* Background gradient */}
           <motion.div
             className="absolute inset-0"
-            animate={{ backgroundColor: emotionColor + '10' }}
+            animate={{ backgroundColor: emotionColor + '25' }}
             transition={{ duration: 1.5 }}
           />
 

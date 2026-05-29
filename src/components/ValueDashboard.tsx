@@ -4,7 +4,7 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
 import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
 import { computeRhythm } from '../utils/rhythmUtils';
-import { computeSensoryProfile } from '../utils/sensoryUtils';
+import { computeSensoryProfile, extractSensoryKeywords } from '../utils/sensoryUtils';
 import { EMOTION_COLORS } from '../types';
 
 const RISK_COLORS: Record<string, string> = {
@@ -821,9 +821,17 @@ function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: R
   );
 }
 
-function SensoryPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: RawMemory[]; theme: 'dark' | 'light'; onSelectMemory?: (m: RawMemory) => void }) {
   const isDark = theme === 'dark';
   const profile = useMemo(() => computeSensoryProfile(rawMemories), [rawMemories]);
+
+  // Find memories with sensory keywords
+  const sensoryMemories = useMemo(() => {
+    return rawMemories.filter(m => {
+      const text = m.summary + ' ' + m.label;
+      return extractSensoryKeywords(text).length > 0 || m.dimensions.sensory.images.length > 0;
+    }).slice(0, 5);
+  }, [rawMemories]);
 
   return (
     <div className="space-y-4">
@@ -872,6 +880,46 @@ function SensoryPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme:
           </div>
         </div>
       </section>
+
+      {/* Sensory memories */}
+      {sensoryMemories.length > 0 && (
+        <section>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
+            📸 有感官记录的记忆
+          </h4>
+          <div className="space-y-1">
+            {sensoryMemories.map(m => {
+              const keywords = extractSensoryKeywords(m.summary + ' ' + m.label);
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => onSelectMemory?.(m)}
+                  className={`w-full text-left p-2 rounded-lg border transition-colors cursor-pointer ${
+                    isDark ? 'bg-[#ffffff03] border-[#ffffff08] hover:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                      {m.label}
+                    </span>
+                  </div>
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {keywords.slice(0, 3).map((kw, i) => (
+                        <span key={i} className={`text-[9px] px-1 py-0.5 rounded ${
+                          isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -1476,7 +1524,7 @@ export default function ValueDashboard() {
                 <RhythmPanel rawMemories={rawMemories} theme={theme} />
               )}
               {tab === 'sensory' && (
-                <SensoryPanel rawMemories={rawMemories} theme={theme} />
+                <SensoryPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
               )}
               {tab === 'flywheel' && (
                 <FlywheelPanel rawMemories={rawMemories} insightMemories={insightMemories} theme={theme} />

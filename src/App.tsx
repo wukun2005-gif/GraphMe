@@ -429,6 +429,7 @@ function AppInner() {
         )}
         <button
           onClick={toggleTheme}
+          title={isDark ? '切换亮色' : '切换暗色'}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
               ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
