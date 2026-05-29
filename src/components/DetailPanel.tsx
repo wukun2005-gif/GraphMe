@@ -145,7 +145,7 @@ function ConnectionGraph({ connections, theme, onSelect }: {
 }
 
 function RawDetail({ memory }: { memory: RawMemory }) {
-  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription } = useAppState();
+  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
   const isDark = theme === 'dark';
   const [showPrivateContent, setShowPrivateContent] = useState(false);
   const isPrivate = memory.dimensions.value.privacyLevel === '仅自己' || memory.dimensions.value.privacyLevel === '加密';
@@ -340,6 +340,43 @@ function RawDetail({ memory }: { memory: RawMemory }) {
           </div>
         </div>
       )}
+
+      {/* Antipode result */}
+      {antipodeMemoryId && (() => {
+        const mem = rawMemories.find(m => m.id === antipodeMemoryId);
+        if (!mem) return null;
+        const emoColor = EMOTION_COLORS[mem.dimensions.emotional.primary] || '#888';
+        return (
+          <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+            <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>
+              🌍 对跖点
+            </h4>
+            {antipodeDescription && (
+              <p className={`text-xs italic mb-2 ${isDark ? 'text-teal-400/70' : 'text-teal-600/70'}`}>
+                "{antipodeDescription}"
+              </p>
+            )}
+            <button
+              onClick={() => selectMemory(mem)}
+              className={`w-full text-left p-2 rounded-lg border transition-colors cursor-pointer ${
+                isDark
+                  ? 'bg-[#ffffff03] border-[#ffffff08] hover:border-teal-500/30 hover:bg-teal-500/5'
+                  : 'bg-gray-50 border-gray-200 hover:border-teal-300 hover:bg-teal-50'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
+                <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {mem.label}
+                </span>
+              </div>
+              <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {mem.summary}
+              </p>
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -782,7 +819,7 @@ function MemoryChainView({ chain, theme, onSelect }: {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang, butterflyEffect, clearButterflyEffect, insightMemories } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang, butterflyEffect, clearButterflyEffect, insightMemories, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1299,6 +1336,21 @@ export default function DetailPanel() {
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
                     >🪃 {boomerangMemoryIds.length > 0 ? '清除回旋镖' : '回旋镖'}</button>
+                    <button
+                      id="demo-antipode-btn"
+                      onClick={() => {
+                        if (antipodeMemoryId) {
+                          clearAntipode();
+                        } else {
+                          findAntipode(selectedMemory.id);
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        antipodeMemoryId
+                          ? isDark ? 'bg-teal-500/15 text-teal-400' : 'bg-teal-100 text-teal-600'
+                          : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >🌍 {antipodeMemoryId ? '清除对跖点' : '对跖点'}</button>
                   </>
                 )}
                 <div className="relative">

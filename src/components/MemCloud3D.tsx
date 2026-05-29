@@ -1390,6 +1390,71 @@ function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitC
   return <OrbitControls {...props} onChange={() => invalidate()} />;
 }
 
+function AntipodeLines({ theme }: { theme: Theme }) {
+  const { antipodeMemoryId, selectedMemory, rawMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+  const [opacity, setOpacity] = useState(1);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (antipodeMemoryId) {
+      setOpacity(1);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setOpacity(0), 3000);
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [antipodeMemoryId]);
+
+  if (!antipodeMemoryId || !selectedMemory || selectedMemory.type !== 'raw' || opacity <= 0) return null;
+
+  const fromMem = selectedMemory as RawMemory;
+  const toMem = rawMemories.find(m => m.id === antipodeMemoryId);
+  if (!toMem) return null;
+
+  const from = fromMem.positions[currentView] || fromMem.position3D;
+  const to = toMem.positions[currentView] || toMem.position3D;
+
+  // Create curved line
+  const midPoint: [number, number, number] = [
+    (from[0] + to[0]) / 2,
+    (from[1] + to[1]) / 2 + 1,
+    (from[2] + to[2]) / 2,
+  ];
+
+  const curve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(...from),
+    new THREE.Vector3(...midPoint),
+    new THREE.Vector3(...to),
+  );
+  const points = curve.getPoints(32);
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+  const lineObj = new THREE.Line(
+    geometry,
+    new THREE.LineBasicMaterial({
+      color: isLight ? '#0d9488' : '#44ccaa',
+      transparent: true,
+      opacity: opacity * 0.6,
+    }),
+  );
+
+  return (
+    <group>
+      <primitive object={lineObj} />
+      {/* Start marker */}
+      <mesh position={from}>
+        <sphereGeometry args={[0.15, 12, 12]} />
+        <meshBasicMaterial color={isLight ? '#0d9488' : '#44ccaa'} transparent opacity={opacity * 0.4} />
+      </mesh>
+      {/* End marker */}
+      <mesh position={to}>
+        <sphereGeometry args={[0.15, 12, 12]} />
+        <meshBasicMaterial color={isLight ? '#0d9488' : '#44ccaa'} transparent opacity={opacity * 0.4} />
+      </mesh>
+    </group>
+  );
+}
+
 function DragRing({ theme }: { theme: Theme }) {
   const { draggedMemoryId, rawMemories, currentView } = useAppState();
   const ringRef = useRef<THREE.Mesh>(null);
@@ -1702,6 +1767,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <RippleEffect theme={theme} />
         <ButterflyEffect theme={theme} />
         <DragRing theme={theme} />
+        <AntipodeLines theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
         <GravityFieldRings theme={theme} />

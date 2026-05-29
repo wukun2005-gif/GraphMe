@@ -497,3 +497,98 @@ function generateBoomerangDescription(
 
   return `${monthsDiff} 个月前的记忆在远处回响——${reasons.slice(0, 2).join('、')}`;
 }
+
+// ========== Antipode (最遥远的记忆) ==========
+
+export interface AntipodeResult {
+  memory: RawMemory;
+  distance: number;
+  description: string;
+}
+
+export function findAntipode(target: RawMemory, allMemories: RawMemory[]): AntipodeResult | null {
+  const candidates = allMemories.filter(m => m.id !== target.id);
+  if (candidates.length === 0) return null;
+
+  let maxDist = -1;
+  let antipode: RawMemory | null = null;
+
+  for (const candidate of candidates) {
+    let dist = 0;
+
+    // 1. Emotion distance (different emotion = high distance)
+    if (target.dimensions.emotional.primary !== candidate.dimensions.emotional.primary) {
+      dist += 3;
+    }
+
+    // 2. Emotion intensity distance
+    dist += Math.abs(target.dimensions.emotional.intensity - candidate.dimensions.emotional.intensity) * 2;
+
+    // 3. Place type distance (different place = distance)
+    if (target.dimensions.spatial.placeType !== candidate.dimensions.spatial.placeType) {
+      dist += 2;
+    }
+
+    // 4. Activity type distance
+    if (target.dimensions.activity.type !== candidate.dimensions.activity.type) {
+      dist += 2;
+    }
+
+    // 5. Person overlap (no shared persons = distance)
+    const sharedPersons = target.dimensions.social.persons.filter(p =>
+      candidate.dimensions.social.persons.includes(p)
+    );
+    dist += (1 - Math.min(sharedPersons.length, 1)) * 2;
+
+    // 6. Importance distance
+    dist += Math.abs(target.dimensions.value.importance - candidate.dimensions.value.importance) * 2;
+
+    // 7. Knowledge distance (no shared knowledge = distance)
+    const sharedKnowledge = target.dimensions.semantic.knowledge.filter(k =>
+      candidate.dimensions.semantic.knowledge.includes(k)
+    );
+    dist += (1 - Math.min(sharedKnowledge.length, 1)) * 1.5;
+
+    // 8. Time distance
+    const daysDiff = Math.abs(target.dimensions.temporal.timestamp - candidate.dimensions.temporal.timestamp) / (1000 * 60 * 60 * 24);
+    dist += Math.min(daysDiff / 30, 3); // Cap at 3
+
+    // 9. Season distance
+    if (target.dimensions.temporal.season !== candidate.dimensions.temporal.season) {
+      dist += 1;
+    }
+
+    // 10. Storyline distance
+    if (target.dimensions.narrative.storyline !== candidate.dimensions.narrative.storyline) {
+      dist += 1.5;
+    }
+
+    if (dist > maxDist) {
+      maxDist = dist;
+      antipode = candidate;
+    }
+  }
+
+  if (!antipode) return null;
+
+  // Generate description
+  const targetEmotion = target.dimensions.emotional.primary;
+  const antipodeEmotion = antipode.dimensions.emotional.primary;
+  const targetPlace = target.dimensions.spatial.landmark || target.dimensions.spatial.placeType;
+  const antipodePlace = antipode.dimensions.spatial.landmark || antipode.dimensions.spatial.placeType;
+
+  let description = '';
+  if (targetEmotion !== antipodeEmotion && target.dimensions.activity.type !== antipode.dimensions.activity.type) {
+    description = `这条${targetEmotion}的${targetPlace}记忆，与那条${antipodeEmotion}的${antipodePlace}记忆，几乎是你记忆宇宙的两极`;
+  } else if (targetEmotion !== antipodeEmotion) {
+    description = `从${targetEmotion}到${antipodeEmotion}——这是你情感光谱的两端`;
+  } else {
+    description = `同一个${targetEmotion}的你，在完全不同的世界里——${targetPlace}与${antipodePlace}`;
+  }
+
+  return {
+    memory: antipode,
+    distance: maxDist,
+    description,
+  };
+}

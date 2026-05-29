@@ -3,6 +3,7 @@ import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollec
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
+import { findAntipode as findAntipodeUtil } from '../utils/similarityUtils';
 
 interface AppState {
   currentView: DimensionView;
@@ -38,6 +39,8 @@ interface AppState {
   archaeologyMode: boolean;
   userPersona: '家长' | '陪伴者' | '极客';
   draggedMemoryId: string | null;
+  antipodeMemoryId: string | null;
+  antipodeDescription: string;
 }
 
 interface AppContextType extends AppState {
@@ -109,6 +112,8 @@ interface AppContextType extends AppState {
   toggleArchaeologyMode: () => void;
   setUserPersona: (persona: '家长' | '陪伴者' | '极客') => void;
   setDraggedMemoryId: (id: string | null) => void;
+  findAntipode: (memoryId: string) => void;
+  clearAntipode: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -151,6 +156,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       catch { return '家长'; }
     })(),
     draggedMemoryId: null,
+    antipodeMemoryId: null,
+    antipodeDescription: '',
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -586,6 +593,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, draggedMemoryId: id }));
   }, []);
 
+  const findAntipode = useCallback((memoryId: string) => {
+    const mem = rawMems.find(m => m.id === memoryId);
+    if (!mem) return;
+    const result = findAntipodeUtil(mem, rawMems);
+    if (result) {
+      setState(s => ({ ...s, antipodeMemoryId: result.memory.id, antipodeDescription: result.description }));
+    }
+  }, [rawMems]);
+
+  const clearAntipode = useCallback(() => {
+    setState(s => ({ ...s, antipodeMemoryId: null, antipodeDescription: '' }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -661,6 +681,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
       userPersona: state.userPersona, setUserPersona,
       draggedMemoryId: state.draggedMemoryId, setDraggedMemoryId,
+      antipodeMemoryId: state.antipodeMemoryId, antipodeDescription: state.antipodeDescription, findAntipode, clearAntipode,
     }}>
       {children}
     </AppContext.Provider>
