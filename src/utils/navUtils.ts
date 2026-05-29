@@ -177,3 +177,76 @@ export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | 
 
   return null;
 }
+
+// ─── Memory Connections (Feature #60) ───
+
+export interface MemoryConnection {
+  id: string;
+  label: string;
+  type: 'insight' | 'storyline' | 'person';
+  detail: string;
+  memory: RawMemory | InsightMemory;
+}
+
+export function getMemoryConnections(
+  memoryId: string,
+  rawMemories: RawMemory[],
+  insightMemories: InsightMemory[],
+): MemoryConnection[] {
+  const target = rawMemories.find(m => m.id === memoryId);
+  if (!target) return [];
+
+  const connections: MemoryConnection[] = [];
+
+  // 1. Insight connections: insights that reference this memory
+  for (const ins of insightMemories) {
+    if (ins.sourceRawMemoryIds.includes(memoryId)) {
+      connections.push({
+        id: ins.id,
+        label: ins.statement,
+        type: 'insight',
+        detail: `${ins.category}洞察`,
+        memory: ins,
+      });
+    }
+  }
+
+  // 2. Storyline connections: same storyline, different memory
+  const storyline = target.dimensions.narrative.storyline;
+  if (storyline) {
+    const sameStory = rawMemories.filter(
+      m => m.id !== memoryId && m.dimensions.narrative.storyline === storyline
+    );
+    for (const m of sameStory) {
+      connections.push({
+        id: m.id,
+        label: m.label,
+        type: 'storyline',
+        detail: `同故事线"${storyline}"`,
+        memory: m,
+      });
+    }
+  }
+
+  // 3. Person connections: shared persons, different memory
+  const persons = target.dimensions.social.persons;
+  if (persons.length > 0) {
+    const personMems = rawMemories.filter(
+      m => m.id !== memoryId &&
+        m.dimensions.social.persons.some(p => persons.includes(p)) &&
+        !connections.some(c => c.id === m.id) // exclude already added
+    );
+    for (const m of personMems.slice(0, 5)) {
+      const shared = m.dimensions.social.persons.filter(p => persons.includes(p));
+      connections.push({
+        id: m.id,
+        label: m.label,
+        type: 'person',
+        detail: `和${shared.join('、')}在一起`,
+        memory: m,
+      });
+    }
+  }
+
+  return connections;
+}

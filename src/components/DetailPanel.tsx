@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory, EmotionType } from '../types';
 import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
 import { computeDiff } from '../utils/valueUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
+import { getMemoryConnections } from '../utils/navUtils';
+import type { MemoryConnection } from '../utils/navUtils';
 
 interface VersionEntry {
   version: number;
@@ -49,9 +51,14 @@ type EditData = {
 };
 
 function RawDetail({ memory }: { memory: RawMemory }) {
-  const { theme } = useAppState();
+  const { theme, rawMemories, insightMemories, selectMemory } = useAppState();
   const isDark = theme === 'dark';
   const d = memory.dimensions;
+
+  const connections = useMemo(
+    () => getMemoryConnections(memory.id, rawMemories, insightMemories),
+    [memory.id, rawMemories, insightMemories]
+  );
   return (
     <div className="space-y-3 text-sm">
       <div className="flex items-center gap-2 mb-3">
@@ -105,6 +112,37 @@ function RawDetail({ memory }: { memory: RawMemory }) {
               🏷 {tag}
             </span>
           ))}
+        </div>
+      )}
+
+      {connections.length > 0 && (
+        <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            🌌 这条记忆的连接 ({connections.length})
+          </h4>
+          <div className="space-y-1">
+            {connections.slice(0, 8).map(conn => {
+              const typeIcon = conn.type === 'insight' ? '💡' : conn.type === 'storyline' ? '🔗' : '👤';
+              const typeColor = conn.type === 'insight'
+                ? isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'
+                : conn.type === 'storyline'
+                  ? isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'
+                  : isDark ? 'text-purple-400' : 'text-purple-600';
+              return (
+                <button
+                  key={conn.id}
+                  onClick={() => selectMemory(conn.memory)}
+                  className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 cursor-pointer transition-colors ${
+                    isDark ? 'hover:bg-[#ffffff08]' : 'hover:bg-black/5'
+                  }`}
+                >
+                  <span>{typeIcon}</span>
+                  <span className={`flex-1 truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{conn.label}</span>
+                  <span className={`text-[10px] flex-shrink-0 ${typeColor}`}>{conn.detail}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
