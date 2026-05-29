@@ -21,6 +21,7 @@ import ConfusionDiary from './components/ConfusionDiary';
 import UserProfile from './components/UserProfile';
 import SocialGraph from './components/SocialGraph';
 import KnowledgeGap from './components/KnowledgeGap';
+import MemoryCinema from './components/MemoryCinema';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
 import { generateConfusionReport } from './utils/confusionUtils';
@@ -42,6 +43,7 @@ function AppInner() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
   const [showGap, setShowGap] = useState(false);
+  const [showCinema, setShowCinema] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -58,6 +60,7 @@ function AppInner() {
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
       if (e.key === 'Escape') {
+        if (showCinema) { setShowCinema(false); return; }
         if (showGap) { setShowGap(false); return; }
         if (showSocial) { setShowSocial(false); return; }
         if (showProfile) { setShowProfile(false); return; }
@@ -91,7 +94,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -367,6 +370,18 @@ function AppInner() {
         >
           🧩
         </button>
+        <button
+          id="btn-cinema"
+          title="记忆微电影"
+          onClick={() => setShowCinema(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🎬
+        </button>
         {hasConfusion && (
           <button
             id="btn-confusion"
@@ -401,6 +416,7 @@ function AppInner() {
       <UserProfile open={showProfile} onClose={() => setShowProfile(false)} />
       <SocialGraph open={showSocial} onClose={() => setShowSocial(false)} />
       <KnowledgeGap open={showGap} onClose={() => setShowGap(false)} />
+      <MemoryCinema open={showCinema} onClose={() => setShowCinema(false)} memories={rawMemories} theme={theme} />
 
       <AnimatePresence>
         {showDream && (
