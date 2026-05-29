@@ -178,3 +178,50 @@ export function generateStory(
 
   return chapters;
 }
+
+// ─── Dream Generator (Feature #63) ───
+
+export interface DreamResult {
+  narrative: string;
+  sourceMemories: RawMemory[];
+}
+
+const DREAM_TEMPLATES = [
+  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
+    `你梦见${fragments[0].place}变成了${fragments[1]?.place || '一个陌生的地方'}，${fragments[0].person}正在${fragments[1]?.activity || '做着什么'}，而你${fragments[0].emotion}地${fragments[0].activity}。空气中弥漫着${fragments[1]?.emotion || '奇异'}的气息。`,
+
+  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
+    `在梦里，${fragments[0].person}和${fragments[1]?.person || '一个模糊的身影'}一起在${fragments[0].place}${fragments[0].activity}。你站在远处，感到${fragments[0].emotion}。突然，${fragments[1]?.place || '一切都'}开始旋转，你发现自己正在${fragments[1]?.activity || '飞翔'}。`,
+
+  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
+    `你梦见时间倒流——${fragments[0].activity}的你回到了${fragments[0].place}。${fragments[0].person}对你微笑，说着你听不懂却感到${fragments[0].emotion}的话。远处，${fragments[1]?.person || '有人'}在${fragments[1]?.activity || '等待'}。`,
+];
+
+export function generateDream(memories: RawMemory[]): DreamResult {
+  if (memories.length < 3) {
+    return {
+      narrative: '记忆太少，无法编织梦境。请先记录更多记忆。',
+      sourceMemories: memories,
+    };
+  }
+
+  // Pick 3-5 random fragments from different categories
+  const shuffled = [...memories].sort(() => Math.random() - 0.5);
+  const count = Math.min(3 + Math.floor(Math.random() * 3), shuffled.length);
+  const selected = shuffled.slice(0, count);
+
+  const fragments = selected.map(m => ({
+    place: m.dimensions.spatial.placeType,
+    person: m.dimensions.social.persons[0] || '某个人',
+    activity: m.dimensions.activity.detail || m.dimensions.activity.type,
+    emotion: m.dimensions.emotional.primary,
+  }));
+
+  const template = DREAM_TEMPLATES[Math.floor(Math.random() * DREAM_TEMPLATES.length)];
+  const narrative = template(fragments);
+
+  return {
+    narrative,
+    sourceMemories: selected,
+  };
+}
