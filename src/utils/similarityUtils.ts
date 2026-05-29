@@ -245,3 +245,107 @@ function generateEchoDescription(
 
   return `${timeDesc}的记忆在远处回响——${sharedFeatures.slice(0, 2).join('、')}`;
 }
+
+export interface MemoryChainLink {
+  memory: RawMemory;
+  connectionReason: string;
+}
+
+/**
+ * 构建记忆链条 — 从当前记忆出发，链式寻找最相似记忆
+ * 每步标注连接原因，多候选时随机选择下一步
+ */
+export function buildMemoryChain(
+  start: RawMemory,
+  allMemories: RawMemory[],
+  steps: number = 5,
+): MemoryChainLink[] {
+  const chain: MemoryChainLink[] = [{ memory: start, connectionReason: '起点' }];
+  const visited = new Set<string>([start.id]);
+
+  let current = start;
+
+  for (let i = 0; i < steps; i++) {
+    // Find similar memories not yet visited
+    const candidates = allMemories.filter(m => !visited.has(m.id));
+
+    if (candidates.length === 0) break;
+
+    // Score each candidate
+    const scored = candidates.map(candidate => {
+      let score = 0;
+      const reasons: string[] = [];
+
+      // Same persons
+      const sharedPersons = current.dimensions.social.persons.filter(p =>
+        candidate.dimensions.social.persons.includes(p),
+      );
+      if (sharedPersons.length > 0) {
+        score += sharedPersons.length * 20;
+        reasons.push(`共享人物→`);
+      }
+
+      // Same placeType
+      if (current.dimensions.spatial.placeType === candidate.dimensions.spatial.placeType) {
+        score += 15;
+        reasons.push(`同地点→`);
+      }
+
+      // Same emotion
+      if (current.dimensions.emotional.primary === candidate.dimensions.emotional.primary) {
+        score += 10;
+        reasons.push(`相同情绪→`);
+      }
+
+      // Same storyline
+      if (
+        current.dimensions.narrative.storyline &&
+        current.dimensions.narrative.storyline === candidate.dimensions.narrative.storyline
+      ) {
+        score += 25;
+        reasons.push(`同故事线→`);
+      }
+
+      // Same activity type
+      if (current.dimensions.activity.type === candidate.dimensions.activity.type) {
+        score += 8;
+        reasons.push(`同活动→`);
+      }
+
+      // Same season
+      if (current.dimensions.temporal.season === candidate.dimensions.temporal.season) {
+        score += 3;
+      }
+
+      // Shared knowledge
+      const sharedKnowledge = current.dimensions.semantic.knowledge.filter(k =>
+        candidate.dimensions.semantic.knowledge.includes(k),
+      );
+      if (sharedKnowledge.length > 0) {
+        score += sharedKnowledge.length * 5;
+        reasons.push(`共享知识→`);
+      }
+
+      return { memory: candidate, score, reasons };
+    });
+
+    // Filter and sort
+    const valid = scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+
+    if (valid.length === 0) break;
+
+    // Randomly select from top 3 candidates for variety
+    const topCandidates = valid.slice(0, 3);
+    const selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+
+    chain.push({
+      memory: selected.memory,
+      connectionReason: selected.reasons[0] || '相关→',
+    });
+
+    visited.add(selected.memory.id);
+    current = selected.memory;
+  }
+
+  return chain;
+}

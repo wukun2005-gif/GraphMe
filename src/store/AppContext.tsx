@@ -31,6 +31,7 @@ interface AppState {
   farewellRecords: FarewellRecord[];
   capsules: TimeCapsule[];
   constellations: Constellation[];
+  memoryChain: { memoryId: string; connectionReason: string }[];
 }
 
 interface AppContextType extends AppState {
@@ -98,6 +99,8 @@ interface AppContextType extends AppState {
   addConnection: (constellationId: string, connection: ConstellationConnection) => void;
   removeConnection: (constellationId: string, fromId: string, toId: string) => void;
   renameConstellation: (id: string, name: string) => void;
+  buildChain: (memoryId: string) => void;
+  clearChain: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -130,6 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     farewellRecords: [],
     capsules: [],
     constellations: [],
+    memoryChain: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -537,6 +541,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setConstellations(prev => prev.map(c => c.id === id ? { ...c, name } : c));
   }, []);
 
+  const buildChain = useCallback((memoryId: string) => {
+    const target = rawMems.find(m => m.id === memoryId);
+    if (!target) return;
+    import('../utils/similarityUtils').then(({ buildMemoryChain }) => {
+      const chain = buildMemoryChain(target, rawMems, 5);
+      setState(s => ({
+        ...s,
+        memoryChain: chain.map(link => ({
+          memoryId: link.memory.id,
+          connectionReason: link.connectionReason,
+        })),
+      }));
+    });
+  }, [rawMems]);
+
+  const clearChain = useCallback(() => {
+    setState(s => ({ ...s, memoryChain: [] }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -606,6 +629,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       farewellRecords, farewellMemory,
       capsules, createCapsule, openCapsule,
       constellations, addConstellation, removeConstellation, addConnection, removeConnection, renameConstellation,
+      memoryChain: state.memoryChain, buildChain, clearChain,
     }}>
       {children}
     </AppContext.Provider>

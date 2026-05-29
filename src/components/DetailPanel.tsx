@@ -597,8 +597,91 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
   );
 }
 
+function MemoryChainView({ chain, theme, onSelect }: {
+  chain: { memoryId: string; connectionReason: string }[];
+  theme: 'dark' | 'light';
+  onSelect: (id: string) => void;
+}) {
+  const { allRawMemories } = useAppState();
+  const isDark = theme === 'dark';
+
+  const chainWithMemories = chain.map(link => {
+    const memory = allRawMemories.find(m => m.id === link.memoryId);
+    return { ...link, memory };
+  }).filter(link => link.memory);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className={`text-xs font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+          📞 记忆传声筒
+        </p>
+        <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          {chainWithMemories.length} 步
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {chainWithMemories.map((link, i) => {
+          const mem = link.memory!;
+          const emoColor = EMOTION_COLORS[mem.dimensions.emotional.primary] || '#888';
+          const isFirst = i === 0;
+          const isLast = i === chainWithMemories.length - 1;
+
+          return (
+            <div key={mem.id} className="relative">
+              {/* Connection arrow */}
+              {!isFirst && (
+                <div className={`absolute -top-3 left-4 text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {link.connectionReason}
+                </div>
+              )}
+
+              {/* Memory card */}
+              <button
+                onClick={() => onSelect(mem.id)}
+                className={`w-full text-left p-2.5 rounded-lg border transition-colors cursor-pointer ${
+                  isFirst
+                    ? isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'
+                    : isDark ? 'bg-[#ffffff03] border-[#ffffff08] hover:border-purple-500/30' : 'bg-gray-50 border-gray-200 hover:border-purple-300'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {isFirst && <span className="text-xs">📍</span>}
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: emoColor }} />
+                  <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {mem.label}
+                  </span>
+                </div>
+                <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {mem.summary}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {mem.dimensions.emotional.primary}
+                  </span>
+                  <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                    📍 {mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType}
+                  </span>
+                </div>
+              </button>
+
+              {/* Arrow down */}
+              {!isLast && (
+                <div className={`text-center text-xs my-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                  ↓
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1024,6 +1107,11 @@ export default function DetailPanel() {
                   allMemories={allRawMemories}
                   theme={theme}
                 />
+              ) : memoryChain.length > 0 ? (
+                <MemoryChainView chain={memoryChain} theme={theme} onSelect={(id) => {
+                  const mem = allRawMemories.find(m => m.id === id);
+                  if (mem) selectMemory(mem);
+                }} />
               ) : selectedMemory.type === 'raw'
                 ? <RawDetail memory={selectedMemory} />
                 : <InsightDetail memory={selectedMemory} />}
@@ -1080,6 +1168,21 @@ export default function DetailPanel() {
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
                     >🔗 {similarMemoryIds.length > 0 ? '清除相似' : '找相似'}</button>
+                    <button
+                      id="demo-chain-btn"
+                      onClick={() => {
+                        if (memoryChain.length > 0) {
+                          clearChain();
+                        } else {
+                          buildChain(selectedMemory.id);
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        memoryChain.length > 0
+                          ? isDark ? 'bg-purple-500/15 text-purple-400' : 'bg-purple-100 text-purple-600'
+                          : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >📞 {memoryChain.length > 0 ? '清除链条' : '传声筒'}</button>
                   </>
                 )}
                 <div className="relative">
