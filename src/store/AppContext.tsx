@@ -34,6 +34,7 @@ interface AppState {
   boomerangMemoryIds: string[];
   boomerangDescription: string;
   gravityFieldMode: boolean;
+  butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
 }
 
 interface AppContextType extends AppState {
@@ -101,6 +102,7 @@ interface AppContextType extends AppState {
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
   toggleGravityFieldMode: () => void;
+  clearButterflyEffect: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -136,6 +138,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     boomerangMemoryIds: [],
     boomerangDescription: '',
     gravityFieldMode: false,
+    butterflyEffect: null,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -262,7 +265,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateInsight = useCallback((id: string, updates: Partial<InsightMemory>) => {
-    setInsightMems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    setInsightMems(prev => {
+      const updated = prev.map(m => m.id === id ? { ...m, ...updates } : m);
+      // If userCorrection is set, calculate butterfly effect (affected insights)
+      if (updates.userCorrection) {
+        const corrected = updated.find(m => m.id === id);
+        if (corrected) {
+          const affectedIds: string[] = [];
+          // Find insights that share source raw memories with the corrected insight
+          const correctedSources = new Set(corrected.sourceRawMemoryIds);
+          for (const other of updated) {
+            if (other.id === id || other.deprecatedAt != null) continue;
+            const shared = other.sourceRawMemoryIds.filter(sid => correctedSources.has(sid));
+            if (shared.length >= 2) {
+              affectedIds.push(other.id);
+            }
+          }
+          if (affectedIds.length > 0) {
+            setState(s => ({ ...s, butterflyEffect: { affectedIds, timestamp: Date.now() } }));
+          }
+        }
+      }
+      return updated;
+    });
   }, []);
 
   const importMemories = useCallback((raws: RawMemory[], insights: InsightMemory[]) => {
@@ -532,6 +557,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, gravityFieldMode: !s.gravityFieldMode }));
   }, []);
 
+  const clearButterflyEffect = useCallback(() => {
+    setState(s => ({ ...s, butterflyEffect: null }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -603,6 +632,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
       gravityFieldMode: state.gravityFieldMode, toggleGravityFieldMode,
+      butterflyEffect: state.butterflyEffect, clearButterflyEffect,
     }}>
       {children}
     </AppContext.Provider>

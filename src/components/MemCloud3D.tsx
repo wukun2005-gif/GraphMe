@@ -1237,6 +1237,95 @@ function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitC
   return <OrbitControls {...props} onChange={() => invalidate()} />;
 }
 
+function ButterflyEffect({ theme }: { theme: Theme }) {
+  const { butterflyEffect, clearButterflyEffect, insightMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+  const [phase, setPhase] = useState<'idle' | 'pulse' | 'ripple' | 'done'>('idle');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+  const flashIndexRef = useRef(0);
+
+  useEffect(() => {
+    if (!butterflyEffect) {
+      setPhase('idle');
+      return;
+    }
+    setPhase('pulse');
+    // After pulse, show ripple
+    timerRef.current = setTimeout(() => setPhase('ripple'), 800);
+    // Auto-clear after 3 seconds
+    const clearTimer = setTimeout(() => {
+      setPhase('done');
+      clearButterflyEffect();
+    }, 3000);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimeout(clearTimer);
+    };
+  }, [butterflyEffect, clearButterflyEffect]);
+
+  // Animate pulse ring expansion
+  useFrame(() => {
+    if (ringRef.current && phase === 'pulse') {
+      const scale = ringRef.current.scale.x;
+      if (scale < 5) {
+        ringRef.current.scale.set(scale + 0.08, scale + 0.08, scale + 0.08);
+        const mat = ringRef.current.material as THREE.MeshBasicMaterial;
+        mat.opacity = Math.max(0, 0.5 - scale * 0.08);
+      }
+    }
+  });
+
+  if (!butterflyEffect || phase === 'idle' || phase === 'done') return null;
+
+  // Find the corrected insight position (first affected = the corrected one itself)
+  const correctedId = butterflyEffect.affectedIds[0];
+  const correctedInsight = insightMemories.find(m => m.id === correctedId);
+  if (!correctedInsight) return null;
+
+  const pos = correctedInsight.position3D;
+  const emColor = new THREE.Color('#ff6b6b');
+
+  return (
+    <group>
+      {/* Shockwave pulse ring */}
+      {phase === 'pulse' && (
+        <mesh ref={ringRef} position={pos} rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.3, 0.35, 48]} />
+          <meshBasicMaterial
+            color={emColor}
+            transparent
+            opacity={0.5}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+
+      {/* Flash affected insights */}
+      {phase === 'ripple' && butterflyEffect.affectedIds.map((id, i) => {
+        const insight = insightMemories.find(m => m.id === id);
+        if (!insight) return null;
+        const iPos = insight.position3D;
+        // Stagger flash by 0.3s each
+        const delay = i * 300;
+        const isFlashing = (Date.now() - butterflyEffect.timestamp - 800 - delay) % 600 < 300;
+
+        return (
+          <mesh key={id} position={iPos}>
+            <sphereGeometry args={[0.25, 16, 16]} />
+            <meshBasicMaterial
+              color={isFlashing ? '#ff6b6b' : '#ffb800'}
+              transparent
+              opacity={isFlashing ? 0.6 : 0.15}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 function GravityFieldRings({ theme }: { theme: Theme }) {
   const { rawMemories, gravityFieldMode, currentView, navCategory, navSubCategory } = useAppState();
   const isLight = theme === 'light';
@@ -1355,6 +1444,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
+        <ButterflyEffect theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
         <GravityFieldRings theme={theme} />

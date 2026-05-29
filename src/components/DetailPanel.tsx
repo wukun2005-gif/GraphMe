@@ -327,7 +327,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 }
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
-  const { rawMemories, theme, selectMemory, updateInsight } = useAppState();
+  const { rawMemories, theme, selectMemory, updateInsight, butterflyEffect, clearButterflyEffect, insightMemories } = useAppState();
   const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -513,6 +513,40 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
             isDark ? 'bg-blue-500/10 text-blue-400/80' : 'bg-blue-50 text-blue-700'
           }`}>
             备注：{memory.userNote}
+          </div>
+        )}
+
+        {/* Butterfly effect ripple report */}
+        {butterflyEffect && butterflyEffect.affectedIds.includes(memory.id) && (
+          <div className={`mt-2 p-2 rounded-lg border text-xs ${
+            isDark ? 'bg-[#ff6b6b]/5 border-[#ff6b6b]/15' : 'bg-red-50 border-red-100'
+          }`}>
+            <div className="flex items-center justify-between mb-1">
+              <span className={`font-medium ${isDark ? 'text-[#ff6b6b]' : 'text-red-600'}`}>
+                🦋 涟漪报告
+              </span>
+              <button
+                onClick={clearButterflyEffect}
+                className={`text-xs cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                ✕
+              </button>
+            </div>
+            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+              你的纠正影响了 {butterflyEffect.affectedIds.length} 条相关洞察：
+            </p>
+            <div className="mt-1 space-y-0.5">
+              {butterflyEffect.affectedIds.slice(0, 5).map(id => {
+                const affected = insightMemories.find(i => i.id === id);
+                if (!affected) return null;
+                return (
+                  <div key={id} className={`flex items-center gap-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <span className="w-1 h-1 rounded-full bg-red-400" />
+                    <span className="truncate">{affected.statement.slice(0, 30)}…</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -730,7 +764,7 @@ function MemoryChainView({ chain, theme, onSelect }: {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang, butterflyEffect, clearButterflyEffect, insightMemories } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
