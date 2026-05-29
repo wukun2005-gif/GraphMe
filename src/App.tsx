@@ -24,7 +24,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, gravityFieldMode, toggleGravityFieldMode } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, gravityFieldMode, toggleGravityFieldMode, archaeologyMode, toggleArchaeologyMode } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -307,6 +307,18 @@ function AppInner() {
           }`}
         >
           🤔 困惑
+        </button>
+        <button
+          id="btn-archaeology"
+          onClick={toggleArchaeologyMode}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            archaeologyMode
+              ? isDark ? 'bg-[#44ccaa]/20 text-[#44ccaa]' : 'bg-teal-100 text-teal-700'
+              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          🏺 考古
         </button>
         <button
           onClick={toggleTheme}

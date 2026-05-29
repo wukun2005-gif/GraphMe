@@ -35,6 +35,7 @@ interface AppState {
   boomerangDescription: string;
   gravityFieldMode: boolean;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
+  archaeologyMode: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -103,6 +104,7 @@ interface AppContextType extends AppState {
   clearBoomerang: () => void;
   toggleGravityFieldMode: () => void;
   clearButterflyEffect: () => void;
+  toggleArchaeologyMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -139,6 +141,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     boomerangDescription: '',
     gravityFieldMode: false,
     butterflyEffect: null,
+    archaeologyMode: false,
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -561,6 +564,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, butterflyEffect: null }));
   }, []);
 
+  const toggleArchaeologyMode = useCallback(() => {
+    setState(s => ({ ...s, archaeologyMode: !s.archaeologyMode }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -633,6 +640,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
       gravityFieldMode: state.gravityFieldMode, toggleGravityFieldMode,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
+      archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
     }}>
       {children}
     </AppContext.Provider>

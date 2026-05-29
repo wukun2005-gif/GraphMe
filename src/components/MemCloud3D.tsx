@@ -68,7 +68,7 @@ function getInsightNavPosition(ins: InsightMemory, category: string, subCategory
 type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
-  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds } = useAppState();
+  const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds, archaeologyMode } = useAppState();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -100,9 +100,39 @@ function ParticleCloud({ theme }: { theme: Theme }) {
     const col = new Float32Array(mems.length * 3);
     const sz = new Float32Array(mems.length);
 
+    // Archaeology mode: group by time layers
+    const timeLayers = archaeologyMode ? (() => {
+      const now = Date.now();
+      const MONTH = 30 * 24 * 60 * 60 * 1000;
+      const layers: Map<number, RawMemory[]> = new Map();
+      mems.forEach(m => {
+        const monthsAgo = Math.floor((now - m.dimensions.temporal.timestamp) / MONTH);
+        const layerKey = Math.min(monthsAgo, 11); // Max 12 layers
+        if (!layers.has(layerKey)) layers.set(layerKey, []);
+        layers.get(layerKey)!.push(m);
+      });
+      return layers;
+    })() : null;
+
     mems.forEach((m, i) => {
       let p: [number, number, number];
-      if (navCategory) {
+      if (archaeologyMode && timeLayers) {
+        // Archaeology mode: Y = time layer, X/Z = spread within layer
+        const now = Date.now();
+        const MONTH = 30 * 24 * 60 * 60 * 1000;
+        const monthsAgo = Math.min(Math.floor((now - m.dimensions.temporal.timestamp) / MONTH), 11);
+        const layerMems = timeLayers.get(monthsAgo) || [];
+        const indexInLayer = layerMems.indexOf(m);
+        const layerSize = layerMems.length;
+        // Spread within layer
+        const angle = (indexInLayer / Math.max(layerSize, 1)) * Math.PI * 2;
+        const radius = 1.5 + (layerSize > 1 ? 0.3 * Math.sqrt(layerSize) : 0);
+        p = [
+          Math.cos(angle) * radius,
+          3 - monthsAgo * 0.55, // Top = recent, bottom = old
+          Math.sin(angle) * radius,
+        ];
+      } else if (navCategory) {
         p = getNavPosition(m, navCategory, navSubCategory);
       } else {
         p = m.positions[currentView] || m.position3D;
@@ -1237,6 +1267,77 @@ function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitC
   return <OrbitControls {...props} onChange={() => invalidate()} />;
 }
 
+function ArchaeologyLayers({ theme }: { theme: Theme }) {
+  const { rawMemories, archaeologyMode, navCategory, navSubCategory } = useAppState();
+  const isLight = theme === 'light';
+
+  const layers = useMemo(() => {
+    if (!archaeologyMode) return [];
+    const now = Date.now();
+    const MONTH = 30 * 24 * 60 * 60 * 1000;
+
+    let mems = rawMemories;
+    if (navCategory) {
+      mems = mems.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+    }
+
+    const layerMap: Map<number, RawMemory[]> = new Map();
+    mems.forEach(m => {
+      const monthsAgo = Math.min(Math.floor((now - m.dimensions.temporal.timestamp) / MONTH), 11);
+      if (!layerMap.has(monthsAgo)) layerMap.set(monthsAgo, []);
+      layerMap.get(monthsAgo)!.push(m);
+    });
+
+    return [...layerMap.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([monthsAgo, mems]) => {
+        // Get dominant emotion
+        const emotionCounts: Record<string, number> = {};
+        mems.forEach(m => {
+          const e = m.dimensions.emotional.primary;
+          emotionCounts[e] = (emotionCounts[e] || 0) + 1;
+        });
+        const dominant = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
+        const emotion = dominant?.[0] || '中性';
+        const color = EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#888';
+
+        const d = new Date(now - monthsAgo * MONTH);
+        const label = monthsAgo === 0 ? '本月' : monthsAgo === 1 ? '上月' : `${monthsAgo} 个月前`;
+
+        return { monthsAgo, count: mems.length, color, emotion, label, y: 3 - monthsAgo * 0.55 };
+      });
+  }, [archaeologyMode, rawMemories, navCategory, navSubCategory]);
+
+  if (!archaeologyMode || layers.length === 0) return null;
+
+  return (
+    <group>
+      {layers.map(layer => (
+        <group key={layer.monthsAgo}>
+          {/* Semi-transparent layer plane */}
+          <mesh position={[0, layer.y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[8, 8]} />
+            <meshBasicMaterial
+              color={layer.color}
+              transparent
+              opacity={isLight ? 0.04 : 0.06}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          {/* Layer label */}
+          <Html position={[3.5, layer.y, 0]} center style={{ pointerEvents: 'none' }}>
+            <div className={`text-xs whitespace-nowrap px-2 py-1 rounded ${
+              isLight ? 'bg-white/80 text-gray-700' : 'bg-black/60 text-gray-300'
+            }`}>
+              <span style={{ color: layer.color }}>●</span> {layer.label} · {layer.count} 条
+            </div>
+          </Html>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function ButterflyEffect({ theme }: { theme: Theme }) {
   const { butterflyEffect, clearButterflyEffect, insightMemories, currentView } = useAppState();
   const isLight = theme === 'light';
@@ -1441,6 +1542,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         {!isLight && <Stars radius={30} depth={50} count={300} factor={3} saturation={0.2} speed={0.1} />}
         <DustParticles theme={theme} />
         <ParticleCloud theme={theme} />
+        <ArchaeologyLayers theme={theme} />
         <InsightNetworkLines theme={theme} />
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
