@@ -16,6 +16,7 @@ import MemorySurprise from './components/MemorySurprise';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import SoundscapeToggle from './components/SoundscapeToggle';
+import MemoryReader from './components/MemoryReader';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const DEFAULT_BG_DARK = '#0a101f';
@@ -29,6 +30,8 @@ function AppInner() {
   const [showSerendipity, setShowSerendipity] = useState(false);
   const [showAnnualReport, setShowAnnualReport] = useState(false);
   const [showDream, setShowDream] = useState(false);
+  const [showReader, setShowReader] = useState(false);
+  const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
@@ -283,6 +286,17 @@ function AppInner() {
           🌙 梦境
         </button>
         <button
+          id="btn-reader"
+          onClick={() => setShowReader(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          📖 阅读
+        </button>
+        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -313,6 +327,17 @@ function AppInner() {
           </motion.div>
         )}
       </AnimatePresence>
+      {showReader && (
+        <MemoryReader
+          memories={rawMemories}
+          theme={theme}
+          onClose={() => {
+            setShowReader(false);
+            setReaderMemory(null);
+          }}
+          onMemoryChange={setReaderMemory}
+        />
+      )}
       <OnboardingOverlay />
       <FakeCursor isPlaying={isDemoPlaying} onStop={handleStopDemo} />
     </div>
