@@ -1376,7 +1376,7 @@
 
 ---
 
-### 95. [Features] "小哥懂了" — 飞轮反馈流（Flywheel Feedback Stream） [ ]
+### 95. [Features] "小哥懂了" — 飞轮反馈流（Flywheel Feedback Stream） [✅]
 
 **问题**: 用户操作（确认洞察、纠正洞察、重温记忆、添加标签、创建精选集）后只有 Toast 提示"已保存"。这些操作对 AI 认知的影响完全不可见。用户不知道"我的每一次互动，都在让小哥更懂我"。`reinforceMemory()` 已实现但其效果只在 ValueDashboard 的数字里体现，没有叙事性反馈。
 **改动范围**:
