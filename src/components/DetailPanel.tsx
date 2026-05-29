@@ -466,7 +466,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 }
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
-  const { rawMemories, theme, selectMemory, updateInsight, butterflyEffect, clearButterflyEffect, insightMemories } = useAppState();
+  const { rawMemories, theme, selectMemory, updateInsight, butterflyEffect, clearButterflyEffect, insightMemories, setTraceHighlightIds } = useAppState();
   const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -474,6 +474,8 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
   const [showCorrectionInput, setShowCorrectionInput] = useState(false);
   const [correctionText, setCorrectionText] = useState(memory.userCorrection || '');
   const [showTrace, setShowTrace] = useState(false);
+  const [activeTraceStep, setActiveTraceStep] = useState<number | null>(null);
+  const [highlightedMemIds, setHighlightedMemIds] = useState<string[]>([]);
 
   const traceSteps = useMemo(() => {
     if (!showTrace) return [];
@@ -678,55 +680,85 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
               🔬 推理溯源
             </h4>
             <div className="space-y-2">
-              {traceSteps.map((step, i) => (
-                <div key={i} className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  <div className="flex items-start gap-2">
-                    <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium ${
-                      i === traceSteps.length - 1
-                        ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
-                        : isDark ? 'bg-[#ffffff08] text-gray-500' : 'bg-gray-200 text-gray-500'
-                    }`}>
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p>{step.description}</p>
-                      {step.metric && (
-                        <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          {step.metric}
-                        </span>
-                      )}
-                      {step.memoryIds.length > 0 && (
-                        <div className="mt-1 space-y-0.5">
-                          <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                            依据 ({step.memoryIds.length} 条):
+              {traceSteps.map((step, i) => {
+                const isActive = activeTraceStep === i;
+                const isLast = i === traceSteps.length - 1;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.15 }}
+                    onClick={() => {
+                      const newStep = isActive ? null : i;
+                      setActiveTraceStep(newStep);
+                      const ids = newStep !== null ? traceSteps[newStep].memoryIds : [];
+                      setHighlightedMemIds(ids);
+                      setTraceHighlightIds(ids);
+                    }}
+                    className={`text-xs cursor-pointer rounded-lg p-2 transition-colors ${
+                      isActive
+                        ? isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'
+                        : isDark ? 'hover:bg-[#ffffff05]' : 'hover:bg-gray-100'
+                    } ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium ${
+                        isLast
+                          ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
+                          : isDark ? 'bg-[#ffffff08] text-gray-500' : 'bg-gray-200 text-gray-500'
+                      }`}>
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p>{step.description}</p>
+                        {step.metric && (
+                          <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {step.metric}
                           </span>
-                          {step.memoryIds.slice(0, 3).map(id => {
-                            const mem = rawMemories.find(m => m.id === id);
-                            if (!mem) return null;
-                            return (
-                              <button
-                                key={id}
-                                onClick={() => selectMemory(mem)}
-                                className={`block w-full text-left text-[10px] truncate cursor-pointer ${
-                                  isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
-                                }`}
-                              >
-                                · {mem.label}
-                              </button>
-                            );
-                          })}
-                          {step.memoryIds.length > 3 && (
+                        )}
+                        {step.memoryIds.length > 0 && isActive && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            className="mt-1 space-y-0.5"
+                          >
                             <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                              ... 还有 {step.memoryIds.length - 3} 条
+                              依据 ({step.memoryIds.length} 条):
                             </span>
-                          )}
-                        </div>
-                      )}
+                            {step.memoryIds.slice(0, 5).map(id => {
+                              const mem = rawMemories.find(m => m.id === id);
+                              if (!mem) return null;
+                              return (
+                                <button
+                                  key={id}
+                                  onClick={(e) => { e.stopPropagation(); selectMemory(mem); }}
+                                  className={`block w-full text-left text-[10px] truncate cursor-pointer ${
+                                    isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
+                                  }`}
+                                >
+                                  · {mem.label}
+                                </button>
+                              );
+                            })}
+                            {step.memoryIds.length > 5 && (
+                              <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                                ... 还有 {step.memoryIds.length - 5} 条
+                              </span>
+                            )}
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
+            {activeTraceStep !== null && (
+              <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                点击步骤查看依据记忆，3D 星云中对应粒子已高亮
+              </p>
+            )}
           </div>
         )}
 

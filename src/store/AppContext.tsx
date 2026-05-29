@@ -38,6 +38,7 @@ interface AppState {
   antipodeMemoryId: string | null;
   lastAction: { type: string; context: any; timestamp: number } | null;
   antipodeDescription: string;
+  traceHighlightIds: string[];
 }
 
 interface AppContextType extends AppState {
@@ -108,6 +109,7 @@ interface AppContextType extends AppState {
   findAntipode: (memoryId: string) => void;
   clearAntipode: () => void;
   setLastAction: (type: string, context: any) => void;
+  setTraceHighlightIds: (ids: string[]) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -146,6 +148,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     antipodeMemoryId: null,
     antipodeDescription: '',
     lastAction: null,
+    traceHighlightIds: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -333,6 +336,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setLastAction = useCallback((type: string, context: any) => {
     setState(s => ({ ...s, lastAction: { type, context, timestamp: Date.now() } }));
+  }, []);
+
+  const setTraceHighlightIds = useCallback((ids: string[]) => {
+    setState(s => ({ ...s, traceHighlightIds: ids }));
   }, []);
 
   const addTag = useCallback((memoryId: string, tag: string) => {
@@ -668,6 +675,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
       antipodeMemoryId: state.antipodeMemoryId, antipodeDescription: state.antipodeDescription, findAntipode, clearAntipode,
       lastAction: state.lastAction, setLastAction,
+      traceHighlightIds: state.traceHighlightIds, setTraceHighlightIds,
     }}>
       {children}
     </AppContext.Provider>
