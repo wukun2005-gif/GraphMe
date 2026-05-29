@@ -1348,6 +1348,66 @@ function AntipodeLines({ theme }: { theme: Theme }) {
   );
 }
 
+function EvolutionEffect({ theme }: { theme: Theme }) {
+  const { lastAction, rawMemories, insightMemories, currentView } = useAppState();
+  const isLight = theme === 'light';
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [effectType, setEffectType] = useState<'confirm' | 'reinforce' | 'correct' | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!lastAction) return;
+    const { type, context } = lastAction;
+
+    if (type === 'confirm' || type === 'correct') {
+      setActiveId(context.id);
+      setEffectType(type as 'confirm' | 'correct');
+    } else if (type === 'reinforce') {
+      setActiveId(context.id);
+      setEffectType('reinforce');
+    } else {
+      return;
+    }
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setActiveId(null);
+      setEffectType(null);
+    }, 1500);
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [lastAction]);
+
+  if (!activeId || !effectType) return null;
+
+  // Find the memory/insight position
+  const rawMem = rawMemories.find(m => m.id === activeId);
+  const insMem = insightMemories.find(m => m.id === activeId);
+  const mem = rawMem || insMem;
+  if (!mem) return null;
+
+  const pos = rawMem
+    ? (rawMem.positions?.[currentView] || rawMem.position3D)
+    : insMem!.position3D;
+
+  const color = effectType === 'confirm' ? '#44ccaa' : effectType === 'correct' ? '#ff6b6b' : '#ffb800';
+
+  return (
+    <group>
+      {/* Glow sphere */}
+      <mesh position={pos}>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.4} />
+      </mesh>
+      {/* Expanding ring */}
+      <mesh position={pos} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.35, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
 function ButterflyEffect({ theme }: { theme: Theme }) {
   const { butterflyEffect, clearButterflyEffect, insightMemories, currentView } = useAppState();
   const isLight = theme === 'light';
@@ -1478,6 +1538,7 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         <InsightRings theme={theme} />
         <RippleEffect theme={theme} />
         <ButterflyEffect theme={theme} />
+        <EvolutionEffect theme={theme} />
         <AntipodeLines theme={theme} />
         <EmotionTrajectoryLines theme={theme} />
         <EchoLines theme={theme} />
