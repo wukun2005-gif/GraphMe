@@ -50,6 +50,100 @@ type EditData = {
   tags: string[];
 };
 
+function ConnectionGraph({ connections, theme, onSelect }: {
+  connections: MemoryConnection[];
+  theme: 'dark' | 'light';
+  onSelect: (conn: MemoryConnection) => void;
+}) {
+  const isDark = theme === 'dark';
+  const width = 380;
+  const height = 200;
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = 70;
+
+  const typeColors: Record<string, string> = {
+    insight: isDark ? '#ffb800' : '#b8860b',
+    storyline: isDark ? '#00f2ff' : '#0088cc',
+    person: isDark ? '#a855f7' : '#7c3aed',
+  };
+
+  const typeIcons: Record<string, string> = {
+    insight: '💡',
+    storyline: '🔗',
+    person: '👤',
+  };
+
+  return (
+    <div className="relative">
+      <svg width={width} height={height} className="w-full" viewBox={`0 0 ${width} ${height}`}>
+        {/* Connection lines */}
+        {connections.map((conn, i) => {
+          const angle = (2 * Math.PI * i) / connections.length - Math.PI / 2;
+          const x = cx + radius * Math.cos(angle);
+          const y = cy + radius * Math.sin(angle);
+          const color = typeColors[conn.type] || '#888';
+          return (
+            <line
+              key={`line-${conn.id}`}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              stroke={color}
+              strokeWidth="1.5"
+              strokeDasharray={conn.type === 'insight' ? '4,2' : conn.type === 'person' ? '2,2' : 'none'}
+              opacity="0.6"
+            />
+          );
+        })}
+
+        {/* Center node (current memory) */}
+        <circle cx={cx} cy={cy} r="16" fill={isDark ? '#1a1a2e' : '#f3f4f6'} stroke={isDark ? '#00f2ff' : '#0088cc'} strokeWidth="2" />
+        <text x={cx} y={cy + 4} textAnchor="middle" className="text-[10px]" fill={isDark ? '#00f2ff' : '#0088cc'}>🧠</text>
+
+        {/* Connected nodes */}
+        {connections.map((conn, i) => {
+          const angle = (2 * Math.PI * i) / connections.length - Math.PI / 2;
+          const x = cx + radius * Math.cos(angle);
+          const y = cy + radius * Math.sin(angle);
+          const color = typeColors[conn.type] || '#888';
+          const icon = typeIcons[conn.type] || '•';
+          return (
+            <g key={conn.id} className="cursor-pointer" onClick={() => onSelect(conn)}>
+              <circle cx={x} cy={y} r="14" fill={isDark ? '#1a1a2e' : '#fff'} stroke={color} strokeWidth="1.5" />
+              <text x={x} y={y + 4} textAnchor="middle" className="text-[10px]">{icon}</text>
+              {/* Label */}
+              <text
+                x={x + (x > cx ? 18 : x < cx ? -18 : 0)}
+                y={y + (y > cy ? 14 : y < cy ? -8 : 4)}
+                textAnchor={x > cx ? 'start' : x < cx ? 'end' : 'middle'}
+                className="text-[8px]"
+                fill={isDark ? '#9ca3af' : '#6b7280'}
+              >
+                {conn.label.length > 10 ? conn.label.slice(0, 10) + '…' : conn.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Legend */}
+        <g transform={`translate(4, ${height - 28})`}>
+          {Object.entries(typeIcons).map(([type, icon], i) => (
+            <g key={type} transform={`translate(${i * 60}, 0)`}>
+              <circle cx="5" cy="5" r="4" fill={isDark ? '#1a1a2e' : '#fff'} stroke={typeColors[type]} strokeWidth="1" />
+              <text x="5" y="8" textAnchor="middle" className="text-[7px]">{icon}</text>
+              <text x="14" y="8" className="text-[7px]" fill={isDark ? '#6b7280' : '#9ca3af'}>
+                {type === 'insight' ? '洞察' : type === 'storyline' ? '故事线' : '人物'}
+              </text>
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 function RawDetail({ memory }: { memory: RawMemory }) {
   const { theme, rawMemories, insightMemories, selectMemory } = useAppState();
   const isDark = theme === 'dark';
@@ -120,29 +214,11 @@ function RawDetail({ memory }: { memory: RawMemory }) {
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             🌌 这条记忆的连接 ({connections.length})
           </h4>
-          <div className="space-y-1">
-            {connections.slice(0, 8).map(conn => {
-              const typeIcon = conn.type === 'insight' ? '💡' : conn.type === 'storyline' ? '🔗' : '👤';
-              const typeColor = conn.type === 'insight'
-                ? isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'
-                : conn.type === 'storyline'
-                  ? isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'
-                  : isDark ? 'text-purple-400' : 'text-purple-600';
-              return (
-                <button
-                  key={conn.id}
-                  onClick={() => selectMemory(conn.memory)}
-                  className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 cursor-pointer transition-colors ${
-                    isDark ? 'hover:bg-[#ffffff08]' : 'hover:bg-black/5'
-                  }`}
-                >
-                  <span>{typeIcon}</span>
-                  <span className={`flex-1 truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{conn.label}</span>
-                  <span className={`text-[10px] flex-shrink-0 ${typeColor}`}>{conn.detail}</span>
-                </button>
-              );
-            })}
-          </div>
+          <ConnectionGraph
+            connections={connections.slice(0, 8)}
+            theme={theme}
+            onSelect={(conn) => selectMemory(conn.memory)}
+          />
         </div>
       )}
     </div>
