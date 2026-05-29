@@ -111,6 +111,7 @@ export default function MemorySurprise() {
                 exit={{ scale: 0, rotate: 10, opacity: 0 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 200 }}
                 className="cursor-pointer select-none"
+                id="demo-surprise-open"
                 onClick={handleOpen}
               >
                 <div className="relative">
@@ -211,6 +212,7 @@ export default function MemorySurprise() {
                 {/* Actions */}
                 <div className={`px-5 py-3 border-t flex gap-2 ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
                   <button
+                    id="demo-surprise-reinforce"
                     onClick={handleReinforce}
                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                       isDark ? 'bg-[#ffb800]/15 text-[#ffb800] hover:bg-[#ffb800]/25' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
@@ -219,6 +221,7 @@ export default function MemorySurprise() {
                     🔄 重温
                   </button>
                   <button
+                    id="demo-surprise-detail"
                     onClick={handleViewDetail}
                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                       isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -227,6 +230,7 @@ export default function MemorySurprise() {
                     📖 查看详情
                   </button>
                   <button
+                    id="demo-surprise-next"
                     onClick={handleNext}
                     className={`px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer ${
                       isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'

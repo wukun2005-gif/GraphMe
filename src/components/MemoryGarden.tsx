@@ -131,6 +131,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    id="demo-garden-water"
                     onClick={() => handleWater(selectedPlant)}
                     className={`px-3 py-1.5 rounded text-xs cursor-pointer transition-colors ${
                       isDark ? 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -139,6 +140,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
                     💧 浇水（重温）
                   </button>
                   <button
+                    id="demo-garden-detail"
                     onClick={() => { selectMemory(selectedPlant.memory); onClose(); }}
                     className={`px-3 py-1.5 rounded text-xs cursor-pointer transition-colors ${
                       isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

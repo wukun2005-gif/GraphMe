@@ -109,6 +109,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
         {/* Actions */}
         <div className="relative z-10 mt-4 flex gap-2 justify-center">
           <button
+            id="demo-dream-redream"
             onClick={handleRedream}
             className="px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 text-xs cursor-pointer hover:bg-purple-500/30 transition-colors"
           >
