@@ -250,7 +250,6 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
               ref={svgRef}
               viewBox={viewBox}
               className="w-full h-full"
-              style={{ transition: 'viewBox 0.8s ease' }}
             >
               <defs>
                 {/* Glow filter */}
@@ -274,6 +273,9 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                   <stop offset="100%" stopColor={isDark ? '#00f2ff' : '#0088cc'} stopOpacity="0.3" />
                 </linearGradient>
               </defs>
+
+              {/* Background */}
+              <rect x="-500" y="-500" width="2200" height="1900" fill={isDark ? '#060b18' : '#f0f4f8'} />
 
               {/* Climate zones (background) */}
               {terrain.climateZones.map((zone, i) => (

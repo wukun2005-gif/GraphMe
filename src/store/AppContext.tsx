@@ -34,7 +34,6 @@ interface AppState {
   memoryChain: { memoryId: string; connectionReason: string }[];
   boomerangMemoryIds: string[];
   boomerangDescription: string;
-  gravityFieldMode: boolean;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
   archaeologyMode: boolean;
   userPersona: '家长' | '陪伴者' | '极客';
@@ -107,7 +106,6 @@ interface AppContextType extends AppState {
   clearChain: () => void;
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
-  toggleGravityFieldMode: () => void;
   clearButterflyEffect: () => void;
   toggleArchaeologyMode: () => void;
   setUserPersona: (persona: '家长' | '陪伴者' | '极客') => void;
@@ -148,7 +146,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     memoryChain: [],
     boomerangMemoryIds: [],
     boomerangDescription: '',
-    gravityFieldMode: false,
     butterflyEffect: null,
     archaeologyMode: false,
     userPersona: (() => {
@@ -572,10 +569,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
   }, []);
 
-  const toggleGravityFieldMode = useCallback(() => {
-    setState(s => ({ ...s, gravityFieldMode: !s.gravityFieldMode }));
-  }, []);
-
   const clearButterflyEffect = useCallback(() => {
     setState(s => ({ ...s, butterflyEffect: null }));
   }, []);
@@ -676,7 +669,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       capsules, createCapsule, openCapsule,
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
-      gravityFieldMode: state.gravityFieldMode, toggleGravityFieldMode,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
       archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
       userPersona: state.userPersona, setUserPersona,
