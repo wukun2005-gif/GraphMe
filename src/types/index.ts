@@ -150,3 +150,12 @@ export interface FarewellRecord {
   releaseStyle: '深海' | '星光' | '微风';
   releasedAt: number;
 }
+
+export interface TimeCapsule {
+  id: string;
+  memoryId: string;
+  sealedAt: number;
+  unlockDate: number;
+  note: string;
+  opened: boolean;
+}

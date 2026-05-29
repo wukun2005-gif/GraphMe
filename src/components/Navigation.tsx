@@ -57,6 +57,7 @@ export default function NavigationSidebar() {
     tagFilter, toggleTagFilter, addTag, removeTag, allTags,
     similarMemoryIds, clearSimilar,
     farewellRecords,
+    capsules, openCapsule,
     favoriteIds, toggleFavorite,
     addToast,
     showChatGPT, toggleShowChatGPT,
@@ -817,6 +818,44 @@ export default function NavigationSidebar() {
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
                               <span className="truncate">{mem.label}</span>
                             </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {capsules.length > 0 && (
+                    <div className="mb-2">
+                      <div className={`text-[10px] mb-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                        ⏳ 时间胶囊 ({capsules.length})
+                      </div>
+                      <div className="space-y-0.5">
+                        {capsules.map(cap => {
+                          const mem = allRawMemories.find(m => m.id === cap.memoryId);
+                          const unlockDate = new Date(cap.unlockDate);
+                          const dateStr = `${unlockDate.getFullYear()}/${unlockDate.getMonth() + 1}/${unlockDate.getDate()}`;
+                          const isReady = !cap.opened && Date.now() >= cap.unlockDate;
+                          return (
+                            <div
+                              key={cap.id}
+                              className={`px-2 py-1 rounded text-[10px] flex items-center gap-1 ${
+                                isDark ? 'text-gray-500' : 'text-gray-500'
+                              }`}
+                            >
+                              <span>{cap.opened ? '📬' : isReady ? '🎁' : '🔒'}</span>
+                              <span className="truncate">{mem?.label || cap.memoryId}</span>
+                              <span className="ml-auto flex-shrink-0">{cap.opened ? '已开启' : dateStr}</span>
+                              {isReady && (
+                                <button
+                                  onClick={() => openCapsule(cap.id)}
+                                  className={`ml-1 px-1 py-0.5 rounded text-[9px] cursor-pointer ${
+                                    isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
+                                  }`}
+                                >
+                                  开启
+                                </button>
+                              )}
+                            </div>
                           );
                         })}
                       </div>

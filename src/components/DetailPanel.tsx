@@ -470,7 +470,7 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, farewellMemory } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, farewellMemory, createCapsule } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -479,6 +479,9 @@ export default function DetailPanel() {
   const [farewellMode, setFarewellMode] = useState(false);
   const [farewellNote, setFarewellNote] = useState('');
   const [farewellStyle, setFarewellStyle] = useState<FarewellRecord['releaseStyle']>('深海');
+  const [capsuleMode, setCapsuleMode] = useState(false);
+  const [capsuleNote, setCapsuleNote] = useState('');
+  const [capsuleMonths, setCapsuleMonths] = useState(3);
 
   useEffect(() => {
     if (!detailOpen) return;
@@ -918,6 +921,13 @@ export default function DetailPanel() {
                       }`}
                     >📸 导出</button>
                     <button
+                      id="demo-capsule-btn"
+                      onClick={() => setCapsuleMode(true)}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >⏳ 封存</button>
+                    <button
                       id="demo-find-similar-btn"
                       onClick={() => {
                         if (similarMemoryIds.length > 0) {
@@ -1027,6 +1037,85 @@ export default function DetailPanel() {
                         </button>
                         <button
                           onClick={() => setFarewellMode(false)}
+                          className={`px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                            isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+
+                {/* Capsule mode overlay */}
+                {capsuleMode && selectedMemory.type === 'raw' && (
+                  <div className={`fixed inset-0 z-50 flex items-center justify-center ${
+                    isDark ? 'bg-black/70' : 'bg-black/50'
+                  }`} onClick={(e) => { if (e.target === e.currentTarget) setCapsuleMode(false); }}>
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className={`w-[340px] rounded-xl border shadow-2xl p-5 ${
+                        isDark ? 'bg-[#1a1020] border-[#ffffff15]' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      <h3 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                        ⏳ 时间胶囊
+                      </h3>
+                      <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        封存这段记忆，未来的某天再打开。
+                      </p>
+
+                      <div className="mb-3">
+                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>给未来自己的话</label>
+                        <textarea
+                          value={capsuleNote}
+                          onChange={e => setCapsuleNote(e.target.value)}
+                          placeholder="未来的我，还记得这天吗？"
+                          rows={2}
+                          className={`w-full border rounded px-2 py-1.5 text-xs resize-none ${
+                            isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
+                          }`}
+                        />
+                      </div>
+
+                      <div className="mb-4">
+                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>解锁时间</label>
+                        <div className="flex gap-2">
+                          {([3, 6, 12]).map(m => (
+                            <button
+                              key={m}
+                              onClick={() => setCapsuleMonths(m)}
+                              className={`flex-1 py-2 rounded-lg text-xs text-center cursor-pointer transition-colors ${
+                                capsuleMonths === m
+                                  ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800] border border-[#ffb800]/30' : 'bg-amber-100 text-amber-700 border border-amber-300'
+                                  : isDark ? 'bg-[#ffffff05] text-gray-400 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {m} 个月后
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const unlockDate = new Date();
+                            unlockDate.setMonth(unlockDate.getMonth() + capsuleMonths);
+                            createCapsule(selectedMemory.id, unlockDate.getTime(), capsuleNote);
+                            setCapsuleMode(false);
+                            setCapsuleNote('');
+                          }}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                            isDark ? 'bg-[#ffb800]/15 text-[#ffb800] hover:bg-[#ffb800]/25' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                          }`}
+                        >
+                          ⏳ 封存记忆
+                        </button>
+                        <button
+                          onClick={() => setCapsuleMode(false)}
                           className={`px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
                             isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}

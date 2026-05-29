@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord } from '../types';
+import type { RawMemory, InsightMemory, DimensionView, EmotionType, MemoryCollection, FarewellRecord, TimeCapsule } from '../types';
 import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMemories } from '../data/demoData';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
@@ -27,6 +27,7 @@ interface AppState {
   collections: MemoryCollection[];
   similarMemoryIds: string[];
   farewellRecords: FarewellRecord[];
+  capsules: TimeCapsule[];
 }
 
 interface AppContextType extends AppState {
@@ -85,6 +86,8 @@ interface AppContextType extends AppState {
   findSimilar: (memoryId: string) => void;
   clearSimilar: () => void;
   farewellMemory: (memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => void;
+  createCapsule: (memoryId: string, unlockDate: number, note: string) => void;
+  openCapsule: (capsuleId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -113,6 +116,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     collections: [],
     similarMemoryIds: [],
     farewellRecords: [],
+    capsules: [],
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -417,6 +421,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteMemory(memoryId);
   }, [rawMems, deleteMemory]);
 
+  const [capsules, setCapsules] = useState<TimeCapsule[]>(() => {
+    try {
+      const saved = localStorage.getItem('graphme-capsules');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('graphme-capsules', JSON.stringify(capsules)); } catch {}
+  }, [capsules]);
+
+  const createCapsule = useCallback((memoryId: string, unlockDate: number, note: string) => {
+    const capsule: TimeCapsule = {
+      id: `capsule_${Date.now()}`,
+      memoryId,
+      sealedAt: Date.now(),
+      unlockDate,
+      note,
+      opened: false,
+    };
+    setCapsules(prev => [...prev, capsule]);
+  }, []);
+
+  const openCapsule = useCallback((capsuleId: string) => {
+    setCapsules(prev => prev.map(c => c.id === capsuleId ? { ...c, opened: true } : c));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -483,6 +514,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       collections, addCollection, removeCollection, addToCollection, removeFromCollection,
       similarMemoryIds: state.similarMemoryIds, findSimilar, clearSimilar,
       farewellRecords, farewellMemory,
+      capsules, createCapsule, openCapsule,
     }}>
       {children}
     </AppContext.Provider>
