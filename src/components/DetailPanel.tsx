@@ -145,7 +145,7 @@ function ConnectionGraph({ connections, theme, onSelect }: {
 }
 
 function RawDetail({ memory }: { memory: RawMemory }) {
-  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription } = useAppState();
+  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription } = useAppState();
   const isDark = theme === 'dark';
   const d = memory.dimensions;
 
@@ -265,6 +265,55 @@ function RawDetail({ memory }: { memory: RawMemory }) {
                     </span>
                     <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                       📍 {echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {boomerangMemoryIds.length > 0 && (
+        <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+          <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+            🪃 记忆回旋镖
+          </h4>
+          {boomerangDescription && (
+            <p className={`text-xs italic mb-2 ${isDark ? 'text-orange-400/70' : 'text-orange-600/70'}`}>
+              "{boomerangDescription}"
+            </p>
+          )}
+          <div className="space-y-2">
+            {boomerangMemoryIds.map(id => {
+              const mem = rawMemories.find(m => m.id === id);
+              if (!mem) return null;
+              const emoColor = EMOTION_COLORS[mem.dimensions.emotional.primary] || '#888';
+              return (
+                <button
+                  key={mem.id}
+                  onClick={() => selectMemory(mem)}
+                  className={`w-full text-left p-2 rounded-lg border transition-colors cursor-pointer ${
+                    isDark
+                      ? 'bg-[#ffffff03] border-[#ffffff08] hover:border-orange-500/30 hover:bg-orange-500/5'
+                      : 'bg-gray-50 border-gray-200 hover:border-orange-300 hover:bg-orange-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
+                    <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {mem.label}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    {mem.summary}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {mem.dimensions.temporal.dateType}
+                    </span>
+                    <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      📍 {mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType}
                     </span>
                   </div>
                 </button>
@@ -681,7 +730,7 @@ function MemoryChainView({ chain, theme, onSelect }: {
 }
 
 export default function DetailPanel() {
-  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory } = useAppState();
+  const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang } = useAppState();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1183,6 +1232,21 @@ export default function DetailPanel() {
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
                     >📞 {memoryChain.length > 0 ? '清除链条' : '传声筒'}</button>
+                    <button
+                      id="demo-boomerang-btn"
+                      onClick={() => {
+                        if (boomerangMemoryIds.length > 0) {
+                          clearBoomerang();
+                        } else {
+                          findBoomerang(selectedMemory.id);
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                        boomerangMemoryIds.length > 0
+                          ? isDark ? 'bg-orange-500/15 text-orange-400' : 'bg-orange-100 text-orange-600'
+                          : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >🪃 {boomerangMemoryIds.length > 0 ? '清除回旋镖' : '回旋镖'}</button>
                   </>
                 )}
                 <div className="relative">

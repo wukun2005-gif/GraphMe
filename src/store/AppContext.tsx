@@ -32,6 +32,8 @@ interface AppState {
   capsules: TimeCapsule[];
   constellations: Constellation[];
   memoryChain: { memoryId: string; connectionReason: string }[];
+  boomerangMemoryIds: string[];
+  boomerangDescription: string;
 }
 
 interface AppContextType extends AppState {
@@ -101,6 +103,8 @@ interface AppContextType extends AppState {
   renameConstellation: (id: string, name: string) => void;
   buildChain: (memoryId: string) => void;
   clearChain: () => void;
+  findBoomerang: (memoryId: string) => void;
+  clearBoomerang: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -134,6 +138,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     capsules: [],
     constellations: [],
     memoryChain: [],
+    boomerangMemoryIds: [],
+    boomerangDescription: '',
   });
 
   const [rawMems, setRawMems] = useState<RawMemory[]>(() => {
@@ -560,6 +566,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, memoryChain: [] }));
   }, []);
 
+  const findBoomerang = useCallback((memoryId: string) => {
+    const target = rawMems.find(m => m.id === memoryId);
+    if (!target) return;
+    import('../utils/similarityUtils').then(({ findBoomerang: findBoomerangFn }) => {
+      const results = findBoomerangFn(target, rawMems, 2);
+      if (results.length > 0) {
+        setState(s => ({
+          ...s,
+          boomerangMemoryIds: results.map(r => r.memory.id),
+          boomerangDescription: results[0].description,
+        }));
+      } else {
+        setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
+      }
+    });
+  }, [rawMems]);
+
+  const clearBoomerang = useCallback(() => {
+    setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
+  }, []);
+
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => prev.map(m => {
       if (m.id !== id) return m;
@@ -630,6 +657,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       capsules, createCapsule, openCapsule,
       constellations, addConstellation, removeConstellation, addConnection, removeConnection, renameConstellation,
       memoryChain: state.memoryChain, buildChain, clearChain,
+      boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
     }}>
       {children}
     </AppContext.Provider>

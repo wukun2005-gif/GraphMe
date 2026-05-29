@@ -349,3 +349,151 @@ export function buildMemoryChain(
 
   return chain;
 }
+
+export interface BoomerangResult {
+  memory: RawMemory;
+  description: string;
+  timeDiffDays: number;
+}
+
+/**
+ * 查找回旋镖记忆 — 跨越时间的远距记忆呼应
+ * 条件：时间间隔≥30天、不同storyline、但emotional.intensity差值≤0.15、activity.type属于同一大类
+ */
+export function findBoomerang(
+  target: RawMemory,
+  allMemories: RawMemory[],
+  limit = 2,
+): BoomerangResult[] {
+  const candidates = allMemories.filter(m => {
+    if (m.id === target.id) return false;
+    // 不同 storyline
+    if (target.dimensions.narrative.storyline &&
+        target.dimensions.narrative.storyline === m.dimensions.narrative.storyline) {
+      return false;
+    }
+    // 间隔 ≥ 30 天
+    const timeDiff = Math.abs(
+      target.dimensions.temporal.timestamp - m.dimensions.temporal.timestamp,
+    );
+    const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+    if (daysDiff < 30) return false;
+    return true;
+  });
+
+  const scored = candidates.map(candidate => {
+    let score = 0;
+    const reasons: string[] = [];
+
+    // 情绪强度相近 (差值 ≤ 0.15)
+    const intensityDiff = Math.abs(
+      target.dimensions.emotional.intensity - candidate.dimensions.emotional.intensity,
+    );
+    if (intensityDiff <= 0.15) {
+      score += 30;
+      reasons.push('情绪强度相近');
+    }
+
+    // 同一大类活动
+    const activityCategories: Record<string, string> = {
+      '学习': '学习',
+      '编程': '学习',
+      '数学': '学习',
+      '阅读': '学习',
+      '运动': '运动',
+      '骑车': '运动',
+      '跑步': '运动',
+      '游戏': '娱乐',
+      '画画': '娱乐',
+      '音乐': '娱乐',
+      '做饭': '生活',
+      '打扫': '生活',
+      '购物': '生活',
+    };
+
+    const targetCategory = activityCategories[target.dimensions.activity.type] || '其他';
+    const candidateCategory = activityCategories[candidate.dimensions.activity.type] || '其他';
+
+    if (targetCategory === candidateCategory && targetCategory !== '其他') {
+      score += 20;
+      reasons.push(`同为${targetCategory}类活动`);
+    }
+
+    // 同一情绪类型
+    if (target.dimensions.emotional.primary === candidate.dimensions.emotional.primary) {
+      score += 15;
+      reasons.push('相同情绪');
+    }
+
+    // 同一地点类型
+    if (target.dimensions.spatial.placeType === candidate.dimensions.spatial.placeType) {
+      score += 10;
+    }
+
+    // 共享人物
+    const sharedPersons = target.dimensions.social.persons.filter(p =>
+      candidate.dimensions.social.persons.includes(p),
+    );
+    if (sharedPersons.length > 0) {
+      score += sharedPersons.length * 8;
+    }
+
+    // 共享知识
+    const sharedKnowledge = target.dimensions.semantic.knowledge.filter(k =>
+      candidate.dimensions.semantic.knowledge.includes(k),
+    );
+    if (sharedKnowledge.length > 0) {
+      score += sharedKnowledge.length * 5;
+    }
+
+    return { memory: candidate, score, reasons };
+  });
+
+  const results = scored
+    .filter(s => s.score >= 30) // At least emotion intensity match
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => {
+      const timeDiff = Math.abs(
+        target.dimensions.temporal.timestamp - s.memory.dimensions.temporal.timestamp,
+      );
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const monthsDiff = Math.floor(daysDiff / 30);
+
+      const description = generateBoomerangDescription(target, s.memory, monthsDiff, s.reasons);
+
+      return {
+        memory: s.memory,
+        description,
+        timeDiffDays: daysDiff,
+      };
+    });
+
+  return results;
+}
+
+function generateBoomerangDescription(
+  target: RawMemory,
+  boomerang: RawMemory,
+  monthsDiff: number,
+  reasons: string[],
+): string {
+  const targetPlace = target.dimensions.spatial.landmark || target.dimensions.spatial.placeType;
+  const boomerangPlace = boomerang.dimensions.spatial.landmark || boomerang.dimensions.spatial.placeType;
+  const targetEmotion = target.dimensions.emotional.primary;
+  const boomerangEmotion = boomerang.dimensions.emotional.primary;
+
+  if (reasons.includes('情绪强度相近') && reasons.includes(`同为${target.dimensions.activity.type}类活动`)) {
+    return `这条${targetEmotion}的${target.dimensions.activity.detail}模式，在 ${monthsDiff} 个月前的${boomerangPlace}也完美重现了`;
+  }
+
+  if (reasons.includes('相同情绪')) {
+    return `${monthsDiff} 个月前的${boomerangPlace}，你也经历了同样的${targetEmotion}——时间在重复，但每一次都是独特的`;
+  }
+
+  if (reasons.includes(`同为${target.dimensions.activity.type}类活动`)) {
+    return `你在${targetPlace}的${target.dimensions.activity.detail}，与 ${monthsDiff} 个月前的${boomerangPlace}形成了跨越时间的呼应`;
+  }
+
+  return `${monthsDiff} 个月前的记忆在远处回响——${reasons.slice(0, 2).join('、')}`;
+}
