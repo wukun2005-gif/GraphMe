@@ -286,6 +286,13 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
       await moveAndClick('demo-review-btn', '🔄 点击"温故"——重温记忆，遗忘曲线重置', 1500);
       if (isCancelled) return;
+
+      // ─── 飞轮时刻 ─────────────────────────────
+      await moveToCenter('🔄 你刚才做了一个重要的事——唤醒了一条快要沉睡的记忆', 3000);
+      if (isCancelled) return;
+      await moveToCenter('💡 这就是记忆飞轮：你用得越多，它越懂你', 3000);
+      if (isCancelled) return;
+
       await moveAndClick('val-dash-journey-tab', '🌊 情感旅程——连续情绪曲线', 2000);
       if (isCancelled) return;
       await moveToCenter('🌈 情绪从好奇到骄傲，见证成长轨迹', 2000);
@@ -334,6 +341,12 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (isCancelled) return;
       window.dispatchEvent(new CustomEvent('demo-close-annual-report'));
       await wait(800);
+      if (isCancelled) return;
+
+      // ─── 飞轮总结 ──────────────────────────────
+      await moveToCenter('🔄 每一次互动，都在推动记忆飞轮', 3000);
+      if (isCancelled) return;
+      await moveToCenter('🎯 确认、纠正、重温——你的每个动作都让 AI 更懂你', 3000);
       if (isCancelled) return;
 
       // ─── OUTRO (20s) ──────────────────────────────
