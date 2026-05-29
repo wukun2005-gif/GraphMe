@@ -18,7 +18,6 @@ import FakeCursor from './components/AutoDemo/FakeCursor';
 import MemoryReader from './components/MemoryReader';
 import CognitiveTerrain from './components/CognitiveTerrain';
 import ConfusionDiary from './components/ConfusionDiary';
-import SecondBrain from './components/SecondBrain';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
 import { generateConfusionReport } from './utils/confusionUtils';
@@ -27,7 +26,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, archaeologyMode, toggleArchaeologyMode, userPersona, setUserPersona } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -37,7 +36,6 @@ function AppInner() {
   const [showReader, setShowReader] = useState(false);
   const [showTerrain, setShowTerrain] = useState(false);
   const [showConfusion, setShowConfusion] = useState(false);
-  const [showSecondBrain, setShowSecondBrain] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
@@ -54,7 +52,6 @@ function AppInner() {
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
       if (e.key === 'Escape') {
-        if (showSecondBrain) { setShowSecondBrain(false); return; }
         if (showConfusion) { setShowConfusion(false); return; }
         if (showTerrain) { setShowTerrain(false); return; }
         if (showSerendipity) { setShowSerendipity(false); return; }
@@ -85,7 +82,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSecondBrain, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -196,23 +193,6 @@ function AppInner() {
               }`}
             >
               {view === '全局视图' ? '🌐 全局' : view === '家庭视图' ? '🏠 家庭' : view === '学习视图' ? '🎓 学习' : '😊 情绪'}
-            </button>
-          ))}
-        </div>
-        <div className={`flex rounded-lg p-0.5 text-xs backdrop-blur-sm ${
-          isDark ? 'bg-[#ffffff08]' : 'bg-black/5'
-        }`}>
-          {(['家长', '陪伴者', '极客'] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => setUserPersona(p)}
-              className={`px-2 py-1 rounded-md text-xs transition-all cursor-pointer ${
-                userPersona === p
-                  ? isDark ? 'bg-[#ffb800]/20 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
-                  : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              {p === '家长' ? '👨‍👩‍👧 家长' : p === '陪伴者' ? '🤗 陪伴者' : '🔧 极客'}
             </button>
           ))}
         </div>
@@ -357,31 +337,6 @@ function AppInner() {
           </button>
         )}
         <button
-          id="btn-archaeology"
-          title="考古模式"
-          onClick={toggleArchaeologyMode}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            archaeologyMode
-              ? isDark ? 'bg-[#44ccaa]/20 text-[#44ccaa]' : 'bg-teal-100 text-teal-700'
-              : isDark ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🏺
-        </button>
-        <button
-          id="btn-second-brain"
-          title="第二大脑"
-          onClick={() => setShowSecondBrain(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
-            isDark
-              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
-              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🧠
-        </button>
-        <button
           onClick={toggleTheme}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -398,7 +353,6 @@ function AppInner() {
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
       <CognitiveTerrain open={showTerrain} onClose={() => setShowTerrain(false)} />
       <ConfusionDiary open={showConfusion} onClose={() => setShowConfusion(false)} />
-      <SecondBrain open={showSecondBrain} onClose={() => setShowSecondBrain(false)} />
 
       <AnimatePresence>
         {showDream && (

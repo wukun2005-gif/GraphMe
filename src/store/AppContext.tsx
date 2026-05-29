@@ -35,8 +35,6 @@ interface AppState {
   boomerangMemoryIds: string[];
   boomerangDescription: string;
   butterflyEffect: { affectedIds: string[]; timestamp: number } | null;
-  archaeologyMode: boolean;
-  userPersona: '家长' | '陪伴者' | '极客';
   draggedMemoryId: string | null;
   antipodeMemoryId: string | null;
   antipodeDescription: string;
@@ -107,8 +105,6 @@ interface AppContextType extends AppState {
   findBoomerang: (memoryId: string) => void;
   clearBoomerang: () => void;
   clearButterflyEffect: () => void;
-  toggleArchaeologyMode: () => void;
-  setUserPersona: (persona: '家长' | '陪伴者' | '极客') => void;
   setDraggedMemoryId: (id: string | null) => void;
   findAntipode: (memoryId: string) => void;
   clearAntipode: () => void;
@@ -147,11 +143,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     boomerangMemoryIds: [],
     boomerangDescription: '',
     butterflyEffect: null,
-    archaeologyMode: false,
-    userPersona: (() => {
-      try { return (localStorage.getItem('graphme-userPersona') as '家长' | '陪伴者' | '极客') || '家长'; }
-      catch { return '家长'; }
-    })(),
     draggedMemoryId: null,
     antipodeMemoryId: null,
     antipodeDescription: '',
@@ -573,15 +564,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, butterflyEffect: null }));
   }, []);
 
-  const toggleArchaeologyMode = useCallback(() => {
-    setState(s => ({ ...s, archaeologyMode: !s.archaeologyMode }));
-  }, []);
-
-  const setUserPersona = useCallback((persona: '家长' | '陪伴者' | '极客') => {
-    setState(s => ({ ...s, userPersona: persona }));
-    try { localStorage.setItem('graphme-userPersona', persona); } catch {}
-  }, []);
-
   const setDraggedMemoryId = useCallback((id: string | null) => {
     setState(s => ({ ...s, draggedMemoryId: id }));
   }, []);
@@ -670,8 +652,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryChain: state.memoryChain, buildChain, clearChain,
       boomerangMemoryIds: state.boomerangMemoryIds, boomerangDescription: state.boomerangDescription, findBoomerang, clearBoomerang,
       butterflyEffect: state.butterflyEffect, clearButterflyEffect,
-      archaeologyMode: state.archaeologyMode, toggleArchaeologyMode,
-      userPersona: state.userPersona, setUserPersona,
       draggedMemoryId: state.draggedMemoryId, setDraggedMemoryId,
       antipodeMemoryId: state.antipodeMemoryId, antipodeDescription: state.antipodeDescription, findAntipode, clearAntipode,
     }}>
