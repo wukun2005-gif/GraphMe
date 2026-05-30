@@ -9,6 +9,16 @@ interface Props {
   onClose: () => void;
 }
 
+// Pre-compute star positions for terrain background
+const TERRAIN_STARS = Array.from({ length: 50 }, (_, i) => ({
+  x: ((i * 37 + 13) % 100),
+  y: ((i * 53 + 7) % 100),
+  size: 1 + ((i * 17) % 15) / 10,
+  color: ['#00f2ff', '#ffb800', '#a78bfa', '#ffffff'][i % 4],
+  duration: 3 + ((i * 23) % 30) / 10,
+  delay: ((i * 11) % 20) / 10,
+}));
+
 export default function CognitiveTerrain({ open, onClose }: Props) {
   const { rawMemories, insightMemories, theme, selectMemory } = useAppState();
   const isDark = theme === 'dark';
@@ -159,20 +169,54 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col"
-          onMouseMove={handleMouseMove}
-        >
-          {/* Background */}
-          <div className={`absolute inset-0 ${isDark ? 'bg-[#060b18]' : 'bg-[#f0f4f8]'}`} />
+        <>
+          {/* Click-outside backdrop */}
+          <div className="fixed inset-0 z-40" onClick={onClose} />
 
-          {/* Header */}
-          <div className={`relative z-10 flex items-center justify-between px-6 py-3 border-b ${
-            isDark ? 'border-[#ffffff08] bg-[#0a101f]/80' : 'border-gray-200 bg-white/80'
-          } backdrop-blur-sm`}>
+          {/* Centering container */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center" onMouseMove={handleMouseMove}>
+
+            {/* Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              onClick={e => e.stopPropagation()}
+              className="w-[750px] max-w-[92vw] h-[75vh] rounded-2xl overflow-hidden
+                         backdrop-blur-xl border shadow-2xl flex flex-col"
+              style={{
+                background: isDark ? 'rgba(8,12,28,0.92)' : 'rgba(255,255,255,0.95)',
+                borderColor: isDark ? '#ffffff12' : '#e5e7eb',
+                boxShadow: '0 0 60px rgba(0,242,255,0.08), 0 25px 50px rgba(0,0,0,0.4)',
+              }}
+            >
+              {/* Internal starfield */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                <div className="absolute inset-0" style={{
+                  background: `radial-gradient(ellipse at 30% 40%, ${isDark ? '#00f2ff08' : '#0088cc05'} 0%, transparent 60%),
+                               radial-gradient(ellipse at 70% 60%, ${isDark ? '#ffb80006' : '#ffb80003'} 0%, transparent 50%)`,
+                }} />
+                {TERRAIN_STARS.map((star, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute rounded-full"
+                    style={{
+                      left: `${star.x}%`, top: `${star.y}%`,
+                      width: `${star.size}px`, height: `${star.size}px`,
+                      background: star.color,
+                      boxShadow: `0 0 ${star.size * 2}px ${star.color}50`,
+                    }}
+                    animate={{ opacity: [0.1, 0.6, 0.1] }}
+                    transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
+                  />
+                ))}
+              </div>
+
+              {/* Header */}
+              <div className={`relative z-10 flex items-center justify-between px-5 py-2.5 border-b ${
+                isDark ? 'border-[#ffffff08]' : 'border-gray-200'
+              }`}>
             <div className="flex items-center gap-3">
               <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 🗺️ 认知地图
@@ -207,6 +251,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
               </div>
 
               <button
+                id="terrain-letter"
                 onClick={handleGenerateLetter}
                 className={`text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
                   isDark
@@ -218,6 +263,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
               </button>
 
               <button
+                id="terrain-save"
                 onClick={handleSavePNG}
                 className={`text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
                   isDark
@@ -229,6 +275,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
               </button>
 
               <button
+                id="terrain-close"
                 onClick={onClose}
                 className={`text-lg leading-none cursor-pointer ml-2 ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
               >
@@ -239,17 +286,19 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
 
           {/* Main content */}
           <div
-            className="relative flex-1 overflow-hidden cursor-grab"
+            className="relative z-10 flex-1 overflow-hidden cursor-grab"
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
+            style={{ perspective: '1200px' }}
           >
             {/* SVG Terrain */}
             <svg
               ref={svgRef}
               viewBox={viewBox}
               className="w-full h-full"
+              style={{ transform: 'rotateX(12deg)', transformOrigin: 'center 60%' }}
             >
               <defs>
                 {/* Glow filter */}
@@ -265,6 +314,24 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                 <filter id="fog-blur">
                   <feGaussianBlur stdDeviation="20" />
                 </filter>
+
+                {/* Mountain shadow — ground shadow beneath 3D nodes */}
+                <filter id="mountain-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
+                  <feOffset dx="3" dy="8" result="offsetBlur" />
+                  <feFlood floodColor="#000000" floodOpacity="0.3" result="color" />
+                  <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
+                  <feMerge>
+                    <feMergeNode in="shadow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Mountain dome gradient — creates 3D sphere illusion */}
+                <radialGradient id="mountain-dome" cx="40%" cy="35%" r="60%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+                  <stop offset="60%" stopColor="white" stopOpacity="0" />
+                </radialGradient>
 
                 {/* River gradient */}
                 <linearGradient id="river-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -413,24 +480,34 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                         </text>
                       </>
                     ) : node.type === 'concept' ? (
-                      // Concept mountain: filled circle with gradient
-                      <>
+                      // Concept mountain: 3D dome with shadow
+                      <g filter="url(#mountain-shadow)">
+                        {/* Base circle — mountain body */}
                         <circle
                           cx={node.x}
                           cy={node.y}
                           r={node.radius}
                           fill={node.color}
-                          opacity={node.opacity * 0.15}
+                          opacity={node.opacity * 0.2}
                           stroke={node.color}
                           strokeWidth={1.5}
                           strokeOpacity={0.4}
                         />
+                        {/* Inner dome — 3D highlight */}
                         <circle
                           cx={node.x}
                           cy={node.y}
-                          r={node.radius * 0.6}
+                          r={node.radius * 0.7}
                           fill={node.color}
-                          opacity={node.opacity * 0.3}
+                          opacity={node.opacity * 0.35}
+                        />
+                        {/* Dome specular highlight */}
+                        <circle
+                          cx={node.x - node.radius * 0.2}
+                          cy={node.y - node.radius * 0.2}
+                          r={node.radius * 0.4}
+                          fill="url(#mountain-dome)"
+                          opacity={0.6}
                         />
                         {/* Mountain peak icon */}
                         <text
@@ -442,20 +519,28 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                         >
                           ⛰️
                         </text>
-                      </>
+                      </g>
                     ) : (
-                      // Person island: rounded shape
-                      <>
+                      // Person island: 3D island with shadow
+                      <g filter="url(#mountain-shadow)">
                         <circle
                           cx={node.x}
                           cy={node.y}
                           r={node.radius}
                           fill={node.color}
-                          opacity={node.opacity * 0.2}
+                          opacity={node.opacity * 0.25}
                           stroke={node.color}
                           strokeWidth={1.5}
                           strokeOpacity={0.5}
                           strokeDasharray={node.type === 'person' ? '3 2' : 'none'}
+                        />
+                        {/* Island dome highlight */}
+                        <circle
+                          cx={node.x - node.radius * 0.15}
+                          cy={node.y - node.radius * 0.15}
+                          r={node.radius * 0.5}
+                          fill="url(#mountain-dome)"
+                          opacity={0.4}
                         />
                         <text
                           x={node.x}
@@ -466,7 +551,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                         >
                           🏝️
                         </text>
-                      </>
+                      </g>
                     )}
 
                     {/* Label */}
@@ -750,7 +835,9 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
               </div>
             </div>
           </div>
-        </motion.div>
+            </motion.div>
+          </div>
+        </>
       )}
     </AnimatePresence>
   );

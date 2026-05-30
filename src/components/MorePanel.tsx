@@ -50,6 +50,7 @@ export default function MorePanel({ features, theme, isShow, onClose }: Props) {
             {features.map(feature => (
               <button
                 key={feature.id}
+                id={`btn-${feature.id}`}
                 onClick={() => { feature.onClick(); onClose(); }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
                   isDark ? 'hover:bg-[#ffffff08]' : 'hover:bg-gray-50'

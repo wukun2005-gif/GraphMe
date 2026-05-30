@@ -23,7 +23,6 @@ import SocialGraph from './components/SocialGraph';
 import KnowledgeGap from './components/KnowledgeGap';
 import MemoryCinema from './components/MemoryCinema';
 import FlywheelFeedback from './components/FlywheelFeedback';
-import FlywheelView from './components/FlywheelView';
 import SessionSummary from './components/SessionSummary';
 import MorePanel from './components/MorePanel';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -48,7 +47,6 @@ function AppInner() {
   const [showSocial, setShowSocial] = useState(false);
   const [showGap, setShowGap] = useState(false);
   const [showCinema, setShowCinema] = useState(false);
-  const [showFlywheel, setShowFlywheel] = useState(false);
   const [showSession, setShowSession] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
@@ -69,7 +67,6 @@ function AppInner() {
       if (e.key === 'Escape') {
         if (showMore) { setShowMore(false); return; }
         if (showSession) { setShowSession(false); return; }
-        if (showFlywheel) { setShowFlywheel(false); return; }
         if (showCinema) { setShowCinema(false); return; }
         if (showGap) { setShowGap(false); return; }
         if (showSocial) { setShowSocial(false); return; }
@@ -104,7 +101,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSession, showFlywheel, showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showSession, showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -129,6 +126,8 @@ function AppInner() {
     const onCloseSerendipity = () => setShowSerendipity(false);
     const onCloseAnnualReport = () => setShowAnnualReport(false);
     const onCloseDream = () => setShowDream(false);
+    const onCloseTerrain = () => setShowTerrain(false);
+    const onCloseCinema = () => setShowCinema(false);
 
     window.addEventListener('demo-select-memory', onSelectMemory);
     window.addEventListener('demo-close-detail', onCloseDetail);
@@ -138,6 +137,8 @@ function AppInner() {
     window.addEventListener('demo-close-serendipity', onCloseSerendipity);
     window.addEventListener('demo-close-annual-report', onCloseAnnualReport);
     window.addEventListener('demo-close-dream', onCloseDream);
+    window.addEventListener('demo-close-terrain', onCloseTerrain);
+    window.addEventListener('demo-close-cinema', onCloseCinema);
 
     return () => {
       window.removeEventListener('demo-select-memory', onSelectMemory);
@@ -148,6 +149,8 @@ function AppInner() {
       window.removeEventListener('demo-close-serendipity', onCloseSerendipity);
       window.removeEventListener('demo-close-annual-report', onCloseAnnualReport);
       window.removeEventListener('demo-close-dream', onCloseDream);
+      window.removeEventListener('demo-close-terrain', onCloseTerrain);
+      window.removeEventListener('demo-close-cinema', onCloseCinema);
     };
   }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
 
@@ -330,7 +333,6 @@ function AppInner() {
               { id: 'profile', emoji: '👤', label: '小哥眼中的你', description: 'AI 对你的结构化认知', onClick: () => setShowProfile(true) },
               { id: 'social', emoji: '🕸️', label: '关系星图', description: 'AI 眼中的你的社交宇宙', onClick: () => setShowSocial(true) },
               { id: 'gap', emoji: '🧩', label: '了解程度', description: 'AI 对你了解多少？', onClick: () => setShowGap(true) },
-              { id: 'flywheel', emoji: '🔄', label: '记忆飞轮', description: '小哥是怎么越来越懂你的', onClick: () => setShowFlywheel(true) },
               { id: 'session', emoji: '📊', label: '会话总结', description: '本次会话的变化摘要', onClick: () => setShowSession(true) },
               { id: 'annual', emoji: '📈', label: '记忆年报', description: '你的年度记忆报告', onClick: () => setShowAnnualReport(true) },
               { id: 'serendipity', emoji: '🎲', label: '碰碰对', description: '发现记忆之间的隐藏联系', onClick: () => setShowSerendipity(true) },
@@ -363,7 +365,6 @@ function AppInner() {
       <KnowledgeGap open={showGap} onClose={() => setShowGap(false)} />
       <MemoryCinema open={showCinema} onClose={() => setShowCinema(false)} memories={rawMemories} theme={theme} />
       <FlywheelFeedback />
-      <FlywheelView open={showFlywheel} onClose={() => setShowFlywheel(false)} />
       <SessionSummary open={showSession} onClose={() => setShowSession(false)} />
 
       <AnimatePresence>

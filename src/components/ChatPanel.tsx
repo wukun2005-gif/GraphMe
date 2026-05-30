@@ -151,7 +151,7 @@ export default function ChatPanel() {
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className={`font-medium text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>💬 问问 GraphMe</h3>
-              <button onClick={toggleChat} className={`text-lg leading-none ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>✕</button>
+              <button id="chat-close" onClick={toggleChat} className={`text-lg leading-none ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>✕</button>
             </div>
 
             <div className="space-y-2 overflow-y-auto flex-1">
@@ -226,6 +226,7 @@ export default function ChatPanel() {
               {QA_PAIRS.map((qa, i) => (
                 <div key={i}>
                   <button
+                    id={`chat-qa-${i}`}
                     onClick={() => setActiveQA(activeQA === i ? null : i)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
                       activeQA === i

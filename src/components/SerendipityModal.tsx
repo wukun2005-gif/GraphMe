@@ -126,6 +126,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
             {/* Footer */}
             <div className={`px-6 py-3 border-t flex justify-end ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
               <button
+                id="serendipity-refresh"
                 onClick={handleRefresh}
                 className={`text-xs px-4 py-1.5 rounded-lg cursor-pointer transition-colors ${
                   isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'

@@ -1264,6 +1264,7 @@ export default function ValueDashboard() {
                   👁️ 感官档案
                 </button>
                 <button
+                  id="val-dash-flywheel-tab"
                   onClick={() => setTab('flywheel')}
                   className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                     tab === 'flywheel'
@@ -1271,10 +1272,11 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  🔄 飞轮
+                  🔄 记忆飞轮
                 </button>
               </div>
               <button
+                id="val-dash-close"
                 onClick={toggleValueDashboard}
                 className={`text-lg leading-none ${
                   isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'

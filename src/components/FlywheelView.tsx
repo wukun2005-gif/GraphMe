@@ -59,6 +59,7 @@ export default function FlywheelView({ open, onClose }: Props) {
               🔄 记忆飞轮
             </h2>
             <button
+              id="flywheel-close"
               onClick={onClose}
               className={`text-lg cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
             >

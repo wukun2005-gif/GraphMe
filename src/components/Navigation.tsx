@@ -96,6 +96,16 @@ export default function NavigationSidebar() {
     [connectionPaths]
   );
 
+  // Auto-expand nav and navigate to category when a memory is selected
+  useEffect(() => {
+    if (!selectedMemory) return;
+    setCollapsed(false);
+    if (connectionPaths.length > 0) {
+      setNavCategory(connectionPaths[0].category);
+      setNavSubCategory(connectionPaths[0].subCategory);
+    }
+  }, [selectedMemory, connectionPaths, setNavCategory, setNavSubCategory]);
+
   const [formOpen, setFormOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
