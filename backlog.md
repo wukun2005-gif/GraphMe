@@ -1663,7 +1663,7 @@
 1. 导入无效 JSON 文件
 2. 预期：控制台有 debug 日志，UI 显示错误提示
 
-### 110. [CodeSmell] MemorySurprise.tsx 空 catch 块 [ ] [P2]
+### 110. [CodeSmell] MemorySurprise.tsx 空 catch 块 [✅] [P2]
 
 **来源**: 静态代码检查
 **问题**: `MemorySurprise.tsx` 中 localStorage 读写操作使用空 catch 块，与 AppContext.tsx 中已修复的问题相同。
