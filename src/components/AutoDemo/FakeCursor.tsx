@@ -160,6 +160,11 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await tryClick('emotion-filter-快乐', '再次点击取消筛选', 1000);
       }
 
+      // ─── SEARCH (0:48–0:56, 8s) ─────────────────
+      await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);
+      await moveToCenter('输入关键词，实时筛选记忆粒子', 2500);
+      await moveToCenter('支持记忆 ID、标签、摘要、人物等多维度搜索', 2500);
+
       // ─── MEMORY BANK (0:56–1:08, 12s) ────────────
       await requireClick('memory-bank-trigger', '记忆银行——你的收藏夹和统计', 2000);
       await moveToCenter('收藏的记忆按时间线排列，越用越丰富', 3000);
