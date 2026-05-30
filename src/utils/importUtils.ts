@@ -116,7 +116,8 @@ export function parseImportJSON(jsonString: string): ImportResult {
   let data: any;
   try {
     data = JSON.parse(jsonString);
-  } catch {
+  } catch (e) {
+    console.debug?.('[ImportUtils] JSON parse failed:', e);
     result.errors.push('无效的 JSON 格式');
     return result;
   }

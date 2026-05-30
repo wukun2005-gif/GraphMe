@@ -1643,7 +1643,7 @@
 | BUG-110 | CodeSmell | P2 | MemorySurprise.tsx 空 catch 块 |
 | BUG-111 | CodeSmell | P2 | MemoryCinema.tsx 硬编码 z-index |
 
-### 108. [CodeSmell] cardUtils.ts 空 catch 块 [ ] [P2]
+### 108. [CodeSmell] cardUtils.ts 空 catch 块 [✅] [P2]
 
 **来源**: 静态代码检查
 **问题**: `cardUtils.ts` 中图片加载失败时使用空 catch 块，调试时无法定位问题。
