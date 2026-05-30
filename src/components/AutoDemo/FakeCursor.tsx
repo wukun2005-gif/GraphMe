@@ -160,33 +160,43 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await tryClick('emotion-filter-快乐', '再次点击取消筛选', 1000);
       }
 
-      // ─── DIMENSION VIEWS (0:40–1:10, 30s) ─────────
+      // ─── DIMENSION VIEWS ──────────────────────────
       await moveToCenter('顶部维度切换——同一组记忆，四种视角', 3000);
       await moveToCenter('每个视角重新排列所有记忆粒子，发现不同维度的关联', 3000);
+      // Zoom out so all particles are visible
+      dispatchCameraMove('zoom-out');
+      await wait(2000); checkCancelled();
       await requireClick('btn-view-家庭视图', '切换到家庭视图', 2000);
-      await moveToCenter('家庭记忆聚在一起，学习记忆散落四周——关系一目了然', 4000);
+      await wait(4000); checkCancelled();
+      await moveToCenter('看！粒子正在重新排列——家庭记忆聚到了一起', 3000);
       await requireClick('btn-view-学习视图', '切换到学习视图', 2000);
-      await moveToCenter('编程、数学、阅读各自成簇——知识版图清晰可见', 4000);
+      await wait(4000); checkCancelled();
+      await moveToCenter('编程、数学、阅读各自成簇——知识版图清晰可见', 3000);
       await requireClick('btn-view-情绪视图', '切换到情绪视图', 2000);
-      await moveToCenter('快乐金光闪闪，悲伤冷蓝幽幽——情绪光谱尽收眼底', 4000);
+      await wait(4000); checkCancelled();
+      await moveToCenter('快乐金光闪闪，悲伤冷蓝幽幽——情绪光谱尽收眼底', 3000);
       await requireClick('btn-view-全局视图', '切回全局视图', 2000);
-      await moveToCenter('四种视角，同一组记忆，不同的理解方式', 3000);
+      await wait(3000); checkCancelled();
+      await moveToCenter('四种视角，同一组记忆，不同的理解方式', 2500);
 
-      // ─── CATEGORY NAV (1:10–1:40, 30s) ────────────
-      await moveToCenter('左侧分类导航——按生活领域快速筛选', 3000);
-      // First expand the sidebar by clicking the expand button
-      const expandOk = await moveAndClick('nav-expand', '展开导航侧栏', 1500);
-      if (expandOk) {
-        await moveAndClick('nav-cat-家庭生活', '点击"家庭生活"', 2000);
-        await moveToCenter('星云实时重排，只显示家庭相关记忆', 3000);
-        await moveToCenter('父子协作、快乐时光、日常生活——三个子分类清晰呈现', 3500);
-        await moveAndClick('nav-cat-学习与成长', '切换到"学习与成长"', 2000);
-        await moveToCenter('学习记忆重新聚类——编程、数学、阅读各成体系', 3500);
-        await moveAndClick('nav-cat-社交与情感', '切换到"社交与情感"', 2000);
-        await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3500);
-        await moveAndClick('nav-cat-家庭生活', '再次点击取消筛选', 1500);
-        await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
-      }
+      // ─── CATEGORY NAV ─────────────────────────────
+      // Expand sidebar if collapsed (use tryClick — no-op if already expanded)
+      await tryClick('nav-expand', '展开导航侧栏', 500);
+      await moveToCenter('左侧分类导航——按生活领域快速筛选', 2500);
+      await moveAndClick('nav-cat-家庭生活', '点击"家庭生活"', 1500);
+      await wait(2000); checkCancelled();
+      dispatchCameraMove('zoom-out');
+      await wait(1500); checkCancelled();
+      await moveToCenter('星云正在重排——只显示家庭相关记忆', 3000);
+      await moveAndClick('nav-cat-学习与成长', '切换到"学习与成长"', 1500);
+      await wait(2000); checkCancelled();
+      await moveToCenter('学习记忆重新聚类——编程、数学、阅读各成体系', 3000);
+      await moveAndClick('nav-cat-社交与情感', '切换到"社交与情感"', 1500);
+      await wait(2000); checkCancelled();
+      await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3000);
+      await moveAndClick('nav-cat-家庭生活', '再次点击取消筛选', 1000);
+      await wait(2000); checkCancelled();
+      await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
 
       // ─── SEARCH (1:40–1:48, 8s) ─────────────────
       await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);

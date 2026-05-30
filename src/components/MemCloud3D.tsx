@@ -737,6 +737,7 @@ function DemoCameraController() {
   const animatingRef = useRef(false);
   const angleRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zoomTargetRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleMove = (e: any) => {
@@ -747,6 +748,10 @@ function DemoCameraController() {
           animatingRef.current = false;
         }, 5000);
         invalidate();
+      } else if (e.detail?.action === 'zoom-out') {
+        // Zoom out so all particles are visible (move camera further away)
+        zoomTargetRef.current = 12;
+        invalidate();
       }
     };
     window.addEventListener('demo-camera-move', handleMove);
@@ -756,14 +761,27 @@ function DemoCameraController() {
     };
   }, [invalidate]);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (animatingRef.current) {
-      angleRef.current += delta * 0.5;
+      angleRef.current += 0.005;
       const radius = 8;
       camera.position.x = THREE.MathUtils.lerp(camera.position.x, Math.sin(angleRef.current) * radius, 0.05);
       camera.position.z = THREE.MathUtils.lerp(camera.position.z, Math.cos(angleRef.current) * radius, 0.05);
       camera.lookAt(0, 0, 0);
       invalidate();
+    }
+    // Smooth zoom out animation
+    if (zoomTargetRef.current !== null) {
+      const currentDist = camera.position.length();
+      const target = zoomTargetRef.current;
+      if (Math.abs(currentDist - target) > 0.1) {
+        const newDist = THREE.MathUtils.lerp(currentDist, target, 0.03);
+        camera.position.normalize().multiplyScalar(newDist);
+        camera.lookAt(0, 0, 0);
+        invalidate();
+      } else {
+        zoomTargetRef.current = null;
+      }
     }
   });
 
