@@ -160,21 +160,31 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await tryClick('emotion-filter-快乐', '再次点击取消筛选', 1000);
       }
 
-      // ─── DIMENSION VIEWS (0:40–0:48, 8s) ─────────
+      // ─── DIMENSION VIEWS (0:40–1:10, 30s) ─────────
       await moveToCenter('顶部维度切换——同一组记忆，四种视角', 3000);
-      await requireClick('btn-view-家庭视图', '家庭视图——记忆按家庭关系重新布局', 2500);
-      await requireClick('btn-view-学习视图', '学习视图——记忆按学习主题聚类', 2500);
-      await requireClick('btn-view-情绪视图', '情绪视图——记忆按情绪色彩分布', 2500);
-      await requireClick('btn-view-全局视图', '切回全局视图', 1500);
+      await moveToCenter('每个视角重新排列所有记忆粒子，发现不同维度的关联', 3000);
+      await requireClick('btn-view-家庭视图', '切换到家庭视图', 2000);
+      await moveToCenter('家庭记忆聚在一起，学习记忆散落四周——关系一目了然', 4000);
+      await requireClick('btn-view-学习视图', '切换到学习视图', 2000);
+      await moveToCenter('编程、数学、阅读各自成簇——知识版图清晰可见', 4000);
+      await requireClick('btn-view-情绪视图', '切换到情绪视图', 2000);
+      await moveToCenter('快乐金光闪闪，悲伤冷蓝幽幽——情绪光谱尽收眼底', 4000);
+      await requireClick('btn-view-全局视图', '切回全局视图', 2000);
+      await moveToCenter('四种视角，同一组记忆，不同的理解方式', 3000);
 
-      // ─── CATEGORY NAV (0:48–0:56, 8s) ────────────
-      await moveAndClick('nav-家庭生活', '分类导航——按生活领域筛选记忆', 2000);
-      await moveToCenter('点击"家庭生活"——只看家庭相关记忆', 2500);
+      // ─── CATEGORY NAV (1:10–1:40, 30s) ────────────
+      await moveToCenter('左侧分类导航——按生活领域快速筛选', 3000);
+      await moveAndClick('nav-家庭生活', '点击"家庭生活"', 2000);
+      await moveToCenter('星云实时重排，只显示家庭相关记忆', 3000);
+      await moveToCenter('父子协作、快乐时光、日常生活——三个子分类清晰呈现', 3500);
       await moveAndClick('nav-学习与成长', '切换到"学习与成长"', 2000);
-      await moveToCenter('3D 星云实时重排，只显示学习相关记忆', 2500);
-      await moveAndClick('nav-家庭生活', '再次点击取消筛选', 1000);
+      await moveToCenter('学习记忆重新聚类——编程、数学、阅读各成体系', 3500);
+      await moveAndClick('nav-社交与情感', '切换到"社交与情感"', 2000);
+      await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3500);
+      await moveAndClick('nav-家庭生活', '再次点击取消筛选', 1500);
+      await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
 
-      // ─── SEARCH (0:56–1:04, 8s) ─────────────────
+      // ─── SEARCH (1:40–1:48, 8s) ─────────────────
       await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);
       await moveToCenter('输入关键词，实时筛选记忆粒子', 2500);
       await moveToCenter('支持记忆 ID、标签、摘要、人物等多维度搜索', 2500);
