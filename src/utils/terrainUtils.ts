@@ -108,12 +108,12 @@ export function generateTerrain(
     // Group by activity type + knowledge keywords
     const key = m.dimensions.activity.type;
     if (!conceptMap.has(key)) conceptMap.set(key, []);
-    conceptMap.get(key)!.push(m);
+    conceptMap.get(key)?.push(m);
     // Also group by knowledge
     for (const k of m.dimensions.semantic.knowledge) {
       const kKey = k;
       if (!conceptMap.has(kKey)) conceptMap.set(kKey, []);
-      conceptMap.get(kKey)!.push(m);
+      conceptMap.get(kKey)?.push(m);
     }
   }
 
@@ -149,7 +149,7 @@ export function generateTerrain(
   for (const m of rawMemories) {
     for (const p of m.dimensions.social.persons) {
       if (!personMap.has(p)) personMap.set(p, []);
-      personMap.get(p)!.push(m);
+      personMap.get(p)?.push(m);
     }
   }
 
@@ -243,7 +243,7 @@ export function generateTerrain(
   for (const m of rawMemories) {
     const e = m.dimensions.emotional.primary;
     if (!emotionClusters.has(e)) emotionClusters.set(e, []);
-    emotionClusters.get(e)!.push(m);
+    emotionClusters.get(e)?.push(m);
   }
 
   let ci = 0;

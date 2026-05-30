@@ -594,7 +594,7 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
     limited.forEach((ins, idx) => {
       ins.sourceRawMemoryIds.forEach(srcId => {
         if (!sourceIndex.has(srcId)) sourceIndex.set(srcId, []);
-        sourceIndex.get(srcId)!.push(idx);
+        sourceIndex.get(srcId)?.push(idx);
       });
     });
 
@@ -611,8 +611,9 @@ function InsightNetworkLines({ theme }: { theme: Theme }) {
     connectionMap.forEach((sharedCount, key) => {
       const [iStr, jStr] = key.split('-');
       const i = parseInt(iStr), j = parseInt(jStr);
-      const pa = posMap.get(limited[i].id)!;
-      const pb = posMap.get(limited[j].id)!;
+      const pa = posMap.get(limited[i].id);
+      const pb = posMap.get(limited[j].id);
+      if (!pa || !pb) return;
       const va = new THREE.Vector3(pa[0], pa[1], pa[2]);
       const vb = new THREE.Vector3(pb[0], pb[1], pb[2]);
       if (sharedCount >= 5) causal.push([va, vb]);

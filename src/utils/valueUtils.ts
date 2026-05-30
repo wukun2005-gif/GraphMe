@@ -97,7 +97,7 @@ export function computeDailyTrajectories(memories: RawMemory[]): DailyTrajectory
     const d = new Date(m.dimensions.temporal.timestamp);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     if (!dayMap.has(key)) dayMap.set(key, []);
-    dayMap.get(key)!.push(m);
+    dayMap.get(key)?.push(m);
   });
 
   const trajectories: DailyTrajectory[] = [];
@@ -307,6 +307,7 @@ export function computeDailyEmotionMap(memories: RawMemory[], days: number = 90)
     const d = new Date(ts);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     if (!map.has(key)) map.set(key, { emotions: {}, summaries: [] });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed by has/set above
     const entry = map.get(key)!;
     const emo = m.dimensions.emotional.primary;
     entry.emotions[emo] = (entry.emotions[emo] || 0) + 1;
