@@ -232,7 +232,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
           window.dispatchEvent(new CustomEvent('demo-close-serendipity'));
           await wait(800);
         }
-      } catch { /* skip */ }
+      } catch (e) { /* serendipity feature may not exist */ console.debug?.('[FakeCursor] Serendipity demo skipped:', e); }
 
       try {
         const ok = await clickMorePanelFeature('dream', '记忆梦境——AI 重组记忆碎片', 2500);
@@ -243,7 +243,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
           window.dispatchEvent(new CustomEvent('demo-close-dream'));
           await wait(500);
         }
-      } catch { /* skip */ }
+      } catch (e) { /* dream feature may not exist */ console.debug?.('[FakeCursor] Dream demo skipped:', e); }
 
       // ─── FLYWHEEL (4:20–5:00, 40s) ───────────────
       try {
@@ -253,7 +253,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
           window.dispatchEvent(new CustomEvent('demo-close-annual-report'));
           await wait(800);
         }
-      } catch { /* skip */ }
+      } catch (e) { /* annual report feature may not exist */ console.debug?.('[FakeCursor] Annual report demo skipped:', e); }
 
       try {
         await requireClick('btn-terrain', '认知地图——你的记忆地形图', 2500);
@@ -262,7 +262,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await tryClick('terrain-letter', '让小哥为你写封信——AI 基于记忆的真情告白', 4000);
         await moveToCenter('信中引用了你的真实记忆，每句话都有迹可循', 3500);
         await tryClick('terrain-close', '关闭认知地图', 1000);
-      } catch { /* skip */ }
+      } catch (e) { /* terrain feature may not exist */ console.debug?.('[FakeCursor] Terrain demo skipped:', e); }
 
       // ─── TAGLINE EXIT ─────────────────────────────
       setTooltipText('GraphMe — 让每一段记忆都有迹可循');

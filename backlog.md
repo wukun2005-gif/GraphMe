@@ -1556,7 +1556,7 @@
 2. 打开 React DevTools，检查是否有 "Can't perform a React state update" 警告
 3. Chrome DevTools Memory → 拍堆快照 → 检查是否有 Detached DOM 或闭包泄漏
 
-### 103. [Stability] AppContext.tsx 空 catch 块吞没 localStorage 错误 [ ] [P1]
+### 103. [Stability] AppContext.tsx 空 catch 块吞没 localStorage 错误 [✅] [P1]
 
 **来源**: 静态代码检查
 **问题**: `AppContext.tsx` 中 8 处 `localStorage.getItem/setItem` 操作使用空 `catch {}` 块，当 localStorage 不可用（隐私模式、存储满、SSR 环境）时：
