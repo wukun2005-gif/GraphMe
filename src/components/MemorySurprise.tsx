@@ -18,7 +18,8 @@ const STORAGE_KEY = 'graphme-surprise-last-date';
 function getLastSurpriseDate(): string {
   try {
     return localStorage.getItem(STORAGE_KEY) || '';
-  } catch {
+  } catch (e) {
+    console.warn('[MemorySurprise] Failed to read last surprise date:', e);
     return '';
   }
 }
@@ -26,7 +27,9 @@ function getLastSurpriseDate(): string {
 function setLastSurpriseDate(date: string) {
   try {
     localStorage.setItem(STORAGE_KEY, date);
-  } catch {}
+  } catch (e) {
+    console.warn('[MemorySurprise] Failed to save last surprise date:', e);
+  }
 }
 
 export default function MemorySurprise() {
