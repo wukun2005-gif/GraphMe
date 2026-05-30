@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppState } from '../store/AppContext';
 import { getDailyMemory } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
@@ -8,6 +8,7 @@ export default function DailyMemoryCard() {
   const isDark = theme === 'dark';
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const daily = useMemo(() => getDailyMemory(rawMemories), [rawMemories]);
 
@@ -28,6 +29,7 @@ export default function DailyMemoryCard() {
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     };
   }, [daily, dismissed]);
 
@@ -36,10 +38,15 @@ export default function DailyMemoryCard() {
   const { memory, reason, daysAgo } = daily;
   const emotionColor = EMOTION_COLORS[memory.dimensions.emotional.primary] || '#888';
 
+  const scheduleDismiss = () => {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    dismissTimerRef.current = setTimeout(() => setDismissed(true), 600);
+  };
+
   const handleClick = () => {
     selectMemory(memory);
     setVisible(false);
-    setTimeout(() => setDismissed(true), 600);
+    scheduleDismiss();
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
@@ -48,7 +55,7 @@ export default function DailyMemoryCard() {
     const today = new Date();
     const key = `graphme-daily-dismissed-${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
     localStorage.setItem(key, '1');
-    setTimeout(() => setDismissed(true), 600);
+    scheduleDismiss();
   };
 
   const timeLabel = daysAgo < 1

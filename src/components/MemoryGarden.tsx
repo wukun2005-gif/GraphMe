@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { getGardenPlantData } from '../utils/valueUtils';
@@ -9,14 +9,20 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
   const isDark = theme === 'dark';
   const [selectedPlant, setSelectedPlant] = useState<GardenPlant | null>(null);
   const [wateringId, setWateringId] = useState<string | null>(null);
+  const wateringTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const plants = useMemo(() => getGardenPlantData(rawMemories), [rawMemories]);
+
+  useEffect(() => {
+    return () => { if (wateringTimerRef.current) clearTimeout(wateringTimerRef.current); };
+  }, []);
 
   const handleWater = (plant: GardenPlant) => {
     setWateringId(plant.memory.id);
     reinforceMemory(plant.memory.id);
     addToast('已浇水，记忆恢复活力', 'success');
-    setTimeout(() => setWateringId(null), 1500);
+    if (wateringTimerRef.current) clearTimeout(wateringTimerRef.current);
+    wateringTimerRef.current = setTimeout(() => setWateringId(null), 1500);
   };
 
   return (
