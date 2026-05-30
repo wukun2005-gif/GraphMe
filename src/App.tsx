@@ -220,12 +220,9 @@ function AppInner() {
         <span>{insightMemories.length} 洞察记忆</span>
       </div>
 
-      {/* Watermark */}
-      <div className={`absolute bottom-6 left-[240px] right-0 z-[1] pointer-events-none select-none flex justify-end pr-[120px]`}
-        style={{
-          opacity: isDark ? 0.15 : 0.12,
-        }}>
-        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+      {/* Watermark — right-aligned to timeline endpoint */}
+      <div className={`absolute bottom-6 left-[240px] right-0 z-10 pointer-events-none select-none flex justify-end pr-[120px]`}>
+        <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
           wukun2005@gmail.com
         </span>
       </div>
