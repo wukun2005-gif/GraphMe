@@ -1699,7 +1699,7 @@
 1. 打开 MemoryReader，切换到空记忆列表
 2. 预期：不崩溃，graceful 降级
 
-### 113. [Bug] MemCloud3D.tsx hovered 非空断言不安全 [ ] [P1]
+### 113. [Bug] MemCloud3D.tsx hovered 非空断言不安全 [✅] [P1]
 
 **来源**: 静态代码检查
 **问题**: 第 1615 行 guard 检查 `hoveredMem` 但 style 用 `hovered!.x`，两个不同变量。若 state 更新竞态导致 `hoveredMem` 有值但 `hovered` 为 null，会崩溃。
