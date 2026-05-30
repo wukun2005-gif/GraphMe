@@ -73,6 +73,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
   }, [goToNext, goToPrev, onClose]);
 
   const d = currentMemory?.dimensions;
+  if (!d) return null;
   const emoColor = EMOTION_COLORS[d.emotional.primary] || '#888';
   const date = new Date(d.temporal.timestamp);
   const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
