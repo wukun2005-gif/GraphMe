@@ -22,7 +22,6 @@ import SocialGraph from './components/SocialGraph';
 import KnowledgeGap from './components/KnowledgeGap';
 import MemoryCinema from './components/MemoryCinema';
 import FlywheelFeedback from './components/FlywheelFeedback';
-import SessionSummary from './components/SessionSummary';
 import MorePanel from './components/MorePanel';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { EMOTION_COLORS } from './types';
@@ -45,7 +44,6 @@ function AppInner() {
   const [showSocial, setShowSocial] = useState(false);
   const [showGap, setShowGap] = useState(false);
   const [showCinema, setShowCinema] = useState(false);
-  const [showSession, setShowSession] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [readerMemory, setReaderMemory] = useState<any>(null);
 
@@ -64,7 +62,6 @@ function AppInner() {
 
       if (e.key === 'Escape') {
         if (showMore) { setShowMore(false); return; }
-        if (showSession) { setShowSession(false); return; }
         if (showCinema) { setShowCinema(false); return; }
         if (showGap) { setShowGap(false); return; }
         if (showSocial) { setShowSocial(false); return; }
@@ -98,7 +95,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSession, showCinema, showGap, showSocial, showProfile, showConfusion, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showCinema, showGap, showSocial, showProfile, showConfusion, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -317,7 +314,7 @@ function AppInner() {
                 : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
             }`}
           >
-            ⚙️ 更多
+            ⋯ 更多
           </button>
           <MorePanel
             theme={theme}
@@ -327,7 +324,6 @@ function AppInner() {
               { id: 'profile', emoji: '👤', label: '小哥眼中的你', description: 'AI 对你的结构化认知', onClick: () => setShowProfile(true) },
               { id: 'social', emoji: '🕸️', label: '关系星图', description: 'AI 眼中的你的社交宇宙', onClick: () => setShowSocial(true) },
               { id: 'gap', emoji: '🧩', label: '了解程度', description: 'AI 对你了解多少？', onClick: () => setShowGap(true) },
-              { id: 'session', emoji: '📊', label: '会话总结', description: '本次会话的变化摘要', onClick: () => setShowSession(true) },
               { id: 'annual', emoji: '📈', label: '记忆年报', description: '你的年度记忆报告', onClick: () => setShowAnnualReport(true) },
               { id: 'dream', emoji: '🌙', label: '记忆梦境', description: 'AI 重组记忆碎片', onClick: () => setShowDream(true) },
               { id: 'reader', emoji: '📖', label: '阅读模式', description: '沉浸式翻阅记忆', onClick: () => setShowReader(true) },
@@ -357,7 +353,6 @@ function AppInner() {
       <KnowledgeGap open={showGap} onClose={() => setShowGap(false)} />
       <MemoryCinema open={showCinema} onClose={() => setShowCinema(false)} memories={rawMemories} theme={theme} />
       <FlywheelFeedback />
-      <SessionSummary open={showSession} onClose={() => setShowSession(false)} />
 
       <AnimatePresence>
         {showDream && (
