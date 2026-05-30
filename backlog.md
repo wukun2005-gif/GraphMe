@@ -1734,7 +1734,7 @@
 1. 运行 demo，确认进度条和光标在最顶层
 2. 运行 z-index 回归测试
 
-### 116. [CodeSmell] Map.get()! 非空断言（3 文件 6 处） [ ] [P2]
+### 116. [CodeSmell] Map.get()! 非空断言（3 文件 6 处） [✅] [P2]
 
 **来源**: 静态检查
 **问题**: valueUtils.ts、terrainUtils.ts、MemCloud3D.tsx 中 `Map.get(key)!` 依赖前置 `set()` 保证非空，逻辑变更或数据畸形时会产生 undefined。
