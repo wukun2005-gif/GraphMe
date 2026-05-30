@@ -221,15 +221,13 @@ function AppInner() {
       </div>
 
       {/* Watermark */}
-      <div className={`absolute bottom-6 left-[240px] z-[1] pointer-events-none select-none`}
+      <div className={`absolute bottom-6 left-[240px] right-0 z-[1] pointer-events-none select-none flex justify-end pr-[120px]`}
         style={{
-          fontSize: '10px',
-          letterSpacing: '0.5px',
           opacity: isDark ? 0.15 : 0.12,
-          color: isDark ? '#ffffff' : '#000000',
-          marginLeft: '180px',
         }}>
-        wukun2005@gmail.com
+        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          wukun2005@gmail.com
+        </span>
       </div>
 
       <TimelineScrubber />
