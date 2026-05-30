@@ -7,7 +7,8 @@ export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context not available');
 
   const emotionColor = EMOTION_COLORS[memory.dimensions.emotional.primary] || '#888';
   const isDark = true;
