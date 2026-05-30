@@ -1721,7 +1721,7 @@
 2. 确认下拉不被其他面板遮挡
 3. 运行 `npx vitest run z-index-regression` 确认回归测试仍过
 
-### 115. [Bug] FakeCursor/Tooltip 硬编码 z-index 绕过常量体系 [ ] [P1]
+### 115. [Bug] FakeCursor/Tooltip 硬编码 z-index 绕过常量体系 [✅] [P1]
 
 **来源**: 静态检查
 **问题**: FakeCursor.tsx 用 `z-[120]`/`z-[110]`，Tooltip.tsx 用 `z-[105]`，OnboardingOverlay.tsx 用 `z-[100]`，全部超出 Z_INDEX.TOOLTIP(60) 且未使用常量。
