@@ -1771,7 +1771,7 @@
 - `src/components/DailyMemoryCard.tsx` L42,51: 同上
 **验证方式**: 快速打开/关闭组件，观察控制台是否有 unmounted component 警告
 
-### 120. [TestGap] 28 个 React 组件零测试覆盖 [ ] [P1]
+### 120. [TestGap] 28 个 React 组件零测试覆盖 [✅] [P1]
 
 **来源**: 测试覆盖分析
 **问题**: 所有组件文件（包括最高风险的 MemCloud3D.tsx、App.tsx、Navigation.tsx、DetailPanel.tsx）均无渲染测试、交互测试或快照测试。
