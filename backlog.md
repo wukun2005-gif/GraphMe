@@ -1744,7 +1744,7 @@
 - `src/components/MemCloud3D.tsx` L597
 **验证方式**: 运行 `npx vitest run` 确认全过
 
-### 117. [CodeSmell] canvas.getContext('2d')! 非空断言 [ ] [P2]
+### 117. [CodeSmell] canvas.getContext('2d')! 非空断言 [✅] [P2]
 
 **来源**: 静态检查
 **问题**: cardUtils.ts:10 和 MemCloud3D.tsx:16 用 `getContext('2d')!`，canvas 上下文不可用时会崩溃。
