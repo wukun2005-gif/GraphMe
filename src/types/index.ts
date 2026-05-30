@@ -160,3 +160,15 @@ export interface TimeCapsule {
   opened: boolean;
 }
 
+// Z-index layer constants to prevent layer conflicts
+// Historical context: z-index conflicts have been fixed 4 times (commits 3456b75, 83e23f3, 2544c50, 0128f8e)
+export const Z_INDEX = {
+  BASE: 10,        // Base layer for 3D canvas and background elements
+  SIDEBAR: 20,     // Navigation sidebar
+  TOOLBAR: 20,     // Top toolbar
+  PANEL: 30,       // Detail panel, Chat panel, Value dashboard
+  DROPDOWN: 40,    // Dropdown menus
+  MODAL: 50,       // Modal dialogs
+  TOOLTIP: 60,     // Tooltips (highest priority)
+} as const;
+

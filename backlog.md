@@ -1576,7 +1576,7 @@
 3. 预期：控制台有明确警告信息，而非静默失败
 4. 可选：显示 Toast "数据保存失败，请检查浏览器存储设置"
 
-### 104. [CodeSmell] FakeCursor.tsx 多处空 catch 块 [ ] [P2]
+### 104. [CodeSmell] FakeCursor.tsx 多处空 catch 块 [✅] [P2]
 
 **来源**: 静态代码检查
 **问题**: `FakeCursor.tsx` 中 5 处 `catch { /* skip */ }` 空 catch 块，用于 try DOM 操作。虽然是防御性编程，但：
