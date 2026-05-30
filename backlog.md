@@ -1762,7 +1762,7 @@
 - `src/components/Navigation.tsx` L47: 同上
 **验证方式**: 手动触发 HMR 后多次导入，检查 ID 唯一性
 
-### 119. [CodeSmell] MemoryGarden/DailyMemoryCard setTimeout 未清理 [ ] [P2]
+### 119. [CodeSmell] MemoryGarden/DailyMemoryCard setTimeout 未清理 [✅] [P2]
 
 **来源**: 静态检查
 **问题**: MemoryGarden.tsx:19 和 DailyMemoryCard.tsx:42,51 在事件处理器中用 setTimeout 但无 cleanup，组件卸载后仍会 setState。
