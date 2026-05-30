@@ -64,6 +64,7 @@ interface AppContextType extends AppState {
   removeToast: (id: string) => void;
   setNavCategory: (cat: string | null) => void;
   setNavSubCategory: (sub: string | null) => void;
+  resetAllFilters: () => void;
   rawMemories: RawMemory[];
   insightMemories: InsightMemory[];
   addMemory: (mem: RawMemory) => void;
@@ -232,6 +233,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   })), []);
   const setNavCategory = useCallback((cat: string | null) => setState(s => ({ ...s, navCategory: cat })), []);
   const setNavSubCategory = useCallback((sub: string | null) => setState(s => ({ ...s, navSubCategory: sub })), []);
+
+  // Reset all filters to default state (used by demo to restore state between steps)
+  const resetAllFilters = useCallback(() => {
+    setState(s => ({
+      ...s,
+      navCategory: null,
+      navSubCategory: null,
+      emotionFilter: [],
+      tagFilter: [],
+      timeRangeFilter: null,
+    }));
+    setHideRawOnly(false);
+    setHideInsightOnly(false);
+  }, []);
 
   const addMemory = useCallback((mem: RawMemory) => {
     setRawMems(prev => [...prev, mem]);
@@ -658,7 +673,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
-      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleTagFilter, addTag, removeTag, allTags, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory,
+      toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleTagFilter, addTag, removeTag, allTags, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory, resetAllFilters,
       rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,

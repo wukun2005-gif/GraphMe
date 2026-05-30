@@ -96,6 +96,10 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       window.dispatchEvent(new CustomEvent('demo-select-memory', { detail: { id: memoryId } }));
     };
 
+    const dispatchResetFilters = () => {
+      window.dispatchEvent(new CustomEvent('demo-reset-filters'));
+    };
+
     const getParticleScreenPos = async (particleId: string): Promise<{ x: number; y: number } | null> => {
       const tryOnce = (): Promise<{ x: number; y: number } | null> => new Promise(resolve => {
         let done = false;
@@ -192,8 +196,9 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await moveAndClick('nav-cat-社交与情感', '切换到"社交与情感"', 1500);
       await wait(2000); checkCancelled();
       await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3000);
-      // Reset: click active category to deselect
-      await moveAndClick('nav-cat-社交与情感', '', 500);
+      // Reset all filters to restore full universe
+      dispatchResetFilters();
+      await wait(1000); checkCancelled();
       await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
 
       // ─── SEARCH (1:40–1:48, 8s) ─────────────────

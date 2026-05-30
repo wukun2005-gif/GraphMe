@@ -31,7 +31,7 @@ const DEFAULT_BG_DARK = '#0a101f';
 const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
-  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery } = useAppState();
+  const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, resetAllFilters } = useAppState();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -121,6 +121,7 @@ function AppInner() {
     const onCloseAnnualReport = () => setShowAnnualReport(false);
     const onCloseDream = () => setShowDream(false);
     const onCloseCinema = () => setShowCinema(false);
+    const onResetFilters = () => resetAllFilters();
 
     window.addEventListener('demo-select-memory', onSelectMemory);
     window.addEventListener('demo-close-detail', onCloseDetail);
@@ -131,6 +132,7 @@ function AppInner() {
     window.addEventListener('demo-close-annual-report', onCloseAnnualReport);
     window.addEventListener('demo-close-dream', onCloseDream);
     window.addEventListener('demo-close-cinema', onCloseCinema);
+    window.addEventListener('demo-reset-filters', onResetFilters);
 
     return () => {
       window.removeEventListener('demo-select-memory', onSelectMemory);
@@ -142,6 +144,7 @@ function AppInner() {
       window.removeEventListener('demo-close-annual-report', onCloseAnnualReport);
       window.removeEventListener('demo-close-dream', onCloseDream);
       window.removeEventListener('demo-close-cinema', onCloseCinema);
+      window.removeEventListener('demo-reset-filters', onResetFilters);
     };
   }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
 
