@@ -1780,7 +1780,7 @@
 - 优先为高风险组件添加 smoke test（渲染不崩溃）：MemCloud3D(21次fix)、App(13次)、Navigation(9次)、DetailPanel(8次)
 **验证方式**: 运行 `npx vitest run` 确认新测试通过
 
-### 121. [TestGap] 15/18 工具函数无测试 [ ] [P2]
+### 121. [TestGap] 15/18 工具函数无测试 [✅] [P2]
 
 **来源**: 测试覆盖分析
 **问题**: similarityUtils、memoryBankUtils、confusionUtils、gapUtils 等核心算法模块无直接测试。
