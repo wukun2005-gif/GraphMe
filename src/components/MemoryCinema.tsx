@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RawMemory } from '../types';
-import { EMOTION_COLORS } from '../types';
+import { EMOTION_COLORS, Z_INDEX } from '../types';
 import { generateFirstPersonNarrative } from '../utils/narrativeUtils';
 
 interface Props {
@@ -88,7 +88,7 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
               onClick={e => e.stopPropagation()}
               className="rounded-2xl overflow-hidden backdrop-blur-xl border shadow-2xl flex flex-col"
               style={{
-                zIndex: 50,
+                zIndex: Z_INDEX.MODAL,
                 width: '560px',
                 maxWidth: '90vw',
                 maxHeight: '80vh',
