@@ -16,7 +16,6 @@ import MemorySurprise from './components/MemorySurprise';
 import DreamWeaver from './components/DreamWeaver';
 import FakeCursor from './components/AutoDemo/FakeCursor';
 import MemoryReader from './components/MemoryReader';
-import CognitiveTerrain from './components/CognitiveTerrain';
 import ConfusionDiary from './components/ConfusionDiary';
 import UserProfile from './components/UserProfile';
 import SocialGraph from './components/SocialGraph';
@@ -41,7 +40,6 @@ function AppInner() {
   const [showAnnualReport, setShowAnnualReport] = useState(false);
   const [showDream, setShowDream] = useState(false);
   const [showReader, setShowReader] = useState(false);
-  const [showTerrain, setShowTerrain] = useState(false);
   const [showConfusion, setShowConfusion] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
@@ -72,7 +70,6 @@ function AppInner() {
         if (showSocial) { setShowSocial(false); return; }
         if (showProfile) { setShowProfile(false); return; }
         if (showConfusion) { setShowConfusion(false); return; }
-        if (showTerrain) { setShowTerrain(false); return; }
         if (showSerendipity) { setShowSerendipity(false); return; }
         if (showSearch && searchQuery) { setSearchQuery(''); return; }
         if (showSearch) { setShowSearch(false); return; }
@@ -101,7 +98,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSession, showCinema, showGap, showSocial, showProfile, showConfusion, showTerrain, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
+  }, [showSession, showCinema, showGap, showSocial, showProfile, showConfusion, showSerendipity, showSearch, searchQuery, setCurrentView, setSearchQuery, setShowSearch]);
 
   // Bridge FakeCursor custom events → React context
   useEffect(() => {
@@ -126,7 +123,6 @@ function AppInner() {
     const onCloseSerendipity = () => setShowSerendipity(false);
     const onCloseAnnualReport = () => setShowAnnualReport(false);
     const onCloseDream = () => setShowDream(false);
-    const onCloseTerrain = () => setShowTerrain(false);
     const onCloseCinema = () => setShowCinema(false);
 
     window.addEventListener('demo-select-memory', onSelectMemory);
@@ -137,7 +133,6 @@ function AppInner() {
     window.addEventListener('demo-close-serendipity', onCloseSerendipity);
     window.addEventListener('demo-close-annual-report', onCloseAnnualReport);
     window.addEventListener('demo-close-dream', onCloseDream);
-    window.addEventListener('demo-close-terrain', onCloseTerrain);
     window.addEventListener('demo-close-cinema', onCloseCinema);
 
     return () => {
@@ -149,7 +144,6 @@ function AppInner() {
       window.removeEventListener('demo-close-serendipity', onCloseSerendipity);
       window.removeEventListener('demo-close-annual-report', onCloseAnnualReport);
       window.removeEventListener('demo-close-dream', onCloseDream);
-      window.removeEventListener('demo-close-terrain', onCloseTerrain);
       window.removeEventListener('demo-close-cinema', onCloseCinema);
     };
   }, [isDemoPlaying, rawMemories, insightMemories, selectMemory]);
@@ -288,16 +282,16 @@ function AppInner() {
           🔍
         </button>
         <button
-          id="btn-terrain"
-          title="认知地图"
-          onClick={() => setShowTerrain(true)}
+          id="btn-serendipity"
+          title="碰碰对"
+          onClick={() => setShowSerendipity(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
               ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🗺️ 认知地图
+          🎲 碰碰对
         </button>
         <button
           id="btn-cinema"
@@ -335,7 +329,6 @@ function AppInner() {
               { id: 'gap', emoji: '🧩', label: '了解程度', description: 'AI 对你了解多少？', onClick: () => setShowGap(true) },
               { id: 'session', emoji: '📊', label: '会话总结', description: '本次会话的变化摘要', onClick: () => setShowSession(true) },
               { id: 'annual', emoji: '📈', label: '记忆年报', description: '你的年度记忆报告', onClick: () => setShowAnnualReport(true) },
-              { id: 'serendipity', emoji: '🎲', label: '碰碰对', description: '发现记忆之间的隐藏联系', onClick: () => setShowSerendipity(true) },
               { id: 'dream', emoji: '🌙', label: '记忆梦境', description: 'AI 重组记忆碎片', onClick: () => setShowDream(true) },
               { id: 'reader', emoji: '📖', label: '阅读模式', description: '沉浸式翻阅记忆', onClick: () => setShowReader(true) },
               ...(hasConfusion ? [{ id: 'confusion', emoji: '🤔', label: '困惑日记', description: 'AI 还有哪些不解', onClick: () => setShowConfusion(true) }] : []),
@@ -358,7 +351,6 @@ function AppInner() {
       <ToastContainer />
       <SerendipityModal open={showSerendipity} onClose={() => setShowSerendipity(false)} />
       <AnnualReport open={showAnnualReport} onClose={() => setShowAnnualReport(false)} />
-      <CognitiveTerrain open={showTerrain} onClose={() => setShowTerrain(false)} />
       <ConfusionDiary open={showConfusion} onClose={() => setShowConfusion(false)} />
       <UserProfile open={showProfile} onClose={() => setShowProfile(false)} />
       <SocialGraph open={showSocial} onClose={() => setShowSocial(false)} />

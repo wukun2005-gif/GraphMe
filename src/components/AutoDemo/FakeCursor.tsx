@@ -254,15 +254,6 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         }
       } catch (e) { /* annual report feature may not exist */ console.debug?.('[FakeCursor] Annual report demo skipped:', e); }
 
-      try {
-        await requireClick('btn-terrain', '认知地图——你的记忆地形图', 2500);
-        await moveToCenter('山峰是高频记忆，岛屿是人际关系，迷雾是遗忘区域', 3500);
-        await moveToCenter('3D 视角俯瞰你的记忆大陆', 3500);
-        await tryClick('terrain-letter', '让小哥为你写封信——AI 基于记忆的真情告白', 4000);
-        await moveToCenter('信中引用了你的真实记忆，每句话都有迹可循', 3500);
-        await tryClick('terrain-close', '', 1000);
-      } catch (e) { /* terrain feature may not exist */ console.debug?.('[FakeCursor] Terrain demo skipped:', e); }
-
       // ─── TAGLINE EXIT ─────────────────────────────
       setTooltipText('GraphMe — 让每一段记忆都有迹可循');
       setPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
