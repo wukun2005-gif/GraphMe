@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import type { RawMemory, EmotionType } from '../types';
-import { EMOTION_COLORS } from '../types';
+import { EMOTION_COLORS, Z_INDEX } from '../types';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import StoryWeaver from './StoryWeaver';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
@@ -284,6 +284,7 @@ export default function NavigationSidebar() {
       <div className={`p-4 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'} flex items-center justify-between`}>
         <h2 className={`font-medium text-sm tracking-wide ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>🧭 记忆导航</h2>
         <button
+          id="nav-collapse"
           onClick={() => setCollapsed(true)}
           className={`transition-colors cursor-pointer ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
           title="收起导航"
@@ -1105,9 +1106,9 @@ export default function NavigationSidebar() {
                               {confirmDeleteId === mem.id ? '确认删除？' : '🗑'}
                             </button>
                             {hoveredId === mem.id && (
-                              <div className={`absolute left-0 top-full mt-1 z-[9999] w-64 p-3 rounded-lg shadow-2xl border text-xs ${
+                              <div className={`absolute left-0 top-full mt-1 w-64 p-3 rounded-lg shadow-2xl border text-xs ${
                                 isDark ? 'bg-[#0d1525] border-[#ffffff20] text-gray-200' : 'bg-white border-gray-200 text-gray-700'
-                              }`} style={{ backdropFilter: 'none' }}>
+                              }`} style={{ backdropFilter: 'none', zIndex: Z_INDEX.DROPDOWN }}>
                                 <p className={`mb-1.5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   {mem.summary.length > 60 ? mem.summary.slice(0, 60) + '...' : mem.summary}
                                 </p>
@@ -1136,9 +1137,9 @@ export default function NavigationSidebar() {
                               </div>
                             )}
                             {tagInputId === mem.id && (
-                              <div className={`absolute left-0 top-full mt-1 z-[9999] w-48 p-2 rounded-lg shadow-2xl border ${
+                              <div className={`absolute left-0 top-full mt-1 w-48 p-2 rounded-lg shadow-2xl border ${
                                 isDark ? 'bg-[#0d1525] border-[#ffffff20]' : 'bg-white border-gray-200'
-                              }`}>
+                              }`} style={{ zIndex: Z_INDEX.DROPDOWN }}>
                                 <div className="flex gap-1 mb-1.5">
                                   <input
                                     type="text"
