@@ -155,13 +155,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem('graphme-rawMemories');
       return saved ? JSON.parse(saved) : defaultRawMemories;
-    } catch { return defaultRawMemories; }
+    } catch (e) { console.warn('[GraphMe] Failed to load rawMemories from localStorage:', e); return defaultRawMemories; }
   });
   const [insightMems, setInsightMems] = useState<InsightMemory[]>(() => {
     try {
       const saved = localStorage.getItem('graphme-insightMemories');
       return saved ? JSON.parse(saved) : defaultInsightMemories;
-    } catch { return defaultInsightMemories; }
+    } catch (e) { console.warn('[GraphMe] Failed to load insightMemories from localStorage:', e); return defaultInsightMemories; }
   });
   const [hideRawOnly, setHideRawOnly] = useState(false);
   const [hideInsightOnly, setHideInsightOnly] = useState(false);
@@ -176,11 +176,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem('graphme-collections');
       return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    } catch (e) { console.warn('[GraphMe] Failed to load collections from localStorage:', e); return []; }
   });
 
   useEffect(() => {
-    try { localStorage.setItem('graphme-collections', JSON.stringify(collections)); } catch {}
+    try { localStorage.setItem('graphme-collections', JSON.stringify(collections)); } catch (e) { console.warn('[GraphMe] Failed to save collections to localStorage:', e); }
   }, [collections]);
 
   useEffect(() => {
@@ -190,11 +190,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    try { localStorage.setItem('graphme-rawMemories', JSON.stringify(rawMems)); } catch {}
+    try { localStorage.setItem('graphme-rawMemories', JSON.stringify(rawMems)); } catch (e) { console.warn('[GraphMe] Failed to save rawMemories to localStorage:', e); }
   }, [rawMems]);
 
   useEffect(() => {
-    try { localStorage.setItem('graphme-insightMemories', JSON.stringify(insightMems)); } catch {}
+    try { localStorage.setItem('graphme-insightMemories', JSON.stringify(insightMems)); } catch (e) { console.warn('[GraphMe] Failed to save insightMemories to localStorage:', e); }
   }, [insightMems]);
 
   const setCurrentView = useCallback((view: DimensionView) => setState(s => ({ ...s, currentView: view })), []);
@@ -492,11 +492,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem('graphme-farewellRecords');
       return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    } catch (e) { console.warn('[GraphMe] Failed to load farewellRecords from localStorage:', e); return []; }
   });
 
   useEffect(() => {
-    try { localStorage.setItem('graphme-farewellRecords', JSON.stringify(farewellRecords)); } catch {}
+    try { localStorage.setItem('graphme-farewellRecords', JSON.stringify(farewellRecords)); } catch (e) { console.warn('[GraphMe] Failed to save farewellRecords to localStorage:', e); }
   }, [farewellRecords]);
 
   const farewellMemory = useCallback((memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => {
@@ -518,11 +518,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem('graphme-capsules');
       return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    } catch (e) { console.warn('[GraphMe] Failed to load capsules from localStorage:', e); return []; }
   });
 
   useEffect(() => {
-    try { localStorage.setItem('graphme-capsules', JSON.stringify(capsules)); } catch {}
+    try { localStorage.setItem('graphme-capsules', JSON.stringify(capsules)); } catch (e) { console.warn('[GraphMe] Failed to save capsules to localStorage:', e); }
   }, [capsules]);
 
   const createCapsule = useCallback((memoryId: string, unlockDate: number, note: string) => {

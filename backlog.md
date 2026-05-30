@@ -1535,7 +1535,7 @@
 
 ---
 
-### 102. [Stability] MemCloud3D.tsx 多处 setTimeout 缺少清理逻辑 [ ] [P1]
+### 102. [Stability] MemCloud3D.tsx 多处 setTimeout 缺少清理逻辑 [✅] [P1]
 
 **来源**: commit 历史分析 + 代码审查
 **问题**: `MemCloud3D.tsx` 中有 10+ 处 `setTimeout` 使用 `useRef` 存储 timer 引用，但部分组件的 `useEffect` cleanup 函数中未清除所有 timer。组件卸载时可能导致：
