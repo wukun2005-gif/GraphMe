@@ -78,6 +78,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         }
         await wait(800); checkCancelled();
       }
+      console.warn(`[FakeCursor] Element "${elementId}" not found after 3 attempts, skipping step: "${text}"`);
       return false;
     };
 
