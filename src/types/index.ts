@@ -169,6 +169,8 @@ export const Z_INDEX = {
   PANEL: 30,       // Detail panel, Chat panel, Value dashboard
   DROPDOWN: 40,    // Dropdown menus
   MODAL: 50,       // Modal dialogs
-  TOOLTIP: 60,     // Tooltips (highest priority)
+  TOOLTIP: 60,     // Tooltips
+  DEMO: 110,       // AutoDemo cursor and tooltip
+  DEMO_BAR: 120,   // AutoDemo progress bar (topmost)
 } as const;
 

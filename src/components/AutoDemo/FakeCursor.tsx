@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Tooltip from './Tooltip';
+import { Z_INDEX } from '../../types';
 
 interface FakeCursorProps {
   isPlaying: boolean;
@@ -133,6 +134,22 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       return await moveAndClick(`btn-${featureId}`, text, waitAfter);
     };
 
+    const collapseNav = async () => {
+      checkCancelled();
+      await moveAndClick('nav-collapse', '', 500);
+    };
+
+    const typeInSearchInput = async (text: string, waitAfter = 2000) => {
+      checkCancelled();
+      const input = document.getElementById('demo-search-input') as HTMLInputElement | null;
+      if (!input) return;
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+      if (!nativeInputValueSetter) return;
+      nativeInputValueSetter.call(input, text);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await wait(waitAfter); checkCancelled();
+    };
+
     // ═══════════════════════════════════════════════
     //  5-MINUTE COMPETITION DEMO
     //  Timing: moveToCenter=700+w, moveAndClick=950+w
@@ -165,6 +182,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       if (legendOk) {
         await tryClick('emotion-filter-快乐', '点击"快乐"——星云只显示快乐记忆', 2500);
         await tryClick('emotion-filter-快乐', '再次点击取消筛选', 1000);
+        await moveAndClick('nav-legend', '', 800);
+        await collapseNav();
       }
 
       // ─── DIMENSION VIEWS ──────────────────────────
@@ -203,13 +222,22 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       dispatchResetFilters();
       await wait(1000); checkCancelled();
       await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
+      await collapseNav();
 
       // ─── SEARCH (1:40–1:48, 8s) ─────────────────
       await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);
       await moveToCenter('输入关键词，实时筛选记忆粒子', 2500);
+      await moveTo(window.innerWidth / 2, window.innerHeight * 0.08, '');
+      await wait(300); checkCancelled();
+      await typeInSearchInput('编程', 3000);
+      await moveToCenter('看！记忆粒子实时响应——只显示含"编程"的记忆', 3000);
       await moveToCenter('支持记忆 ID、标签、摘要、人物等多维度搜索', 2500);
+      await typeInSearchInput('', 500);
+      dispatchResetFilters();
+      await requireClick('btn-search', '', 800);
 
       // ─── MEMORY BANK (0:56–1:08, 12s) ────────────
+      await moveToCenter('', 300);
       await requireClick('memory-bank-trigger', '记忆银行——你的收藏夹和统计', 2000);
       await moveToCenter('收藏的记忆按时间线排列，越用越丰富', 3000);
       await moveToCenter('记忆统计——收藏总数、时间分布、情绪分布', 2500);
@@ -225,17 +253,21 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await tryClick('chat-close', '', 1000);
       // Close detail panel that may have opened from memory link click
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
+      dispatchResetFilters();
       await wait(800);
 
       // ─── AI SUPERPOWERS (1:37–3:43, 126s) ───────
       // ChatGPT Import (28s)
+      await tryClick('nav-expand', '展开导航侧栏', 500);
       await requireClick('nav-memory-mgr', '记忆管理——外部 Agent 记忆一键导入', 2000);
       await requireClick('nav-chatgpt-import', '从 ChatGPT 导入聊天记录，自动转化为结构化记忆', 4000);
       await moveToCenter('聊天记录 → 记忆碎片 → 洞察记忆', 3000);
       await moveToCenter('全链路自动化，ChatGPT 的记忆现在也有了 10 维结构', 2500);
       await tryClick('nav-memory-mgr', '', 1000);
+      await collapseNav();
 
       // Storyboard (60s) ★ COMPLETE
+      await tryClick('nav-expand', '展开导航侧栏', 500);
       await requireClick('nav-storyboard', '"我的侧写"——AGI 用记忆讲述你的故事', 2500);
       await requireClick('storyweaver-play-btn', '播放：记忆节点逐一亮起，情绪轨迹线流动', 3000);
       await moveToCenter('从过去到现在，从现在到未来', 4000);
@@ -246,6 +278,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await wait(1000);
       await moveToCenter('AI 自动编织记忆叙事，无需手动整理', 3000);
       await tryClick('nav-storyboard', '', 1000);
+      await collapseNav();
 
       // Cinema (18s)
       await requireClick('btn-cinema', '微电影——记忆变成电影画面', 2500);
@@ -259,7 +292,6 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await requireClick('val-dash-health-tab', '记忆健康——10 维度覆盖率', 3000);
       await requireClick('val-dash-decay-tab', '遗忘曲线——艾宾浩斯理论 vs 实际衰减', 3000);
       await tryClick('demo-review-btn', '点击"温故"——重温记忆，遗忘曲线重置', 2500);
-      await moveToCenter('你刚才唤醒了一条快要沉睡的记忆——这就是飞轮', 4000);
       await requireClick('val-dash-journey-tab', '情感旅程——连续情绪曲线', 3000);
       await moveToCenter('从好奇到骄傲，你的情绪就是你的成长轨迹', 3000);
       await requireClick('val-dash-weekly-tab', '本周回顾——新增记忆 + 情绪分布', 3000);
@@ -345,15 +377,15 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-full h-1 z-[120] bg-black/20">
+      <div className="fixed top-0 left-0 w-full h-1 bg-black/20" style={{ zIndex: Z_INDEX.DEMO_BAR }}>
         <motion.div className="h-full bg-gradient-to-r from-[#00f2ff] to-[#ffb800]"
           animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} />
       </div>
       <Tooltip text={tooltipText} position={position} />
-      <motion.div className="fixed z-[110] pointer-events-none"
+      <motion.div className="fixed pointer-events-none"
         animate={{ x: position.x, y: position.y, scale: isClicking ? 0.7 : 1 }}
         transition={{ duration: 0.6, ease: 'anticipate' }}
-        style={{ left: 0, top: 0, marginLeft: -12, marginTop: -12 }}
+        style={{ left: 0, top: 0, marginLeft: -12, marginTop: -12, zIndex: Z_INDEX.DEMO }}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 2L20 10.6667L12 13L10 21L4 2Z" fill="white" stroke="black" strokeWidth="1.5" strokeLinejoin="round"/>

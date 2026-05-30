@@ -10,14 +10,18 @@ describe('Z-Index Layer Constants — Regression Prevention', () => {
     expect(Z_INDEX.DROPDOWN).toBeDefined();
     expect(Z_INDEX.MODAL).toBeDefined();
     expect(Z_INDEX.TOOLTIP).toBeDefined();
+    expect(Z_INDEX.DEMO).toBeDefined();
+    expect(Z_INDEX.DEMO_BAR).toBeDefined();
   });
 
-  it('should have correct layer ordering (BASE < SIDEBAR < PANEL < DROPDOWN < MODAL < TOOLTIP)', () => {
+  it('should have correct layer ordering (BASE < SIDEBAR < PANEL < DROPDOWN < MODAL < TOOLTIP < DEMO < DEMO_BAR)', () => {
     expect(Z_INDEX.BASE).toBeLessThan(Z_INDEX.SIDEBAR);
     expect(Z_INDEX.SIDEBAR).toBeLessThan(Z_INDEX.PANEL);
     expect(Z_INDEX.PANEL).toBeLessThan(Z_INDEX.DROPDOWN);
     expect(Z_INDEX.DROPDOWN).toBeLessThan(Z_INDEX.MODAL);
     expect(Z_INDEX.MODAL).toBeLessThan(Z_INDEX.TOOLTIP);
+    expect(Z_INDEX.TOOLTIP).toBeLessThan(Z_INDEX.DEMO);
+    expect(Z_INDEX.DEMO).toBeLessThan(Z_INDEX.DEMO_BAR);
   });
 
   it('should have SIDEBAR and TOOLBAR at same level (both z-20)', () => {
@@ -32,11 +36,13 @@ describe('Z-Index Layer Constants — Regression Prevention', () => {
     expect(Z_INDEX.DROPDOWN).toBe(40);
     expect(Z_INDEX.MODAL).toBe(50);
     expect(Z_INDEX.TOOLTIP).toBe(60);
+    expect(Z_INDEX.DEMO).toBe(110);
+    expect(Z_INDEX.DEMO_BAR).toBe(120);
   });
 
-  it('should not have any z-index value exceeding 100 (prevents future 99999 issues)', () => {
+  it('should not have any z-index value exceeding 120 (prevents future 99999 issues)', () => {
     Object.values(Z_INDEX).forEach(value => {
-      expect(value).toBeLessThanOrEqual(100);
+      expect(value).toBeLessThanOrEqual(120);
     });
   });
 

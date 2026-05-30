@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { Z_INDEX } from '../../types';
 
 export default function Tooltip({ text, position }: { text: string; position: { x: number; y: number } | null }) {
   if (!text || !position) return null;
@@ -18,10 +19,11 @@ export default function Tooltip({ text, position }: { text: string; position: { 
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.9 }}
         transition={{ duration: 0.3 }}
-        className="fixed z-[105] px-4 py-2.5 text-sm font-medium rounded-xl shadow-[0_4px_24px_rgba(255,184,0,0.25)] pointer-events-none max-w-[480px] text-center leading-relaxed"
+        className="fixed px-4 py-2.5 text-sm font-medium rounded-xl shadow-[0_4px_24px_rgba(255,184,0,0.25)] pointer-events-none max-w-[480px] text-center leading-relaxed"
         style={{
           left,
           top,
+          zIndex: Z_INDEX.DEMO,
           background: 'linear-gradient(135deg, rgba(255,184,0,0.95), rgba(255,140,0,0.95))',
           color: '#0a101f',
           backdropFilter: 'blur(8px)',

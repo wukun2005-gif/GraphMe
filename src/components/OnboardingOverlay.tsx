@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Z_INDEX } from '../types';
 
 const STORAGE_KEY = 'graphme-onboarding-done';
 
@@ -59,7 +60,7 @@ export default function OnboardingOverlay() {
   const currentStep = STEPS[step];
 
   return (
-    <div className="fixed inset-0 z-[100]">
+    <div className="fixed inset-0" style={{ zIndex: Z_INDEX.MODAL }}>
       {/* Dark overlay with cutout */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
