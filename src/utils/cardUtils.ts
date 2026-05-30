@@ -43,7 +43,8 @@ export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
       ctx.clip();
       ctx.drawImage(img, photoX, photoY, photoW, photoH);
       ctx.restore();
-    } catch {
+    } catch (e) {
+      console.debug?.('[CardUtils] Image load failed:', e);
       drawEmojiPlaceholder(ctx, photoX, photoY, photoW, photoH, emotionColor);
     }
   } else {

@@ -1627,3 +1627,60 @@
 **验证方式**:
 1. `npm test` 通过
 2. 新测试覆盖粒子拖拽和 OrbitControls 的边界情况
+
+---
+
+## Bug 扫描结果（2026-05-30 第二次扫描）
+
+> 基于静态代码检查自动生成，补充上一轮扫描遗漏的问题
+
+### 发现的新问题
+
+| ID | 维度 | 优先级 | 标题 |
+|----|------|--------|------|
+| BUG-108 | CodeSmell | P2 | cardUtils.ts 空 catch 块 |
+| BUG-109 | CodeSmell | P2 | importUtils.ts 空 catch 块 |
+| BUG-110 | CodeSmell | P2 | MemorySurprise.tsx 空 catch 块 |
+| BUG-111 | CodeSmell | P2 | MemoryCinema.tsx 硬编码 z-index |
+
+### 108. [CodeSmell] cardUtils.ts 空 catch 块 [ ] [P2]
+
+**来源**: 静态代码检查
+**问题**: `cardUtils.ts` 中图片加载失败时使用空 catch 块，调试时无法定位问题。
+**改动范围**:
+- `src/utils/cardUtils.ts` L46: `catch {` → 添加 `catch (e) { console.debug?.('[CardUtils] Image load failed:', e); }`
+**验证方式**:
+1. 运行记忆卡片生成功能
+2. 预期：图片加载失败时控制台有 debug 日志
+
+### 109. [CodeSmell] importUtils.ts 空 catch 块 [ ] [P2]
+
+**来源**: 静态代码检查
+**问题**: `importUtils.ts` 中 JSON 解析失败时使用空 catch 块，虽然有错误消息推入 result.errors，但未记录原始错误。
+**改动范围**:
+- `src/utils/importUtils.ts` L119: `catch {` → 添加 `catch (e) { console.debug?.('[ImportUtils] JSON parse failed:', e); }`
+**验证方式**:
+1. 导入无效 JSON 文件
+2. 预期：控制台有 debug 日志，UI 显示错误提示
+
+### 110. [CodeSmell] MemorySurprise.tsx 空 catch 块 [ ] [P2]
+
+**来源**: 静态代码检查
+**问题**: `MemorySurprise.tsx` 中 localStorage 读写操作使用空 catch 块，与 AppContext.tsx 中已修复的问题相同。
+**改动范围**:
+- `src/components/MemorySurprise.tsx` L21: `catch {` → 添加 `catch (e) { console.warn('[MemorySurprise] Failed to read last surprise date:', e); }`
+- `src/components/MemorySurprise.tsx` L29: `catch {}` → 添加 `catch (e) { console.warn('[MemorySurprise] Failed to save last surprise date:', e); }`
+**验证方式**:
+1. 模拟 localStorage 不可用
+2. 预期：控制台有警告日志
+
+### 111. [CodeSmell] MemoryCinema.tsx 硬编码 z-index [ ] [P2]
+
+**来源**: 静态代码检查
+**问题**: `MemoryCinema.tsx` 中使用 `zIndex: 50` 硬编码值，应使用统一的 Z_INDEX 常量。
+**改动范围**:
+- `src/components/MemoryCinema.tsx` L91: `zIndex: 50` → `zIndex: Z_INDEX.MODAL`
+- 文件开头添加 `import { Z_INDEX } from '../types';`
+**验证方式**:
+1. 打开记忆影院功能
+2. 预期：模态框正常显示，无 z-index 冲突
