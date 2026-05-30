@@ -44,7 +44,7 @@ const EMOTION_LABELS: Record<EmotionType, string> = {
   '思念': '💭 思念',
 };
 
-let createIdCounter = 2000;
+let createIdCounter = Date.now();
 
 export default function NavigationSidebar() {
   const {

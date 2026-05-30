@@ -17,7 +17,7 @@ function isValidEmotion(e: string): e is EmotionType {
   return VALID_EMOTIONS.includes(e as EmotionType);
 }
 
-let importIdCounter = 9000;
+let importIdCounter = Date.now();
 
 function parseRawMemory(item: any, index: number): { memory: RawMemory | null; error: string | null } {
   if (!item.label || typeof item.label !== 'string') {
