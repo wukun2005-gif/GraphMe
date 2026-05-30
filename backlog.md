@@ -1684,3 +1684,124 @@
 **验证方式**:
 1. 打开记忆影院功能
 2. 预期：模态框正常显示，无 z-index 冲突
+
+---
+
+## 2026-05-30 Bug 扫描新增（BUG-112 ~ BUG-123）
+
+### 112. [Bug] MemoryReader.tsx 空值崩溃 [✅] [P0]
+
+**来源**: 静态代码检查
+**问题**: `currentMemory?.dimensions` 使 `d` 可能为 undefined，但第 76-77 行直接访问 `d.emotional.primary` 和 `d.temporal.timestamp`，无空值保护。当记忆数组为空或索引越界时会抛出 TypeError。
+**改动范围**:
+- `src/components/MemoryReader.tsx` L75-78: 加 `if (!d) return null` 或用 `d?.emotional?.primary`
+**验证方式**:
+1. 打开 MemoryReader，切换到空记忆列表
+2. 预期：不崩溃，graceful 降级
+
+### 113. [Bug] MemCloud3D.tsx hovered 非空断言不安全 [ ] [P1]
+
+**来源**: 静态代码检查
+**问题**: 第 1615 行 guard 检查 `hoveredMem` 但 style 用 `hovered!.x`，两个不同变量。若 state 更新竞态导致 `hoveredMem` 有值但 `hovered` 为 null，会崩溃。
+**改动范围**:
+- `src/components/MemCloud3D.tsx` L1615: 改 guard 为 `hoveredMem && hovered`，或用可选链 `hovered?.x`
+**验证方式**:
+1. 快速在粒子间移动鼠标
+2. 预期：tooltip 正常，无崩溃
+
+### 114. [Bug] Navigation.tsx z-index 战争（z-[9999]） [ ] [P1]
+
+**来源**: Commit 历史分析 + 静态检查
+**问题**: Navigation.tsx 第 1109、1140 行使用 `z-[9999]`，远超项目 Z_INDEX 常量体系最大值 60，属于 z-index 战争反模式。
+**改动范围**:
+- `src/components/Navigation.tsx` L1109,1140: 改用 `Z_INDEX.DROPDOWN` 或新增 `Z_INDEX.NAV_DROPDOWN`
+- `src/types/index.ts`: 如需更高层级，在 Z_INDEX 常量中扩展
+**验证方式**:
+1. 展开导航栏，点击分类下拉
+2. 确认下拉不被其他面板遮挡
+3. 运行 `npx vitest run z-index-regression` 确认回归测试仍过
+
+### 115. [Bug] FakeCursor/Tooltip 硬编码 z-index 绕过常量体系 [ ] [P1]
+
+**来源**: 静态检查
+**问题**: FakeCursor.tsx 用 `z-[120]`/`z-[110]`，Tooltip.tsx 用 `z-[105]`，OnboardingOverlay.tsx 用 `z-[100]`，全部超出 Z_INDEX.TOOLTIP(60) 且未使用常量。
+**改动范围**:
+- `src/components/AutoDemo/FakeCursor.tsx` L379,384: 改用 Z_INDEX 常量或新增 `Z_INDEX.DEMO`
+- `src/components/AutoDemo/Tooltip.tsx` L21: 同上
+- `src/components/OnboardingOverlay.tsx` L62: 改用 `Z_INDEX.MODAL`
+- `src/types/index.ts`: 新增 `DEMO(110)` 和 `DEMO_OVERLAY(120)` 层级
+**验证方式**:
+1. 运行 demo，确认进度条和光标在最顶层
+2. 运行 z-index 回归测试
+
+### 116. [CodeSmell] Map.get()! 非空断言（3 文件 6 处） [ ] [P2]
+
+**来源**: 静态检查
+**问题**: valueUtils.ts、terrainUtils.ts、MemCloud3D.tsx 中 `Map.get(key)!` 依赖前置 `set()` 保证非空，逻辑变更或数据畸形时会产生 undefined。
+**改动范围**:
+- `src/utils/valueUtils.ts` L100
+- `src/utils/terrainUtils.ts` L111,116,152,246
+- `src/components/MemCloud3D.tsx` L597
+**验证方式**: 运行 `npx vitest run` 确认全过
+
+### 117. [CodeSmell] canvas.getContext('2d')! 非空断言 [ ] [P2]
+
+**来源**: 静态检查
+**问题**: cardUtils.ts:10 和 MemCloud3D.tsx:16 用 `getContext('2d')!`，canvas 上下文不可用时会崩溃。
+**改动范围**:
+- `src/utils/cardUtils.ts` L10
+- `src/components/MemCloud3D.tsx` L16
+**验证方式**: 运行 `npx vitest run` 确认全过
+
+### 118. [CodeSmell] 全局可变计数器热重载会产生重复 ID [ ] [P2]
+
+**来源**: 静态检查
+**问题**: importUtils.ts:20 (`importIdCounter=9000`) 和 Navigation.tsx:47 (`createIdCounter=2000`) 是模块级可变计数器，HMR 热重载后重置，可能产生重复 ID。
+**改动范围**:
+- `src/utils/importUtils.ts` L20: 改用 `Date.now() + Math.random()` 或 useRef
+- `src/components/Navigation.tsx` L47: 同上
+**验证方式**: 手动触发 HMR 后多次导入，检查 ID 唯一性
+
+### 119. [CodeSmell] MemoryGarden/DailyMemoryCard setTimeout 未清理 [ ] [P2]
+
+**来源**: 静态检查
+**问题**: MemoryGarden.tsx:19 和 DailyMemoryCard.tsx:42,51 在事件处理器中用 setTimeout 但无 cleanup，组件卸载后仍会 setState。
+**改动范围**:
+- `src/components/MemoryGarden.tsx` L19: 用 useRef 追踪 timer，在 useEffect cleanup 中清除
+- `src/components/DailyMemoryCard.tsx` L42,51: 同上
+**验证方式**: 快速打开/关闭组件，观察控制台是否有 unmounted component 警告
+
+### 120. [TestGap] 28 个 React 组件零测试覆盖 [ ] [P1]
+
+**来源**: 测试覆盖分析
+**问题**: 所有组件文件（包括最高风险的 MemCloud3D.tsx、App.tsx、Navigation.tsx、DetailPanel.tsx）均无渲染测试、交互测试或快照测试。
+**改动范围**:
+- 新增 `src/__tests__/components/` 目录
+- 优先为高风险组件添加 smoke test（渲染不崩溃）：MemCloud3D(21次fix)、App(13次)、Navigation(9次)、DetailPanel(8次)
+**验证方式**: 运行 `npx vitest run` 确认新测试通过
+
+### 121. [TestGap] 15/18 工具函数无测试 [ ] [P2]
+
+**来源**: 测试覆盖分析
+**问题**: similarityUtils、memoryBankUtils、confusionUtils、gapUtils 等核心算法模块无直接测试。
+**改动范围**:
+- 优先为以下高复杂度模块添加单元测试：similarityUtils(19KB)、memoryBankUtils(18KB)、confusionUtils
+**验证方式**: 运行 `npx vitest run --coverage` 确认覆盖率提升
+
+### 122. [Risk] FakeCursor demo 脚本脆弱性（静默失败） [ ] [P2]
+
+**来源**: Commit 历史分析（7 次 demo state reset bug）
+**问题**: `moveAndClick` 函数在元素找不到时返回 false 但不报错，demo 步骤被静默跳过。任何 UI 变更都可能导致 demo 部分步骤无声消失。
+**改动范围**:
+- `src/components/AutoDemo/FakeCursor.tsx`: `moveAndClick` 在 3 次重试失败后 console.warn 记录跳过的步骤
+**验证方式**: 故意修改一个 demo 元素 ID，确认控制台有警告
+
+### 123. [CodeSmell] App.tsx 超 1000 行，职责过多 [ ] [P3]
+
+**来源**: Commit 历史分析（13 次 bug-fix，最高频文件）
+**问题**: App.tsx 承担了布局、工具栏、水印、主题切换、导航桥接、搜索、demo 事件桥接等职责，是 bug 最密集的文件。
+**改动范围**:
+- 提取 `src/components/TopBar.tsx`（搜索、视图切换、更多按钮）
+- 提取 `src/components/Watermark.tsx`
+- 提取 demo 事件桥接到 `src/hooks/useDemoBridge.ts`
+**验证方式**: 运行全量测试 + 手动 demo 回归
