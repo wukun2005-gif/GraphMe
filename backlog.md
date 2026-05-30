@@ -1788,7 +1788,7 @@
 - 优先为以下高复杂度模块添加单元测试：similarityUtils(19KB)、memoryBankUtils(18KB)、confusionUtils
 **验证方式**: 运行 `npx vitest run --coverage` 确认覆盖率提升
 
-### 122. [Risk] FakeCursor demo 脚本脆弱性（静默失败） [ ] [P2]
+### 122. [Risk] FakeCursor demo 脚本脆弱性（静默失败） [✅] [P2]
 
 **来源**: Commit 历史分析（7 次 demo state reset bug）
 **问题**: `moveAndClick` 函数在元素找不到时返回 false 但不报错，demo 步骤被静默跳过。任何 UI 变更都可能导致 demo 部分步骤无声消失。
