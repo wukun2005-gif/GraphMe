@@ -1615,7 +1615,7 @@
 1. `npm test` 通过
 2. 新测试验证 Navigation z-index < DetailPanel z-index < Tooltip z-index
 
-### 107. [TestGap] 缺少 OrbitControls 交互冲突回归测试 [ ] [P2]
+### 107. [TestGap] 缺少 OrbitControls 交互冲突回归测试 [✅] [P2]
 
 **来源**: 测试覆盖分析 + commit 历史（PATTERN-2）
 **问题**: OrbitControls 与粒子拖拽的事件冲突已修复 2 次（a0bd3a0, 728ebba），但无自动化测试验证。交互逻辑复杂（capture phase、stopImmediatePropagation），容易在后续修改中回归。
