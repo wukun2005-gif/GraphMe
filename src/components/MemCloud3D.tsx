@@ -1607,12 +1607,12 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
           target={[0, 0, 0]}
         />
       </Canvas>
-      {hoveredMem && (
+      {hoveredMem && hovered && (
         <div
           className={`fixed px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap pointer-events-none ${
             isDark ? 'bg-[#0d1525] border-[#ffffff10] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
           }`}
-          style={{ left: hovered!.x + 8, top: hovered!.y - 28, zIndex: Z_INDEX.TOOLTIP }}
+          style={{ left: hovered.x + 8, top: hovered.y - 28, zIndex: Z_INDEX.TOOLTIP }}
         >
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hoveredMem.color }} />
