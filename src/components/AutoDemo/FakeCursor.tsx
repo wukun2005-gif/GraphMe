@@ -174,15 +174,19 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
 
       // ─── CATEGORY NAV (1:10–1:40, 30s) ────────────
       await moveToCenter('左侧分类导航——按生活领域快速筛选', 3000);
-      await moveAndClick('nav-家庭生活', '点击"家庭生活"', 2000);
-      await moveToCenter('星云实时重排，只显示家庭相关记忆', 3000);
-      await moveToCenter('父子协作、快乐时光、日常生活——三个子分类清晰呈现', 3500);
-      await moveAndClick('nav-学习与成长', '切换到"学习与成长"', 2000);
-      await moveToCenter('学习记忆重新聚类——编程、数学、阅读各成体系', 3500);
-      await moveAndClick('nav-社交与情感', '切换到"社交与情感"', 2000);
-      await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3500);
-      await moveAndClick('nav-家庭生活', '再次点击取消筛选', 1500);
-      await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
+      // First expand the sidebar by clicking the expand button
+      const expandOk = await moveAndClick('nav-expand', '展开导航侧栏', 1500);
+      if (expandOk) {
+        await moveAndClick('nav-cat-家庭生活', '点击"家庭生活"', 2000);
+        await moveToCenter('星云实时重排，只显示家庭相关记忆', 3000);
+        await moveToCenter('父子协作、快乐时光、日常生活——三个子分类清晰呈现', 3500);
+        await moveAndClick('nav-cat-学习与成长', '切换到"学习与成长"', 2000);
+        await moveToCenter('学习记忆重新聚类——编程、数学、阅读各成体系', 3500);
+        await moveAndClick('nav-cat-社交与情感', '切换到"社交与情感"', 2000);
+        await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3500);
+        await moveAndClick('nav-cat-家庭生活', '再次点击取消筛选', 1500);
+        await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
+      }
 
       // ─── SEARCH (1:40–1:48, 8s) ─────────────────
       await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);

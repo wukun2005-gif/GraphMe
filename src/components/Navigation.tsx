@@ -215,6 +215,7 @@ export default function NavigationSidebar() {
     return (
       <div className="w-[40px] flex flex-col h-full items-center pt-4">
         <button
+          id="nav-expand"
           onClick={() => setCollapsed(false)}
           className={`transition-colors mb-3 cursor-pointer ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
           title="展开导航"
