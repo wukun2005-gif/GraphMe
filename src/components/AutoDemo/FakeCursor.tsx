@@ -158,6 +158,9 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await requireClick('demo-find-similar-btn', '找相似——发现语义相近的记忆', 3000);
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
       await wait(1500);
+      // Reset filters (selecting a memory auto-sets category filter via Navigation)
+      dispatchResetFilters();
+      await wait(500); checkCancelled();
       const legendOk = await moveAndClick('nav-legend', '图例——粒子颜色 = 情绪色彩', 1500);
       if (legendOk) {
         await tryClick('emotion-filter-快乐', '点击"快乐"——星云只显示快乐记忆', 2500);

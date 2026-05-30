@@ -224,10 +224,14 @@ function AppInner() {
       </div>
 
       {/* Watermark — same style as memory count, right-aligned to timeline endpoint */}
-      <div className={`absolute bottom-6 left-[240px] right-0 z-10 pointer-events-none select-none flex justify-end pr-[120px]`}>
-        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          wukun2005@gmail.com
-        </span>
+      <div className={`absolute bottom-6 left-[240px] z-10 pointer-events-none select-none transition-all duration-300 ${
+        detailOpen ? 'right-[436px]' : 'right-[120px]'
+      }`}>
+        <div className={`flex justify-end`}>
+          <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            wukun2005@gmail.com
+          </span>
+        </div>
       </div>
 
       <TimelineScrubber />
