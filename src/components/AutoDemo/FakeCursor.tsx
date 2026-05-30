@@ -164,7 +164,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await requireClick('memory-bank-trigger', '记忆银行——你的收藏夹和统计', 2000);
       await moveToCenter('收藏的记忆按时间线排列，越用越丰富', 3000);
       await moveToCenter('记忆统计——收藏总数、时间分布、情绪分布', 2500);
-      await tryClick('memory-bank-close', '关闭记忆银行', 1000);
+      await tryClick('memory-bank-close', '', 1000);
 
       // ─── CHAT (1:08–1:37, 29s) ───────────────────
       await requireClick('chat-trigger', '聊天——和 AI 对话探索记忆', 2500);
@@ -173,7 +173,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await moveToCenter('AI 回答并引用真实记忆——可点击跳转', 2500);
       await tryClick('chat-link-0', '点击记忆链接——跳转到原始记忆', 2500);
       await moveToCenter('每个回答都可追溯来源，AI 越了解你回答越精准', 3500);
-      await tryClick('chat-close', '关闭聊天', 1000);
+      await tryClick('chat-close', '', 1000);
       // Close detail panel that may have opened from memory link click
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
       await wait(800);
@@ -184,7 +184,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await requireClick('nav-chatgpt-import', '从 ChatGPT 导入聊天记录，自动转化为结构化记忆', 4000);
       await moveToCenter('聊天记录 → 记忆碎片 → 洞察记忆', 3000);
       await moveToCenter('全链路自动化，ChatGPT 的记忆现在也有了 10 维结构', 2500);
-      await tryClick('nav-memory-mgr', '收起面板', 1000);
+      await tryClick('nav-memory-mgr', '', 1000);
 
       // Storyboard (60s) ★ COMPLETE
       await requireClick('nav-storyboard', '"我的侧写"——AGI 用记忆讲述你的故事', 2500);
@@ -195,15 +195,14 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await clickParticle('mem_003', '点击故事中的一个节点——查看这段记忆', 3000);
       window.dispatchEvent(new CustomEvent('demo-close-detail'));
       await wait(1000);
-      await moveToCenter('情绪从好奇到骄傲，见证成长轨迹', 3500);
       await moveToCenter('AI 自动编织记忆叙事，无需手动整理', 3000);
-      await tryClick('nav-storyboard', '关闭侧写', 1000);
+      await tryClick('nav-storyboard', '', 1000);
 
       // Cinema (18s)
       await requireClick('btn-cinema', '微电影——记忆变成电影画面', 2500);
       await moveToCenter('记忆碎片变成连贯的微电影，自动配乐', 3500);
       await moveToCenter('选择不同时间范围，生成不同时长的影片', 2500);
-      await tryClick('cinema-close', '关闭微电影', 1000);
+      await tryClick('cinema-close', '', 1000);
 
       // Value Dashboard (60s) ★ COMPLETE with all tabs
       await requireClick('val-dash-trigger', '价值看板——你的记忆理财顾问', 2500);
@@ -219,7 +218,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await requireClick('val-dash-flywheel-tab', '记忆飞轮——小哥是怎么越来越懂你的', 3000);
       await moveToCenter('记忆积累 → 模式发现 → 洞察生成 → 用户反馈 → 理解加深 → 循环继续', 3500);
       await moveToCenter('你参与得越多，AI 越懂你——这就是飞轮效应', 3000);
-      await tryClick('val-dash-close', '关闭价值看板', 1000);
+      await tryClick('val-dash-close', '', 1000);
 
       // ─── EMOTIONAL PEAK (3:43–4:20, 37s) ────────
       try {
@@ -261,7 +260,7 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await moveToCenter('3D 视角俯瞰你的记忆大陆', 3500);
         await tryClick('terrain-letter', '让小哥为你写封信——AI 基于记忆的真情告白', 4000);
         await moveToCenter('信中引用了你的真实记忆，每句话都有迹可循', 3500);
-        await tryClick('terrain-close', '关闭认知地图', 1000);
+        await tryClick('terrain-close', '', 1000);
       } catch (e) { /* terrain feature may not exist */ console.debug?.('[FakeCursor] Terrain demo skipped:', e); }
 
       // ─── TAGLINE EXIT ─────────────────────────────

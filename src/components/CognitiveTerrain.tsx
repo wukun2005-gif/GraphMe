@@ -361,8 +361,8 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                       y={zone.y + zone.radius + 15}
                       textAnchor="middle"
                       fill={zone.color}
-                      opacity={0.4}
-                      fontSize={10}
+                      opacity={0.5}
+                      fontSize={12}
                     >
                       {zone.emotion}
                     </text>
@@ -473,8 +473,8 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                           y={node.y + 3}
                           textAnchor="middle"
                           fill={node.color}
-                          fontSize={8}
-                          opacity={0.5}
+                          fontSize={10}
+                          opacity={0.6}
                         >
                           ?
                         </text>
@@ -514,8 +514,8 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                           x={node.x}
                           y={node.y - node.radius - 8}
                           textAnchor="middle"
-                          fontSize={12}
-                          opacity={0.7}
+                          fontSize={14}
+                          opacity={0.8}
                         >
                           ⛰️
                         </text>
@@ -560,8 +560,8 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                       y={node.y + (isRuin ? -node.radius - 6 : node.radius + 14)}
                       textAnchor="middle"
                       fill={isDark ? '#ffffff' : '#1a1a1a'}
-                      fontSize={isHovered ? 11 : 9}
-                      opacity={isHovered ? 1 : 0.7}
+                      fontSize={isHovered ? 14 : 11}
+                      opacity={isHovered ? 1 : 0.8}
                       style={{ transition: 'font-size 0.2s, opacity 0.2s' }}
                     >
                       {node.label}
@@ -574,7 +574,7 @@ export default function CognitiveTerrain({ open, onClose }: Props) {
                         y={node.y + node.radius + 24}
                         textAnchor="middle"
                         fill={isDark ? '#666' : '#999'}
-                        fontSize={8}
+                        fontSize={10}
                       >
                         {node.memoryCount} 条记忆
                       </text>

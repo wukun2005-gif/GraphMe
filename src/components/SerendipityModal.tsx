@@ -96,7 +96,15 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
                               style={{ background: `${emoColor}15` }}>
                               {mem.dimensions.emotional.primary === '快乐' ? '😊' :
                                mem.dimensions.emotional.primary === '骄傲' ? '🏆' :
-                               mem.dimensions.emotional.primary === '好奇' ? '🔍' : '💭'}
+                               mem.dimensions.emotional.primary === '好奇' ? '🔍' :
+                               mem.dimensions.emotional.primary === '悲伤' ? '😢' :
+                               mem.dimensions.emotional.primary === '愤怒' ? '😠' :
+                               mem.dimensions.emotional.primary === '惊讶' ? '😲' :
+                               mem.dimensions.emotional.primary === '恐惧' ? '😨' :
+                               mem.dimensions.emotional.primary === '厌恶' ? '🤢' :
+                               mem.dimensions.emotional.primary === '感激' ? '🙏' :
+                               mem.dimensions.emotional.primary === '思念' ? '💭' :
+                               mem.dimensions.emotional.primary === '沮丧' ? '😔' : '🌟'}
                             </div>
                           )}
                           <p className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
