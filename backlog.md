@@ -1674,7 +1674,7 @@
 1. 模拟 localStorage 不可用
 2. 预期：控制台有警告日志
 
-### 111. [CodeSmell] MemoryCinema.tsx 硬编码 z-index [ ] [P2]
+### 111. [CodeSmell] MemoryCinema.tsx 硬编码 z-index [✅] [P2]
 
 **来源**: 静态代码检查
 **问题**: `MemoryCinema.tsx` 中使用 `zIndex: 50` 硬编码值，应使用统一的 Z_INDEX 常量。
