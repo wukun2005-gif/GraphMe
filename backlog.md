@@ -1507,3 +1507,123 @@
 3. 重温一条记忆后打开 Chat，预期问候语变为重温相关
 4. 关闭 Chat 后再次打开，如果期间无新操作，保持上次的问候语
 5. 预设 QA 功能不受影响，照常匹配
+
+---
+
+## Bug 扫描结果（2026-05-30）
+
+> 基于 commit 历史分析、静态代码检查、测试覆盖分析自动生成
+
+### Bug 模式清单
+
+| 模式 ID | 模式名称 | 出现次数 | 典型 commit | 典型文件 |
+|---------|---------|---------|-------------|---------|
+| PATTERN-1 | Z-index 层级冲突 | 4 | 3456b75, 83e23f3, 2544c50, 0128f8e | App.tsx, MemCloud3D.tsx, Navigation.tsx |
+| PATTERN-2 | OrbitControls 交互事件冲突 | 2 | a0bd3a0, 728ebba | MemCloud3D.tsx |
+| PATTERN-3 | Timer 清理不完整 | 多处 | - | MemCloud3D.tsx |
+| PATTERN-4 | 空 catch 块吞没错误 | 10+ | - | AppContext.tsx, FakeCursor.tsx |
+| PATTERN-5 | localStorage 静默失败 | 8 | - | AppContext.tsx |
+
+### 高风险文件（基于 bug-fix commit 频次）
+
+| 文件 | bug-fix 次数 | 代码行数 | 主要问题 |
+|------|-------------|---------|---------|
+| MemCloud3D.tsx | 21 | 1595 | Z-index、OrbitControls、Timer 清理 |
+| App.tsx | 13 | 409 | Z-index、布局重叠 |
+| Navigation.tsx | 9 | 1260 | Z-index、模板字符串 |
+| DetailPanel.tsx | 8 | 1735 | Timer 清理 |
+
+---
+
+### 102. [Stability] MemCloud3D.tsx 多处 setTimeout 缺少清理逻辑 [ ] [P1]
+
+**来源**: commit 历史分析 + 代码审查
+**问题**: `MemCloud3D.tsx` 中有 10+ 处 `setTimeout` 使用 `useRef` 存储 timer 引用，但部分组件的 `useEffect` cleanup 函数中未清除所有 timer。组件卸载时可能导致：
+1. 内存泄漏（timer 回调持有已卸载组件的闭包引用）
+2. setState 调用触发 React "Can't perform a React state update on an unmounted component" 警告
+**风险模式**: PATTERN-3 — Timer 清理不完整
+**改动范围**:
+- `src/components/MemCloud3D.tsx`: 
+  - L489-503: EchoLines — 已正确清理 ✓
+  - L739-746: InteractionLoop — 检查 timeoutRef 是否在 cleanup 中清除
+  - L1061-1107: ThrottleTimer — 确保组件卸载时清除 throttleTimer
+  - L1208-1283: HoldTagController — holdTimer 已清理 ✓
+  - L1306-1314: AntipodeLines — 已清理 ✓
+  - L1372-1394: EvolutionEffect — 已清理 ✓
+  - L1431-1452: ButterflyEffect — 检查 clearTimer 是否在 cleanup 中清除
+**验证方式**:
+1. 打开应用，快速切换导航分类 10+ 次
+2. 打开 React DevTools，检查是否有 "Can't perform a React state update" 警告
+3. Chrome DevTools Memory → 拍堆快照 → 检查是否有 Detached DOM 或闭包泄漏
+
+### 103. [Stability] AppContext.tsx 空 catch 块吞没 localStorage 错误 [ ] [P1]
+
+**来源**: 静态代码检查
+**问题**: `AppContext.tsx` 中 8 处 `localStorage.getItem/setItem` 操作使用空 `catch {}` 块，当 localStorage 不可用（隐私模式、存储满、SSR 环境）时：
+1. 用户创建的记忆无法持久化，刷新后丢失，但无任何提示
+2. 导入的 ChatGPT 数据静默丢失
+3. 无法诊断"为什么我的数据不见了"
+**风险模式**: PATTERN-4 — 空 catch 块吞没错误；PATTERN-5 — localStorage 静默失败
+**改动范围**:
+- `src/store/AppContext.tsx`:
+  - L158: `catch { return defaultRawMemories; }` → 添加 console.warn
+  - L164: `catch { return defaultInsightMemories; }` → 添加 console.warn
+  - L179: `catch { return []; }` → 添加 console.warn
+  - L183, 193, 197, 499, 525: `catch {}` → 添加 console.warn + 可选 Toast 提示
+**验证方式**:
+1. 在 Chrome DevTools → Application → Storage → 勾选 "Block all cookies" 模拟 localStorage 不可用
+2. 创建一条新记忆，刷新页面
+3. 预期：控制台有明确警告信息，而非静默失败
+4. 可选：显示 Toast "数据保存失败，请检查浏览器存储设置"
+
+### 104. [CodeSmell] FakeCursor.tsx 多处空 catch 块 [ ] [P2]
+
+**来源**: 静态代码检查
+**问题**: `FakeCursor.tsx` 中 5 处 `catch { /* skip */ }` 空 catch 块，用于 try DOM 操作。虽然是防御性编程，但：
+1. 如果 DOM 操作失败（如元素不存在），调试时无法从日志定位问题
+2. 应至少添加 `console.debug` 或明确注释说明失败场景
+**风险模式**: PATTERN-4 — 空 catch 块吞没错误
+**改动范围**:
+- `src/components/AutoDemo/FakeCursor.tsx`:
+  - L235, 246, 256, 265: `catch { /* skip */ }` → 改为 `catch (e) { /* element may not exist */ console.debug?.('FakeCursor:', e); }`
+  - L286: `catch (err: any)` — 已有 console.error ✓
+**验证方式**:
+1. 运行一键演示模式
+2. 控制台无意外错误输出
+3. 如有 DOM 操作失败，能在 debug 级别日志中看到原因
+
+### 105. [CodeSmell] MemCloud3D.tsx 使用 zIndex: 99999 硬编码 [ ] [P2]
+
+**来源**: commit 历史分析（PATTERN-1）
+**问题**: Tooltip 使用 `zIndex: 99999` 硬编码值，与 Navigation 的 `z-20`、DetailPanel 的 `z-30` 等 Tailwind 类形成混乱的层级系统。历史上已因 z-index 冲突修复 4 次（3456b75, 83e23f3, 2544c50, 0128f8e）。
+**风险模式**: PATTERN-1 — Z-index 层级冲突
+**改动范围**:
+- `src/components/MemCloud3D.tsx` L1583: `zIndex: 99999` → 使用 CSS 变量或统一的 z-index 常量
+- `src/App.tsx`: 定义统一的 z-index 层级常量（如 `Z_SIDEBAR=20, Z_PANEL=30, Z_TOOLTIP=50, Z_MODAL=100`）
+**验证方式**:
+1. 悬停 3D 粒子，Tooltip 应在最顶层
+2. 打开侧栏、详情面板、Chat 面板，确认无遮挡
+3. 所有 z-index 值来自统一常量，无硬编码
+
+### 106. [TestGap] 缺少 z-index 层级回归测试 [ ] [P2]
+
+**来源**: 测试覆盖分析
+**问题**: 项目有 207 个测试但全部是业务逻辑和数据模型测试，无 UI 层级测试。z-index 冲突已修复 4 次，但无回归测试防止再次出现。
+**改动范围**:
+- `src/__tests__/`: 新增 `z-index-regression.test.ts`，使用 Testing Library 检查关键组件的 computed z-index 值
+**验证方式**:
+1. `npm test` 通过
+2. 新测试验证 Navigation z-index < DetailPanel z-index < Tooltip z-index
+
+### 107. [TestGap] 缺少 OrbitControls 交互冲突回归测试 [ ] [P2]
+
+**来源**: 测试覆盖分析 + commit 历史（PATTERN-2）
+**问题**: OrbitControls 与粒子拖拽的事件冲突已修复 2 次（a0bd3a0, 728ebba），但无自动化测试验证。交互逻辑复杂（capture phase、stopImmediatePropagation），容易在后续修改中回归。
+**改动范围**:
+- `src/__tests__/`: 新增 `orbit-controls-interaction.test.ts`，模拟 pointerdown 事件验证：
+  1. 靠近粒子时 OrbitControls 被阻塞
+  2. 远离粒子时 OrbitControls 正常工作
+  3. 拖拽完成后 OrbitControls 恢复
+**验证方式**:
+1. `npm test` 通过
+2. 新测试覆盖粒子拖拽和 OrbitControls 的边界情况
