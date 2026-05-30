@@ -160,7 +160,21 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
         await tryClick('emotion-filter-快乐', '再次点击取消筛选', 1000);
       }
 
-      // ─── SEARCH (0:48–0:56, 8s) ─────────────────
+      // ─── DIMENSION VIEWS (0:40–0:48, 8s) ─────────
+      await moveToCenter('顶部维度切换——同一组记忆，四种视角', 3000);
+      await requireClick('btn-view-家庭视图', '家庭视图——记忆按家庭关系重新布局', 2500);
+      await requireClick('btn-view-学习视图', '学习视图——记忆按学习主题聚类', 2500);
+      await requireClick('btn-view-情绪视图', '情绪视图——记忆按情绪色彩分布', 2500);
+      await requireClick('btn-view-全局视图', '切回全局视图', 1500);
+
+      // ─── CATEGORY NAV (0:48–0:56, 8s) ────────────
+      await moveAndClick('nav-家庭生活', '分类导航——按生活领域筛选记忆', 2000);
+      await moveToCenter('点击"家庭生活"——只看家庭相关记忆', 2500);
+      await moveAndClick('nav-学习与成长', '切换到"学习与成长"', 2000);
+      await moveToCenter('3D 星云实时重排，只显示学习相关记忆', 2500);
+      await moveAndClick('nav-家庭生活', '再次点击取消筛选', 1000);
+
+      // ─── SEARCH (0:56–1:04, 8s) ─────────────────
       await requireClick('btn-search', '搜索——快速定位任何记忆', 2000);
       await moveToCenter('输入关键词，实时筛选记忆粒子', 2500);
       await moveToCenter('支持记忆 ID、标签、摘要、人物等多维度搜索', 2500);
