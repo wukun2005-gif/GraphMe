@@ -542,33 +542,40 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
         </span>
       </div>
 
-      {curveData.storylineFilter.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          <button
-            onClick={() => setSelectedStoryline(null)}
-            className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
-              !selectedStoryline
-                ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
-                : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            全部
-          </button>
-          {curveData.storylineFilter.map(sl => (
+      {curveData.storylineFilter.length > 0 && (() => {
+        // Only show storylines with 2+ memories
+        const validStorylines = curveData.storylineFilter.filter(sl =>
+          curveData.points.filter(p => p.storyline === sl).length >= 2
+        );
+        if (validStorylines.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1 mb-2">
             <button
-              key={sl}
-              onClick={() => setSelectedStoryline(selectedStoryline === sl ? null : sl)}
+              onClick={() => setSelectedStoryline(null)}
               className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
-                selectedStoryline === sl
+                !selectedStoryline
                   ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
                   : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {sl}
+              全部
             </button>
-          ))}
-        </div>
-      )}
+            {validStorylines.map(sl => (
+              <button
+                key={sl}
+                onClick={() => setSelectedStoryline(selectedStoryline === sl ? null : sl)}
+                className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
+                  selectedStoryline === sl
+                    ? isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-yellow-100 text-yellow-700'
+                    : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {sl}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       <div className="relative">
         <svg width={width} height={height} className="w-full" viewBox={`0 0 ${width} ${height}`}>

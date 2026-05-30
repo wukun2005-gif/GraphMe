@@ -220,6 +220,18 @@ function AppInner() {
         <span>{insightMemories.length} 洞察记忆</span>
       </div>
 
+      {/* Watermark */}
+      <div className={`absolute bottom-6 left-[240px] z-[1] pointer-events-none select-none`}
+        style={{
+          fontSize: '10px',
+          letterSpacing: '0.5px',
+          opacity: isDark ? 0.15 : 0.12,
+          color: isDark ? '#ffffff' : '#000000',
+          marginLeft: '180px',
+        }}>
+        wukun2005@gmail.com
+      </div>
+
       <TimelineScrubber />
 
       <div className={`absolute top-4 z-20 flex flex-wrap items-center justify-end gap-1.5 max-w-[520px] transition-all duration-300 ${

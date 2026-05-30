@@ -459,6 +459,19 @@ export default function NavigationSidebar() {
 
       <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
         <button
+          id="nav-storyboard"
+          onClick={() => { setShowStoryBoard(!showStoryBoard); setShowLegend(false); setShowMemoryMgr(false); setShowTags(false); }}
+          className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
+            isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
+          }`}
+        >
+          <span>📖 我的侧写</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
+        </button>
+      </div>
+
+      <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
+        <button
           id="nav-tags"
           onClick={() => { setShowTags(!showTags); setShowLegend(false); setShowMemoryMgr(false); setShowStoryBoard(false); }}
           className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
@@ -1194,19 +1207,6 @@ export default function NavigationSidebar() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      <div className={`border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
-        <button
-          id="nav-storyboard"
-          onClick={() => { setShowStoryBoard(!showStoryBoard); setShowLegend(false); setShowMemoryMgr(false); }}
-          className={`w-full text-left px-4 py-2 text-xs transition-all flex items-center justify-between cursor-pointer ${
-            isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
-          }`}
-        >
-          <span>📖 我的侧写</span>
-          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
-        </button>
       </div>
 
       <div className={`p-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
