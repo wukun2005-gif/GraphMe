@@ -1653,7 +1653,7 @@
 1. 运行记忆卡片生成功能
 2. 预期：图片加载失败时控制台有 debug 日志
 
-### 109. [CodeSmell] importUtils.ts 空 catch 块 [ ] [P2]
+### 109. [CodeSmell] importUtils.ts 空 catch 块 [✅] [P2]
 
 **来源**: 静态代码检查
 **问题**: `importUtils.ts` 中 JSON 解析失败时使用空 catch 块，虽然有错误消息推入 result.errors，但未记录原始错误。
