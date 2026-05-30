@@ -161,6 +161,13 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       }
 
       // ─── DIMENSION VIEWS ──────────────────────────
+      // Reset any active category/emotion filters before dimension demo
+      if (legendOk) {
+        await tryClick('emotion-filter-快乐', '', 500);
+      }
+      await moveAndClick('nav-cat-家庭生活', '', 500);
+      await moveAndClick('nav-cat-学习与成长', '', 500);
+      await moveAndClick('nav-cat-社交与情感', '', 500);
       await moveToCenter('顶部维度切换——同一组记忆，四种视角', 3000);
       await moveToCenter('每个视角重新排列所有记忆粒子，发现不同维度的关联', 3000);
       // Zoom out so all particles are visible
