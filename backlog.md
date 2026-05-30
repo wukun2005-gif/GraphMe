@@ -1709,7 +1709,7 @@
 1. 快速在粒子间移动鼠标
 2. 预期：tooltip 正常，无崩溃
 
-### 114. [Bug] Navigation.tsx z-index 战争（z-[9999]） [ ] [P1]
+### 114. [Bug] Navigation.tsx z-index 战争（z-[9999]） [✅] [P1]
 
 **来源**: Commit 历史分析 + 静态检查
 **问题**: Navigation.tsx 第 1109、1140 行使用 `z-[9999]`，远超项目 Z_INDEX 常量体系最大值 60，属于 z-index 战争反模式。
