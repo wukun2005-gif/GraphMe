@@ -1314,7 +1314,21 @@ function DynamicClearColor({ color }: { color: string }) {
 
 function OrbitControlsWithInvalidation(props: React.ComponentProps<typeof OrbitControls>) {
   const { invalidate } = useThree();
-  return <OrbitControls {...props} onChange={() => invalidate()} />;
+  const [enabled, setEnabled] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.action === 'zoom-out') {
+        setEnabled(false);
+        setTimeout(() => setEnabled(true), 3000);
+      }
+    };
+    window.addEventListener('demo-camera-move', handler);
+    return () => window.removeEventListener('demo-camera-move', handler);
+  }, []);
+
+  return <OrbitControls {...props} enabled={enabled} onChange={() => invalidate()} />;
 }
 
 function AntipodeLines({ theme }: { theme: Theme }) {
