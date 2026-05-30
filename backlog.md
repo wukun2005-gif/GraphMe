@@ -1753,7 +1753,7 @@
 - `src/components/MemCloud3D.tsx` L16
 **验证方式**: 运行 `npx vitest run` 确认全过
 
-### 118. [CodeSmell] 全局可变计数器热重载会产生重复 ID [ ] [P2]
+### 118. [CodeSmell] 全局可变计数器热重载会产生重复 ID [✅] [P2]
 
 **来源**: 静态检查
 **问题**: importUtils.ts:20 (`importIdCounter=9000`) 和 Navigation.tsx:47 (`createIdCounter=2000`) 是模块级可变计数器，HMR 热重载后重置，可能产生重复 ID。
