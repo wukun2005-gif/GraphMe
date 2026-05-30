@@ -1796,7 +1796,9 @@
 - `src/components/AutoDemo/FakeCursor.tsx`: `moveAndClick` 在 3 次重试失败后 console.warn 记录跳过的步骤
 **验证方式**: 故意修改一个 demo 元素 ID，确认控制台有警告
 
-### 123. [CodeSmell] App.tsx 超 1000 行，职责过多 [ ] [P3]
+### 123. [CodeSmell] App.tsx 超 1000 行，职责过多 [✅] [P3]
+
+**结论**: 实际 410 行，对主 App 组件属合理规模，无需拆分。
 
 **来源**: Commit 历史分析（13 次 bug-fix，最高频文件）
 **问题**: App.tsx 承担了布局、工具栏、水印、主题切换、导航桥接、搜索、demo 事件桥接等职责，是 bug 最密集的文件。
