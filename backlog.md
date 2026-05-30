@@ -1592,7 +1592,7 @@
 2. 控制台无意外错误输出
 3. 如有 DOM 操作失败，能在 debug 级别日志中看到原因
 
-### 105. [CodeSmell] MemCloud3D.tsx 使用 zIndex: 99999 硬编码 [ ] [P2]
+### 105. [CodeSmell] MemCloud3D.tsx 使用 zIndex: 99999 硬编码 [✅] [P2]
 
 **来源**: commit 历史分析（PATTERN-1）
 **问题**: Tooltip 使用 `zIndex: 99999` 硬编码值，与 Navigation 的 `z-20`、DetailPanel 的 `z-30` 等 Tailwind 类形成混乱的层级系统。历史上已因 z-index 冲突修复 4 次（3456b75, 83e23f3, 2544c50, 0128f8e）。
