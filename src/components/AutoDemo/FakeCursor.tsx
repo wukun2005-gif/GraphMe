@@ -161,16 +161,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       }
 
       // ─── DIMENSION VIEWS ──────────────────────────
-      // Reset any active category/emotion filters before dimension demo
-      if (legendOk) {
-        await tryClick('emotion-filter-快乐', '', 500);
-      }
-      await moveAndClick('nav-cat-家庭生活', '', 500);
-      await moveAndClick('nav-cat-学习与成长', '', 500);
-      await moveAndClick('nav-cat-社交与情感', '', 500);
       await moveToCenter('顶部维度切换——同一组记忆，四种视角', 3000);
       await moveToCenter('每个视角重新排列所有记忆粒子，发现不同维度的关联', 3000);
-      // Zoom out so all particles are visible
       dispatchCameraMove('zoom-out');
       await wait(2000); checkCancelled();
       await requireClick('btn-view-家庭视图', '切换到家庭视图', 2000);
@@ -187,7 +179,6 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await moveToCenter('四种视角，同一组记忆，不同的理解方式', 2500);
 
       // ─── CATEGORY NAV ─────────────────────────────
-      // Expand sidebar if collapsed (use tryClick — no-op if already expanded)
       await tryClick('nav-expand', '展开导航侧栏', 500);
       await moveToCenter('左侧分类导航——按生活领域快速筛选', 2500);
       await moveAndClick('nav-cat-家庭生活', '点击"家庭生活"', 1500);
@@ -201,8 +192,8 @@ export default function FakeCursor({ isPlaying, onStop }: FakeCursorProps) {
       await moveAndClick('nav-cat-社交与情感', '切换到"社交与情感"', 1500);
       await wait(2000); checkCancelled();
       await moveToCenter('朋友互动、情感表达——社交网络跃然眼前', 3000);
-      await moveAndClick('nav-cat-家庭生活', '再次点击取消筛选', 1000);
-      await wait(2000); checkCancelled();
+      // Reset: click active category to deselect
+      await moveAndClick('nav-cat-社交与情感', '', 500);
       await moveToCenter('所有记忆回归——完整宇宙重现', 2500);
 
       // ─── SEARCH (1:40–1:48, 8s) ─────────────────
