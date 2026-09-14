@@ -822,7 +822,7 @@ This is a product concept demo, not a visual effects showcase. The core goal of 
 | Insight Network Lines | Amber gold semi-transparent dashed lines (`rgba(255,184,0,0.25)`), always visible at low opacity, hover increases to 0.5 |
 | Performance Constraints | Target environment: 2015 MacBook Pro (i7 2.2GHz / 16GB / Chrome x86_64), particle count ≤ 60, WebGL post-processing effects (Bloom/Glow) disabled, maintain ≥30fps |
 
-### 5.2 Interaction Specifications
+### 5.3 Interaction Specifications
 
 | Interaction | Behavior |
 |------|------|
@@ -1244,7 +1244,7 @@ Each memory atom node = a high-dimensional vector in dimensions D1~D10, with tot
 | BL-018 | Multimedia Attachments (Images) | §3.2 | Embed 3-5 illustrative images in memory detail panel (upgraded from P1 to P0) | BL-004 |✅
 | BL-019 | Insight Memory Provenance Links | §3.5 | In Insight detail panel, add clickable memory links to each Raw Memory evidence item, clicking navigates directly to corresponding raw memory and expands details | BL-004, BL-005 |✅
 | BL-020 | Memory Health Radar Chart | §3.4 | In Value Dashboard add "Memory Health" tab: 10-dimension coverage radar chart + forgetting index + emotion trend curve. Radar chart shows which life dimensions are covered by memory and where gaps exist | BL-016 |✅
-| BL-033 | Cluster Tag | §3.11 | In nebula, display small text tags next some clusters (like parent-child game photo thumbnails, `printf("hello world")` code snippets, sad diary fragments, etc.) as spatial POIs. Default少量display, tags only appear when mouse holds on a cluster, hide when released, nebula returns to default tag state. Tags shouldn't be too large or too many to avoid visual clutter | BL-003 |✅
+| BL-033 | Cluster Tag | §3.11 | In nebula, display small text tags next some clusters (like parent-child game photo thumbnails, `printf("hello world")` code snippets, sad diary fragments, etc.) as spatial POIs. Default minimal display, tags only appear when mouse holds on a cluster, hide when released, nebula returns to default tag state. Tags shouldn't be too large or too many to avoid visual clutter | BL-003 |✅
 | BL-034 | Story Board (Xiao Ge Says About Me) | §3.12 | Add Story Board feature to Navigation Panel: AGI automatically connects all memory fragments to generate a narrative — using raw memories to tell the past, insight memories to tell the future you. Rich with multimedia data from memories, letting memories give users a "portrait" (Graph Me) | BL-002, BL-008, BL-018 |✅
 | BL-039 | Cluster Tag Images + Hold-to-Reveal | §3.11 | BUGFIX: Cluster tags currently don't show any image thumbnails; holding mouse on a cluster doesn't reveal tags either. Fix: tags should include the first image thumbnail associated with the memory; holding cluster should reveal that cluster's tags, release to hide | BL-033 |✅
 | BL-040 | Navigation Sidebar Collapse Mutex | §3.6 | UX: "Legend", "Memory Management", "Xiao Ge Says" three collapsible panels should be mutually exclusive when expanded — opening one should auto-collapse others to prevent navigation bar from overflowing screen and becoming unusable | BL-008 |✅
