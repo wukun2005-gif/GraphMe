@@ -13,6 +13,9 @@ import {
   computeMemoryTypePotential,
 } from '../utils/memoryBankUtils';
 import { buildPreferenceTrees } from '../utils/preferenceUtils';
+import { useI18n } from '../i18n';
+import { emotionT } from '../i18n/dataTranslations';
+import { memoryLabelT } from '../i18n/memoryData';
 
 const TREND_ICON: Record<string, string> = {
   up: '↗',
@@ -41,16 +44,16 @@ const PREDICTION_COLORS: Record<string, { bar: string; barLight: string; text: s
   },
 };
 
-function PersonaEvolutionPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+function PersonaEvolutionPanel({ rawMemories, theme, t }: { rawMemories: RawMemory[]; theme: 'dark' | 'light'; t: (key: string) => string }) {
   const isDark = theme === 'dark';
-  const evolution = useMemo(() => computePersonaEvolution(rawMemories), [rawMemories]);
+  const evolution = useMemo(() => computePersonaEvolution(rawMemories, t), [rawMemories, t]);
 
   const radarLabels: { key: keyof typeof evolution.current; label: string }[] = [
-    { key: 'emotionalRichness', label: '情感' },
-    { key: 'socialDensity', label: '社交' },
-    { key: 'knowledgeDepth', label: '知识' },
-    { key: 'narrativeCoherence', label: '叙事' },
-    { key: 'reviewFrequency', label: '回顾' },
+    { key: 'emotionalRichness', label: t('radar.emotion') },
+    { key: 'socialDensity', label: t('radar.social') },
+    { key: 'knowledgeDepth', label: t('memoryBank.knowledge') },
+    { key: 'narrativeCoherence', label: t('dim.narrative') },
+    { key: 'reviewFrequency', label: t('radar.review') },
   ];
 
   const size = 120;
@@ -132,11 +135,11 @@ function PersonaEvolutionPanel({ rawMemories, theme }: { rawMemories: RawMemory[
       <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
         <div className="flex items-center gap-2 mb-1">
           <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-            {evolution.currentType}型
+            {evolution.currentType}
           </span>
           {evolution.currentType !== evolution.previousType && (
             <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              ← {evolution.previousType}型
+              ← {evolution.previousType}
             </span>
           )}
         </div>
@@ -159,6 +162,7 @@ function PersonaEvolutionPanel({ rawMemories, theme }: { rawMemories: RawMemory[
 
 export default function MemoryBank() {
   const { memoryBankOpen, toggleMemoryBank, detailOpen, theme, selectMemory, rawMemories, insightMemories } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [timeRange, setTimeRange] = useState<TimeRange>('月');
   const [expandedDim, setExpandedDim] = useState<string | null>(null);
@@ -172,13 +176,13 @@ export default function MemoryBank() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [memoryBankOpen, toggleMemoryBank]);
 
-  const dimensionData = useMemo(() => computeDimensionData(rawMemories, timeRange), [rawMemories, timeRange]);
+  const dimensionData = useMemo(() => computeDimensionData(rawMemories, timeRange, t), [rawMemories, timeRange, t]);
   const healthScore = useMemo(() => computeHealthScore(rawMemories, timeRange), [rawMemories, timeRange]);
   const assetStats = useMemo(() => computeAssetStats(rawMemories), [rawMemories]);
-  const temperament = useMemo(() => computeTemperament(rawMemories), [rawMemories]);
-  const dimensionRates = useMemo(() => computeDimensionRates(rawMemories, timeRange), [rawMemories, timeRange]);
-  const memoryTypePotential = useMemo(() => computeMemoryTypePotential(rawMemories), [rawMemories]);
-  const preferenceTrees = useMemo(() => buildPreferenceTrees(rawMemories, insightMemories), [rawMemories, insightMemories]);
+  const temperament = useMemo(() => computeTemperament(rawMemories, t, language), [rawMemories, t, language]);
+  const dimensionRates = useMemo(() => computeDimensionRates(rawMemories, timeRange, t), [rawMemories, timeRange, t]);
+  const memoryTypePotential = useMemo(() => computeMemoryTypePotential(rawMemories, t), [rawMemories, t]);
+  const preferenceTrees = useMemo(() => buildPreferenceTrees(rawMemories, insightMemories, language), [rawMemories, insightMemories, language]);
 
   const topImproving = useMemo(() => {
     return [...dimensionData].sort((a, b) => {
@@ -196,8 +200,10 @@ export default function MemoryBank() {
         switch (dimId) {
           case 'happiness': return m.dimensions.emotional.primary === '快乐' && m.dimensions.emotional.intensity > 0.7;
           case 'social': return m.dimensions.social.persons.length > 1;
-          case 'creativity': return m.dimensions.activity.type === '绘画' || m.dimensions.activity.detail.includes('画') || m.dimensions.activity.detail.includes('创');
-          case 'logic': return m.dimensions.semantic.knowledge.length > 0 || m.dimensions.activity.type === '学习';
+          // 注意：判断一律基于 activity.type 这个内部枚举标识符，
+          // 不要用 activity.detail 做中文子串匹配 —— detail 已本地化，跨语言会失配。
+          case 'creativity': return ['绘画', '创作', '手工', '艺术'].includes(m.dimensions.activity.type);
+          case 'logic': return m.dimensions.semantic.knowledge.length > 0 || ['学习', '编程'].includes(m.dimensions.activity.type);
           case 'outdoor': return m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场';
           default: return false;
         }
@@ -216,7 +222,7 @@ export default function MemoryBank() {
         className={`fixed bottom-36 w-12 h-12 bg-[#00f2ff]/15 border border-[#00f2ff]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#00f2ff]/25 transition-all z-20 shadow-[0_0_15px_rgba(0,242,255,0.1)] ${
           detailOpen ? 'right-[436px]' : 'right-6'
         }`}
-        title="记忆银行"
+        title={t('memoryBank.title')}
       >
         💰
       </button>
@@ -236,13 +242,13 @@ export default function MemoryBank() {
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                📊 你的生命维度投资组合
+                📊 {t('memoryBank.investment')}
               </h3>
               <div className="flex items-center gap-2">
                 <div className={`flex rounded-md p-0.5 text-xs ${
                   isDark ? 'bg-[#ffffff08]' : 'bg-gray-100'
                 }`}>
-                  {(['周', '月', '季'] as TimeRange[]).map(range => (
+                  {([['周', t('memoryBank.week')], ['月', t('memoryBank.month')], ['季', t('memoryBank.quarter')]] as [TimeRange, string][]).map(([range, label]) => (
                     <button
                       key={range}
                       onClick={() => setTimeRange(range)}
@@ -252,7 +258,7 @@ export default function MemoryBank() {
                           : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                       }`}
                     >
-                      {range}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -264,7 +270,7 @@ export default function MemoryBank() {
                       ? 'bg-[#ffffff10] hover:bg-[#ffffff20] text-gray-400 hover:text-gray-200'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-500 hover:text-gray-700'
                   }`}
-                  title="关闭"
+                  title={t('memoryBank.close')}
                 >
                   ✕
                 </button>
@@ -277,10 +283,10 @@ export default function MemoryBank() {
             }`}>
               <div className="flex items-center justify-between mb-1">
                 <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  💰 总资产健康度
+                  💰 {t('memoryBank.health')}
                 </span>
                 <span className={`text-xs ${healthScore.delta >= 0 ? (isDark ? 'text-green-400' : 'text-green-600') : (isDark ? 'text-red-400' : 'text-red-600')}`}>
-                  {healthScore.delta >= 0 ? '+' : ''}{healthScore.delta} <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>较上期</span>
+                  {healthScore.delta >= 0 ? '+' : ''}{healthScore.delta} <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('memoryBank.vsLast')}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -322,22 +328,22 @@ export default function MemoryBank() {
               <div className="flex-1 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> 正资产
+                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> {t('memoryBank.positiveAssets')}
                   </span>
                   <span className={`text-[10px] font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                    {assetStats.positive} 条
+                    {assetStats.positive} {t('memoryBank.countUnit')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> 待改善
+                    <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> {t('memoryBank.toImprove')}
                   </span>
                   <span className={`text-[10px] font-medium ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    {assetStats.negative} 条
+                    {assetStats.negative} {t('memoryBank.countUnit')}
                   </span>
                 </div>
                 <div className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  正资产占比 {assetStats.ratio}%，{assetStats.ratio >= 60 ? '整体健康' : '需要关注'}
+                  {t('memoryBank.positiveRatio', { ratio: assetStats.ratio, status: assetStats.ratio >= 60 ? t('memoryBank.overallHealthy') : t('memoryBank.needsAttention') })}
                 </div>
               </div>
             </div>
@@ -404,7 +410,7 @@ export default function MemoryBank() {
                         isDark ? 'border-[#ffffff08]' : 'border-gray-200'
                       }`}>
                         <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          历史趋势 ({timeRange})
+                          {t('memoryBank.historyTrend', { range: timeRange })}
                         </div>
                         <svg width="100%" height="32" viewBox="0 0 200 32" className="mb-2">
                           <polyline
@@ -417,7 +423,7 @@ export default function MemoryBank() {
                           />
                         </svg>
                         <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          关联记忆：
+                          {t('memoryBank.relatedMemories')}
                         </div>
                         <div className="space-y-1">
                           {getRelatedMemoriesForDim(dim.id).map((mem) => (
@@ -430,9 +436,9 @@ export default function MemoryBank() {
                                   : 'bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-800'
                               }`}
                             >
-                              <span className="flex-1">{mem.label}</span>
+                              <span className="flex-1">{memoryLabelT(language, mem.id, mem.label)}</span>
                               <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                {new Date(mem.dimensions.temporal.timestamp).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}
+                                {new Date(mem.dimensions.temporal.timestamp).toLocaleDateString(t('memoryBank.dateLocale'), { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}
                               </span>
                             </button>
                           ))}
@@ -448,7 +454,7 @@ export default function MemoryBank() {
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
                 <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  🌟 正资产鼓励
+                  {t('memoryBank.positiveEncouragement')}
                 </h4>
                 <div className="space-y-2">
                   {topImproving.map((dim, i) => {
@@ -469,14 +475,14 @@ export default function MemoryBank() {
                         <div className="flex items-center gap-1 mb-1">
                           <span className="text-xs">{dim.emoji}</span>
                           <span className={`text-xs font-medium ${textClass}`}>
-                            {dim.label}维度{isPositive ? '创新高' : '需关注'}
+                            {isPositive ? t('memoryBank.dimensionHigh', { dim: dim.label }) : t('memoryBank.dimensionAttention', { dim: dim.label })}
                           </span>
                           <span className={`ml-auto text-[10px] px-1 py-0.5 rounded ${badgeClass}`}>
                             {isPositive ? '↗' : '↘'} {dim.trendPct > 0 ? (isPositive ? '+' : '-') : ''}{dim.trendPct}%
                           </span>
                         </div>
                         <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          建议：{dim.actionLabel}
+                          {t('memoryBank.suggestion')}{dim.actionLabel}
                         </p>
                         <button
                           onClick={() => {
@@ -487,7 +493,7 @@ export default function MemoryBank() {
                             isDark ? `${textClass}/60 hover:${textClass}` : `${textClass}/60 hover:${textClass}`
                           }`}
                         >
-                          📎 追溯相关记忆
+                          📎 {t('memoryBank.traceMemory')}
                         </button>
                       </div>
                     );
@@ -500,7 +506,7 @@ export default function MemoryBank() {
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
                 <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  🧬 心智模型气质画像
+                  {t('memoryBank.mindModel')}
                 </h4>
                 <div className="flex items-center gap-3 mb-3">
                   <svg width="64" height="64" viewBox="0 0 64 64">
@@ -545,7 +551,7 @@ export default function MemoryBank() {
                   </div>
                 </div>
                 <div className={`text-[10px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  代表性记忆片段：
+                  {t('memoryBank.representativeMemories')}
                 </div>
                 <div className="space-y-1.5">
                   {temperament.representativeMems.map((mem, i) => (
@@ -568,7 +574,7 @@ export default function MemoryBank() {
                 </div>
 
                 {/* 雷达图 + 演化时间轴 */}
-                <PersonaEvolutionPanel rawMemories={rawMemories} theme={theme} />
+                <PersonaEvolutionPanel rawMemories={rawMemories} theme={theme} t={t} />
               </div>
 
               {/* 维度利率排名 */}
@@ -576,7 +582,7 @@ export default function MemoryBank() {
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
                 <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  📈 维度利率排名
+                  {t('memoryBank.dimensionRates')}
                 </h4>
                 <div className="space-y-1">
                   {dimensionRates.map(item => (
@@ -618,7 +624,7 @@ export default function MemoryBank() {
                             ? 'bg-yellow-500/15 text-yellow-400'
                             : 'bg-green-500/15 text-green-400'
                       }`}>
-                        {item.risk === 'high' ? '⚠ 预警' : item.risk === 'medium' ? '○ 关注' : '✓ 正常'}
+                        {item.risk === 'high' ? t('memoryBank.warning') : item.risk === 'medium' ? t('memoryBank.watch') : t('memoryBank.normal')}
                       </span>
                     </div>
                   ))}
@@ -630,7 +636,7 @@ export default function MemoryBank() {
                 isDark ? 'border-[#ffffff08]' : 'border-gray-200'
               }`}>
                 <h4 className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  💹 记忆类型增值潜力排行
+                  {t('memoryBank.memoryTypePotential')}
                 </h4>
                 <div className="space-y-1">
                   {memoryTypePotential.map(item => (
@@ -663,7 +669,7 @@ export default function MemoryBank() {
                             ? isDark ? 'bg-blue-500/15 text-blue-400' : 'bg-blue-100 text-blue-700'
                             : isDark ? 'bg-gray-500/15 text-gray-400' : 'bg-gray-200 text-gray-600'
                       }`}>
-                        {item.invest}
+                        {item.invest === '高' ? t('memoryBank.investHigh') : item.invest === '中高' ? t('memoryBank.investMediumHigh') : item.invest === '中' ? t('memoryBank.investMedium') : t('memoryBank.investLow')}
                       </span>
                       <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                         {item.suggestion}
@@ -685,7 +691,7 @@ export default function MemoryBank() {
             className={`p-4 rounded-xl border ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}
           >
             <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#cc44ff]' : 'text-purple-600'}`}>
-              🌿 偏好演化
+              {t('memoryBank.preferenceEvolution')}
             </h4>
             <div className="space-y-3">
               {preferenceTrees.slice(0, 3).map((tree, i) => (
@@ -711,7 +717,7 @@ export default function MemoryBank() {
                     ))}
                   </div>
                   <p className={`text-[9px] mt-0.5 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                    {tree.description} · 置信度 {Math.round(tree.root.confidence * 100)}%
+                    {tree.description} · {t('memoryBank.confidence', { percent: Math.round(tree.root.confidence * 100) })}
                   </p>
                 </div>
               ))}

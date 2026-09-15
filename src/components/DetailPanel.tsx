@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import { useI18n } from '../i18n';
+import { emotionT, emotionNameT, privacyT, dateTypeT, dateT, categoryT, contentT, joinContentT } from '../i18n/dataTranslations';
+import { insightStatementT, insightDescriptionT, storylineNameT, memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 import type { RawMemory, InsightMemory, EmotionType, FarewellRecord } from '../types';
-import { EMOTION_COLORS, CATEGORY_LABELS } from '../types';
+import { EMOTION_COLORS } from '../types';
 import { computeDiff, computeImportanceBreakdown } from '../utils/valueUtils';
-import { extractSensoryKeywords } from '../utils/sensoryUtils';
+import { extractSensoryKeywords, sensoryWordT } from '../utils/sensoryUtils';
 import { renderMemoryCard, downloadBlob } from '../utils/cardUtils';
 import { getMemoryConnections } from '../utils/navUtils';
 import type { MemoryConnection } from '../utils/navUtils';
@@ -14,26 +17,28 @@ interface VersionEntry {
   version: number;
   statement: string;
   confidence: number;
-  date: string;
+  date: number;
   change: string;
 }
 
+const mv = (m: number, d: number) => new Date(2026, m, d).getTime();
+
 const MOCK_VERSIONS: Record<string, VersionEntry[]> = {
   'insight_001': [
-    { version: 1, statement: '孩子对编程有兴趣', confidence: 0.72, date: '4月15日', change: '初始发现' },
-    { version: 2, statement: '孩子对图形化编程的兴趣在上升', confidence: 0.85, date: '5月20日', change: '印证加深' },
+    { version: 1, statement: 'detail.version.insight001.v1', confidence: 0.72, date: mv(3, 15), change: 'detail.version.initialDiscovery' },
+    { version: 2, statement: 'detail.version.insight001.v2', confidence: 0.85, date: mv(4, 20), change: 'detail.version.evidenceDeepened' },
   ],
   'insight_003': [
-    { version: 1, statement: '孩子面对困难时倾向于求助', confidence: 0.68, date: '4月10日', change: '初始发现' },
-    { version: 2, statement: '孩子相信通过努力可以解决难题', confidence: 0.82, date: '5月18日', change: '新数据修正结论' },
+    { version: 1, statement: 'detail.version.insight003.v1', confidence: 0.68, date: mv(3, 10), change: 'detail.version.initialDiscovery' },
+    { version: 2, statement: 'detail.version.insight003.v2', confidence: 0.82, date: mv(4, 18), change: 'detail.version.newDataCorrected' },
   ],
   'insight_008': [
-    { version: 1, statement: '孩子的数学能力在具象操作阶段', confidence: 0.75, date: '4月5日', change: '初始发现' },
-    { version: 2, statement: '数学直觉从具象操作向抽象符号过渡', confidence: 0.73, date: '5月22日', change: '分数题表现改变结论' },
+    { version: 1, statement: 'detail.version.insight008.v1', confidence: 0.75, date: mv(3, 5), change: 'detail.version.initialDiscovery' },
+    { version: 2, statement: 'detail.version.insight008.v2', confidence: 0.73, date: mv(4, 22), change: 'detail.version.fractionProblemChanged' },
   ],
   'insight_010': [
-    { version: 1, statement: '孩子遇到问题第一反应是求助他人', confidence: 0.78, date: '4月8日', change: '初始发现' },
-    { version: 2, statement: '处理挫折的策略从求助到尝试独立解决', confidence: 0.68, date: '5月25日', change: '独立编程里程碑修正' },
+    { version: 1, statement: 'detail.version.insight010.v1', confidence: 0.78, date: mv(3, 8), change: 'detail.version.initialDiscovery' },
+    { version: 2, statement: 'detail.version.insight010.v2', confidence: 0.68, date: mv(4, 25), change: 'detail.version.independentMilestoneCorrected' },
   ],
 };
 
@@ -57,6 +62,7 @@ function ConnectionGraph({ connections, theme, onSelect }: {
   theme: 'dark' | 'light';
   onSelect: (conn: MemoryConnection) => void;
 }) {
+  const { t } = useI18n();
   const isDark = theme === 'dark';
   const width = 380;
   const height = 200;
@@ -136,7 +142,7 @@ function ConnectionGraph({ connections, theme, onSelect }: {
               <circle cx="5" cy="5" r="4" fill={isDark ? '#1a1a2e' : '#fff'} stroke={typeColors[type]} strokeWidth="1" />
               <text x="5" y="8" textAnchor="middle" className="text-[7px]">{icon}</text>
               <text x="14" y="8" className="text-[7px]" fill={isDark ? '#6b7280' : '#9ca3af'}>
-                {type === 'insight' ? '洞察' : type === 'storyline' ? '故事线' : '人物'}
+                {type === 'insight' ? t('detail.legend.insight') : type === 'storyline' ? t('detail.legend.storyline') : t('detail.legend.person')}
               </text>
             </g>
           ))}
@@ -147,14 +153,15 @@ function ConnectionGraph({ connections, theme, onSelect }: {
 }
 
 function ImportanceRadar({ memory, allMemories, theme }: { memory: RawMemory; allMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+  const { t } = useI18n();
   const isDark = theme === 'dark';
   const breakdown = computeImportanceBreakdown(memory, allMemories);
   const axes = [
-    { label: '情绪', value: breakdown.emotional, emoji: '😊' },
-    { label: '频率', value: breakdown.frequency, emoji: '🔄' },
-    { label: '社交', value: breakdown.social, emoji: '👥' },
-    { label: '里程碑', value: breakdown.milestone, emoji: '🏆' },
-    { label: '回顾', value: breakdown.access, emoji: '📖' },
+    { label: t('radar.emotion'), value: breakdown.emotional, emoji: '😊' },
+    { label: t('radar.frequency'), value: breakdown.frequency, emoji: '🔄' },
+    { label: t('radar.social'), value: breakdown.social, emoji: '👥' },
+    { label: t('radar.milestone'), value: breakdown.milestone, emoji: '🏆' },
+    { label: t('radar.review'), value: breakdown.access, emoji: '📖' },
   ];
 
   const cx = 40, cy = 40, r = 30;
@@ -206,7 +213,8 @@ function ImportanceRadar({ memory, allMemories, theme }: { memory: RawMemory; al
 }
 
 function RawDetail({ memory }: { memory: RawMemory }) {
-  const { theme, rawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
+  const { theme, rawMemories, sourceRawMemories, insightMemories, selectMemory, echoMemoryIds, echoDescription, boomerangMemoryIds, boomerangDescription, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [showPrivateContent, setShowPrivateContent] = useState(false);
   const isPrivate = memory.dimensions.value.privacyLevel === '仅自己' || memory.dimensions.value.privacyLevel === '加密';
@@ -218,8 +226,8 @@ function RawDetail({ memory }: { memory: RawMemory }) {
   );
 
   const connections = useMemo(
-    () => getMemoryConnections(memory.id, rawMemories, insightMemories),
-    [memory.id, rawMemories, insightMemories]
+    () => getMemoryConnections(memory.id, rawMemories, insightMemories, language),
+    [memory.id, rawMemories, insightMemories, language]
   );
   return (
     <div className="space-y-3 text-sm">
@@ -230,7 +238,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       {isPrivate && !showPrivateContent ? (
         <div className="space-y-2">
           <p className={`leading-relaxed blur-sm select-none ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-            {memory.summary}
+            {memorySummaryT(language, memory.id, memory.summary)}
           </p>
           <button
             onClick={() => setShowPrivateContent(true)}
@@ -238,11 +246,11 @@ function RawDetail({ memory }: { memory: RawMemory }) {
               isDark ? 'bg-[#ffffff08] text-gray-400 hover:text-gray-200' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
             }`}
           >
-            🔓 显示内容
+            {t('detail.showContent')}
           </button>
         </div>
       ) : (
-        <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memory.summary}</p>
+        <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memorySummaryT(language, memory.id, memory.summary)}</p>
       )}
       {d.sensory.images.length > 0 && (
         <div className="flex gap-2 py-2 overflow-x-auto">
@@ -250,7 +258,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
             <img
               key={i}
               src={img}
-              alt={`记忆照片 ${i + 1}`}
+              alt={t('detail.photo', { index: i + 1 })}
               className={`w-24 h-24 rounded-lg object-cover border-2 flex-shrink-0 ${
                 isDark ? 'border-[#ffffff10]' : 'border-gray-200'
               }`}
@@ -261,11 +269,17 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       )}
       {/* Sensory keywords */}
       {(() => {
-        const sensoryWords = extractSensoryKeywords(memory.summary + ' ' + memory.label);
+        // 用未本地化的原文提取：SENSORY_WORDS 是中文词表，
+        // 对翻译后的英文 label/summary 匹配必然落空。
+        const sourceMem = sourceRawMemories.find(m => m.id === memory.id);
+        const extractText = sourceMem
+          ? sourceMem.summary + ' ' + sourceMem.label
+          : memory.summary + ' ' + memory.label;
+        const sensoryWords = extractSensoryKeywords(extractText);
         if (sensoryWords.length === 0) return null;
         return (
           <div className="flex flex-wrap gap-1.5">
-            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>👁️ 感官印象：</span>
+            <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.sensoryImpression')}</span>
             {sensoryWords.map((word, i) => (
               <span
                 key={i}
@@ -273,32 +287,32 @@ function RawDetail({ memory }: { memory: RawMemory }) {
                   isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
                 }`}
               >
-                {word}
+                {sensoryWordT(language, word)}
               </span>
             ))}
           </div>
         );
       })()}
       <div className={`grid grid-cols-2 gap-x-4 gap-y-1.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⏰ 时间</span> {d.temporal.dateType}</div>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📍 地点</span> {d.spatial.landmark}</div>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>👤 人物</span> {d.social.persons.join('、') || '无'}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.time')}</span> {dateTypeT(language, d.temporal.dateType)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.place')}</span> {contentT(language, d.spatial.landmark)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.persons')}</span> {joinContentT(language, d.social.persons) || t('detail.none')}</div>
         <div>
-          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>😊 情绪</span>
-          <span style={{ color: EMOTION_COLORS[d.emotional.primary] }}> {d.emotional.primary} ({d.emotional.intensity.toFixed(2)})</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.emotion')}</span>
+          <span style={{ color: EMOTION_COLORS[d.emotional.primary] }}> {emotionT(language, d.emotional.primary)} ({d.emotional.intensity.toFixed(2)})</span>
         </div>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🎮 活动</span> {d.activity.detail}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.activity')}</span> {contentT(language, d.activity.detail)}</div>
         {d.semantic.knowledge.length > 0 && (
-          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📝 知识</span> {d.semantic.knowledge.join('、')}</div>
+          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.knowledge')}</span> {joinContentT(language, d.semantic.knowledge)}</div>
         )}
         <div className="col-span-2">
-          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>⭐ 重要性</span>
+          <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.importance')}</span>
           <ImportanceRadar memory={memory} allMemories={rawMemories} theme={theme} />
         </div>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 CQI</span> {d.value.cqi.toFixed(2)}</div>
-        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔒 隐私</span> {d.value.privacyLevel}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.cqi')}</span> {d.value.cqi.toFixed(2)}</div>
+        <div><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.privacy')}</span> {privacyT(language, d.value.privacyLevel)}</div>
         {d.narrative.storyline && (
-          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>🔗 故事线</span> {d.narrative.storyline}</div>
+          <div className="col-span-2"><span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.storyline')}</span> {storylineNameT(language, d.narrative.storyline)}</div>
         )}
       </div>
       {memory.tags && memory.tags.length > 0 && (
@@ -319,7 +333,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       {connections.length > 0 && (
         <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            🌌 这条记忆的连接 ({connections.length})
+            {t('detail.connections', { count: connections.length })}
           </h4>
           <ConnectionGraph
             connections={connections.slice(0, 8)}
@@ -332,7 +346,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       {echoMemories.length > 0 && (
         <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            🔮 记忆回声
+            {t('detail.echo')}
           </h4>
           {echoDescription && (
             <p className={`text-xs italic mb-2 ${isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'}`}>
@@ -355,18 +369,18 @@ function RawDetail({ memory }: { memory: RawMemory }) {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
                     <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {echo.label}
+                      {memoryLabelT(language, echo.id, echo.label)}
                     </span>
                   </div>
                   <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                    {echo.summary}
+                    {memorySummaryT(language, echo.id, echo.summary)}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                      {echo.dimensions.temporal.dateType}
+                      {dateTypeT(language, echo.dimensions.temporal.dateType)}
                     </span>
                     <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                      📍 {echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType}
+                      📍 {contentT(language, echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType)}
                     </span>
                   </div>
                 </button>
@@ -379,7 +393,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
       {boomerangMemoryIds.length > 0 && (
         <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
-            🪃 记忆回旋镖
+            {t('detail.boomerang')}
           </h4>
           {boomerangDescription && (
             <p className={`text-xs italic mb-2 ${isDark ? 'text-orange-400/70' : 'text-orange-600/70'}`}>
@@ -404,18 +418,18 @@ function RawDetail({ memory }: { memory: RawMemory }) {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
                     <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {mem.label}
+                      {memoryLabelT(language, mem.id, mem.label)}
                     </span>
                   </div>
                   <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                    {mem.summary}
+                    {memorySummaryT(language, mem.id, mem.summary)}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                      {mem.dimensions.temporal.dateType}
+                      {dateTypeT(language, mem.dimensions.temporal.dateType)}
                     </span>
                     <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                      📍 {mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType}
+                      📍 {contentT(language, mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType)}
                     </span>
                   </div>
                 </button>
@@ -433,7 +447,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
         return (
           <div className={`mt-4 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
             <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>
-              🌍 对跖点
+              {t('detail.antipode')}
             </h4>
             {antipodeDescription && (
               <p className={`text-xs italic mb-2 ${isDark ? 'text-teal-400/70' : 'text-teal-600/70'}`}>
@@ -451,11 +465,11 @@ function RawDetail({ memory }: { memory: RawMemory }) {
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
                 <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {mem.label}
+                  {memoryLabelT(language, mem.id, mem.label)}
                 </span>
               </div>
               <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {mem.summary}
+                {memorySummaryT(language, mem.id, mem.summary)}
               </p>
             </button>
           </div>
@@ -467,6 +481,7 @@ function RawDetail({ memory }: { memory: RawMemory }) {
 
 function InsightDetail({ memory }: { memory: InsightMemory }) {
   const { rawMemories, theme, selectMemory, updateInsight, butterflyEffect, clearButterflyEffect, insightMemories, setTraceHighlightIds } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const versions = MOCK_VERSIONS[memory.id];
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -479,12 +494,12 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
 
   const traceSteps = useMemo(() => {
     if (!showTrace) return [];
-    return generateTraceSteps(memory, rawMemories);
-  }, [showTrace, memory, rawMemories]);
+    return generateTraceSteps(memory, rawMemories, language);
+  }, [showTrace, memory, rawMemories, language]);
 
   const sourceSummaries = memory.sourceRawMemoryIds.map(id => {
     const raw = rawMemories.find(m => m.id === id);
-    return { id, summary: raw?.summary || '未知记忆', rawMem: raw };
+    return { id, summary: raw ? memorySummaryT(language, raw.id, raw.summary) : t('detail.unknownMemory'), rawMem: raw };
   });
 
   return (
@@ -496,15 +511,15 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
       <div className={`rounded-lg p-3 border ${
         isDark ? 'bg-[#1a1a2e] border-[#ffb800]/20' : 'bg-yellow-50 border-yellow-200'
       }`}>
-        <p className={`font-medium text-sm ${isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'}`}>{CATEGORY_LABELS[memory.category]}：{memory.statement}</p>
-        <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{memory.description}</p>
+        <p className={`font-medium text-sm ${isDark ? 'text-[#ffb800]' : 'text-[#b8860b]'}`}>{categoryT(language, memory.category)}: {insightStatementT(language, memory.id, memory.statement)}</p>
+        <p className={`mt-1 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{insightDescriptionT(language, memory.id, memory.description)}</p>
         <div className={`mt-2 rounded h-2 overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-gray-200'}`}>
           <div className="h-full bg-[#ffb800] rounded" style={{ width: `${memory.confidence * 100}%` }} />
         </div>
         <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Confidence {Math.round(memory.confidence * 100)}%</p>
       </div>
       <div>
-        <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📊 依据（共 {memory.sourceRawMemoryIds.length} 条原始记忆）</p>
+        <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.insight.evidence', { count: memory.sourceRawMemoryIds.length })}</p>
         <div className={`text-xs space-y-1 max-h-32 overflow-y-auto ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
           {sourceSummaries.map(({ id, summary, rawMem }) => (
             <button
@@ -524,7 +539,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
       </div>
       {versions && versions.length > 1 && (
         <div>
-          <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📖 版本历史（认知演化）</p>
+          <p className={`text-xs mb-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('detail.insight.versionHistory')}</p>
           <div className="space-y-0">
             {versions.map((v, i) => {
               const isLatest = i === versions.length - 1;
@@ -538,19 +553,19 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                   }`} />
                   <div className="text-xs">
                     <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v{v.version}</span>
-                    <span className={`mx-1 ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>({v.date})</span>
+                    <span className={`mx-1 ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>({dateT(language, v.date)})</span>
                     <span className={`text-xs ${isLatest ? (isDark ? 'text-[#ffb800]' : 'text-[#b8860b]') : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
-                      {isLatest ? ' ← 当前版本' : ''}
+                      {isLatest ? t('detail.insight.currentVersion') : ''}
                     </span>
                   </div>
-                  <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{v.statement}</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t(v.statement)}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-gray-200'}`}>
                       <div className="h-full bg-[#ffb800]/40 rounded" style={{ width: `${v.confidence * 100}%` }} />
                     </div>
                     <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{Math.round(v.confidence * 100)}%</span>
                   </div>
-                  <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{v.change}</span>
+                  <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t(v.change)}</span>
                 </div>
               );
             })}
@@ -559,7 +574,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
       )}
       {memory.previousVersionId && !versions && (
         <div className="text-gray-500 text-xs">
-          📖 版本 v{memory.version - 1} → v{memory.version}
+          {t('detail.version.numbered', { from: memory.version - 1, to: memory.version })}
         </div>
       )}
 
@@ -573,7 +588,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {memory.userConfirmed ? '👍 已确认' : '👍 确认'}
+            {memory.userConfirmed ? t('detail.insight.confirmed') : t('detail.insight.confirm')}
           </button>
           <button
             onClick={() => setShowCorrectionInput(!showCorrectionInput)}
@@ -583,7 +598,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            ✏️ {memory.userCorrection ? '已纠正' : '纠正'}
+            {memory.userCorrection ? t('detail.insight.corrected') : t('detail.insight.correct')}
           </button>
           <button
             onClick={() => setShowNoteInput(!showNoteInput)}
@@ -593,7 +608,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            💬 {memory.userNote ? '已备注' : '备注'}
+            {memory.userNote ? t('detail.insight.notated') : t('detail.insight.note')}
           </button>
           <button
             onClick={() => setShowTrace(!showTrace)}
@@ -603,7 +618,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 : isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            🔬 {showTrace ? '收起溯源' : '溯源'}
+            {showTrace ? t('detail.insight.traceCollapse') : t('detail.insight.trace')}
           </button>
         </div>
 
@@ -611,7 +626,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           <div className={`text-xs px-2 py-1 rounded mb-2 ${
             isDark ? 'bg-amber-500/10 text-amber-400/80' : 'bg-amber-50 text-amber-700'
           }`}>
-            纠正：{memory.userCorrection}
+            {t('detail.insight.correctionLabel', { text: memory.userCorrection })}
           </div>
         )}
 
@@ -621,7 +636,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
               type="text"
               value={correctionText}
               onChange={e => setCorrectionText(e.target.value)}
-              placeholder="输入纠正内容..."
+              placeholder={t('detail.insight.correctionPlaceholder')}
               className={`flex-1 border rounded px-2 py-1 text-xs ${
                 isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
               }`}
@@ -635,7 +650,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
               }`}
             >
-              保存
+              {t('detail.insight.save')}
             </button>
           </div>
         )}
@@ -646,7 +661,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
               type="text"
               value={noteText}
               onChange={e => setNoteText(e.target.value)}
-              placeholder="输入备注..."
+              placeholder={t('detail.insight.notePlaceholder')}
               className={`flex-1 border rounded px-2 py-1 text-xs ${
                 isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
               }`}
@@ -660,7 +675,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'
               }`}
             >
-              保存
+              {t('detail.insight.save')}
             </button>
           </div>
         )}
@@ -669,7 +684,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           <div className={`text-xs px-2 py-1 rounded ${
             isDark ? 'bg-blue-500/10 text-blue-400/80' : 'bg-blue-50 text-blue-700'
           }`}>
-            备注：{memory.userNote}
+            {t('detail.insight.noteLabel', { text: memory.userNote })}
           </div>
         )}
 
@@ -677,7 +692,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
         {showTrace && traceSteps.length > 0 && (
           <div className={`mt-2 p-3 rounded-lg border ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}>
             <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-              🔬 推理溯源
+              {t('detail.insight.traceTitle')}
             </h4>
             <div className="space-y-2">
               {traceSteps.map((step, i) => {
@@ -724,7 +739,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                             className="mt-1 space-y-0.5"
                           >
                             <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                              依据 ({step.memoryIds.length} 条):
+                              {t('detail.insight.traceEvidence', { count: step.memoryIds.length })}
                             </span>
                             {step.memoryIds.slice(0, 5).map(id => {
                               const mem = rawMemories.find(m => m.id === id);
@@ -737,13 +752,13 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                                     isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
                                   }`}
                                 >
-                                  · {mem.label}
+                                  · {memoryLabelT(language, mem.id, mem.label)}
                                 </button>
                               );
                             })}
                             {step.memoryIds.length > 5 && (
                               <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                                ... 还有 {step.memoryIds.length - 5} 条
+                                {t('detail.insight.traceMore', { count: step.memoryIds.length - 5 })}
                               </span>
                             )}
                           </motion.div>
@@ -756,7 +771,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
             </div>
             {activeTraceStep !== null && (
               <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                点击步骤查看依据记忆，3D 星云中对应粒子已高亮
+                {t('detail.insight.traceHint')}
               </p>
             )}
           </div>
@@ -769,7 +784,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
           }`}>
             <div className="flex items-center justify-between mb-1">
               <span className={`font-medium ${isDark ? 'text-[#ff6b6b]' : 'text-red-600'}`}>
-                🦋 涟漪报告
+                {t('detail.insight.rippleReport')}
               </span>
               <button
                 onClick={clearButterflyEffect}
@@ -779,7 +794,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
               </button>
             </div>
             <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-              你的纠正影响了 {butterflyEffect.affectedIds.length} 条相关洞察：
+              {t('detail.insight.rippleAffected', { count: butterflyEffect.affectedIds.length })}
             </p>
             <div className="mt-1 space-y-0.5">
               {butterflyEffect.affectedIds.slice(0, 5).map(id => {
@@ -788,7 +803,7 @@ function InsightDetail({ memory }: { memory: InsightMemory }) {
                 return (
                   <div key={id} className={`flex items-center gap-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                     <span className="w-1 h-1 rounded-full bg-red-400" />
-                    <span className="truncate">{affected.statement.slice(0, 30)}…</span>
+                    <span className="truncate">{insightStatementT(language, affected.id, affected.statement).slice(0, 30)}…</span>
                   </div>
                 );
               })}
@@ -807,9 +822,10 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
   allMemories: RawMemory[];
   theme: 'dark' | 'light';
 }) {
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const target = compareTarget ? allMemories.find(m => m.id === compareTarget) : null;
-  const diffs = target ? computeDiff(memory, target) : [];
+  const diffs = target ? computeDiff(memory, target, language) : [];
 
   // Same storyline memories for quick selection
   const storylineMems = allMemories.filter(m =>
@@ -822,12 +838,12 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
     return (
       <div className="space-y-3">
         <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          选择一条记忆进行对比
+          {t('detail.compare.selectMemory')}
         </p>
         {storylineMems.length > 0 && (
           <div>
             <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              同故事线记忆
+              {t('detail.compare.storylineMemories')}
             </p>
             <div className="space-y-1">
               {storylineMems.map(m => (
@@ -839,16 +855,16 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
-                  <span className="truncate">{m.label}</span>
+                  <span className="truncate">{memoryLabelT(language, m.id, m.label)}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
         <div>
-          <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            所有记忆
-          </p>
+            <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              {t('detail.compare.allMemories')}
+            </p>
           <div className="space-y-1 max-h-[200px] overflow-y-auto">
             {allMemories.filter(m => m.id !== memory.id).slice(0, 20).map(m => (
               <button
@@ -859,7 +875,7 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
                 }`}
               >
                 <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
-                <span className="truncate">{m.label}</span>
+                <span className="truncate">{memoryLabelT(language, m.id, m.label)}</span>
               </button>
             ))}
           </div>
@@ -871,12 +887,12 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>对比模式</p>
+        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('detail.compare.mode')}</p>
         <button
           onClick={() => onSelectTarget(null)}
           className={`text-[10px] cursor-pointer ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}
         >
-          更换
+          {t('detail.compare.switch')}
         </button>
       </div>
 
@@ -887,15 +903,15 @@ function CompareView({ memory, compareTarget, onSelectTarget, allMemories, theme
           return (
             <div key={mem.id} className={`p-2.5 rounded-lg border ${isDark ? 'bg-[#ffffff03] border-[#ffffff06]' : 'bg-gray-50 border-gray-100'}`}>
               <p className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {idx === 0 ? '早期' : '后期'}
+                {idx === 0 ? t('detail.compare.early') : t('detail.compare.later')}
               </p>
               <p className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                {mem.label}
+                {memoryLabelT(language, mem.id, mem.label)}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
                 <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  {mem.dimensions.emotional.primary}
+                  {emotionNameT(language, mem.dimensions.emotional.primary)}
                 </span>
               </div>
             </div>
@@ -932,6 +948,7 @@ function MemoryChainView({ chain, theme, onSelect }: {
   onSelect: (id: string) => void;
 }) {
   const { allRawMemories } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
 
   const chainWithMemories = chain.map(link => {
@@ -943,10 +960,10 @@ function MemoryChainView({ chain, theme, onSelect }: {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className={`text-xs font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-          📞 记忆传声筒
+          {t('detail.chain.title')}
         </p>
         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {chainWithMemories.length} 步
+          {t('detail.chain.steps', { count: chainWithMemories.length })}
         </p>
       </div>
 
@@ -979,18 +996,18 @@ function MemoryChainView({ chain, theme, onSelect }: {
                   {isFirst && <span className="text-xs">📍</span>}
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: emoColor }} />
                   <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {mem.label}
+                    {memoryLabelT(language, mem.id, mem.label)}
                   </span>
                 </div>
                 <p className={`text-[10px] line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                  {mem.summary}
+                  {memorySummaryT(language, mem.id, mem.summary)}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    {mem.dimensions.emotional.primary}
+                    {emotionNameT(language, mem.dimensions.emotional.primary)}
                   </span>
                   <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    📍 {mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType}
+                    📍 {contentT(language, mem.dimensions.spatial.landmark || mem.dimensions.spatial.placeType)}
                   </span>
                 </div>
               </button>
@@ -1011,6 +1028,7 @@ function MemoryChainView({ chain, theme, onSelect }: {
 
 export default function DetailPanel() {
   const { selectedMemory, detailOpen, toggleDetail, deleteMemory, updateMemory, theme, favoriteIds, toggleFavorite, collections, addToCollection, removeFromCollection, allRawMemories, findSimilar, clearSimilar, similarMemoryIds, echoMemoryIds, echoDescription, findEcho, clearEcho, farewellMemory, createCapsule, memoryChain, buildChain, clearChain, selectMemory, boomerangMemoryIds, boomerangDescription, findBoomerang, clearBoomerang, butterflyEffect, clearButterflyEffect, insightMemories, antipodeMemoryId, antipodeDescription, findAntipode, clearAntipode } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [editMode, setEditMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1187,7 +1205,7 @@ export default function DetailPanel() {
         >
           <div className="flex justify-between items-center mb-4">
             <h3 className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-              {selectedMemory.type === 'raw' ? '记忆原子详情' : 'GraphMe 的发现'}
+              {selectedMemory.type === 'raw' ? t('detail.title.rawDetail') : t('detail.title.insightDetail')}
             </h3>
             <div className="flex items-center gap-2">
               <button
@@ -1198,7 +1216,7 @@ export default function DetailPanel() {
                     ? 'text-amber-400'
                     : isDark ? 'text-gray-600 hover:text-amber-400' : 'text-gray-400 hover:text-amber-400'
                 }`}
-                title={favoriteIds.includes(selectedMemory.id) ? '取消收藏' : '收藏'}
+                title={favoriteIds.includes(selectedMemory.id) ? t('detail.unfavorite') : t('detail.favorite')}
               >
                 {favoriteIds.includes(selectedMemory.id) ? '⭐' : '☆'}
               </button>
@@ -1206,7 +1224,7 @@ export default function DetailPanel() {
                 <div className="relative group">
                   <button
                     className={`transition-colors text-sm cursor-pointer ${isDark ? 'text-gray-600 hover:text-purple-400' : 'text-gray-400 hover:text-purple-500'}`}
-                    title="添加到精选集"
+                    title={t('detail.addToCollection')}
                   >
                     📁
                   </button>
@@ -1267,7 +1285,7 @@ export default function DetailPanel() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>情绪</label>
+                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.emotion')}</label>
                     <select
                       value={edit.emotion}
                       onChange={e => updateEdit('emotion', e.target.value)}
@@ -1281,7 +1299,7 @@ export default function DetailPanel() {
                     </select>
                   </div>
                   <div>
-                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>地点类型</label>
+                    <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.placeType')}</label>
                     <select
                       value={edit.placeType}
                       onChange={e => updateEdit('placeType', e.target.value)}
@@ -1289,17 +1307,17 @@ export default function DetailPanel() {
                         isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
                       }`}
                     >
-                      <option value="家">🏠 家</option>
-                      <option value="学校">🏫 学校</option>
-                      <option value="公园">🌳 公园</option>
-                      <option value="游乐场">🎡 游乐场</option>
-                      <option value="商场">🛍️ 商场</option>
-                      <option value="其他">📍 其他</option>
+                      <option value="家">{t('nav.place.home')}</option>
+                      <option value="学校">{t('nav.place.school')}</option>
+                      <option value="公园">{t('nav.place.park')}</option>
+                      <option value="游乐场">{t('nav.place.playground')}</option>
+                      <option value="商场">{t('nav.place.mall')}</option>
+                      <option value="其他">{t('nav.place.other')}</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>地标</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.landmark')}</label>
                   <input
                     type="text"
                     value={edit.landmark}
@@ -1310,7 +1328,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>活动</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.activity')}</label>
                   <input
                     type="text"
                     value={edit.activity}
@@ -1321,7 +1339,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>故事线</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.storyline')}</label>
                   <input
                     type="text"
                     value={edit.storyline}
@@ -1332,7 +1350,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>人物（用、分隔）</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.personsHint')}</label>
                   <input
                     type="text"
                     value={edit.persons}
@@ -1343,7 +1361,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>知识标签（用、分隔）</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.knowledgeHint')}</label>
                   <input
                     type="text"
                     value={edit.knowledge}
@@ -1354,7 +1372,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>重要性 ({edit.importance.toFixed(2)})</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.importance')} ({edit.importance.toFixed(2)})</label>
                   <input
                     type="range"
                     min="0"
@@ -1366,7 +1384,7 @@ export default function DetailPanel() {
                   />
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>隐私级别</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.privacyLevel')}</label>
                   <select
                     value={edit.privacyLevel}
                     onChange={e => updateEdit('privacyLevel', e.target.value)}
@@ -1374,14 +1392,14 @@ export default function DetailPanel() {
                       isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300 focus:border-[#00f2ff]/30' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-[#0088cc]/30'
                     }`}
                   >
-                    <option value="公开">🌐 公开</option>
-                    <option value="家庭可见">👨‍👩‍👧 家庭可见</option>
-                    <option value="仅自己">🔒 仅自己</option>
-                    <option value="加密">🔐 加密</option>
+                    <option value="公开">{t('nav.privacy.public')}</option>
+                    <option value="家庭可见">{t('nav.privacy.family')}</option>
+                    <option value="仅自己">{t('nav.privacy.private')}</option>
+                    <option value="加密">{t('nav.privacy.encrypted')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>标签</label>
+                  <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.edit.tags')}</label>
                   <div className="flex flex-wrap gap-1 mb-1.5">
                     {edit.tags.map(tag => (
                       <span
@@ -1390,7 +1408,7 @@ export default function DetailPanel() {
                           isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-red-500/20 hover:text-red-400' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-red-100 hover:text-red-600'
                         }`}
                         onClick={() => setEdit(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }))}
-                        title={`删除标签 "${tag}"`}
+                        title={t('detail.deleteTag', { tag })}
                       >
                         {tag} ×
                       </span>
@@ -1399,7 +1417,7 @@ export default function DetailPanel() {
                   <div className="flex gap-1">
                     <input
                       type="text"
-                      placeholder="输入标签，回车添加"
+                      placeholder={t('detail.edit.tagInputPlaceholder')}
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -1420,10 +1438,10 @@ export default function DetailPanel() {
               <div className={`flex gap-2 pt-3 border-t ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'}`}>
                 <button onClick={saveEdit} className={`flex-1 px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                   isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'
-                }`}>💾 保存</button>
+                }`}>{t('detail.save')}</button>
                 <button onClick={cancelEdit} className={`flex-1 px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                   isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff10]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}>取消</button>
+                }`}>{t('detail.cancel')}</button>
               </div>
             </div>
           ) : (
@@ -1453,7 +1471,7 @@ export default function DetailPanel() {
                       className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                         isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >✏️ 编辑</button>
+                    >{t('detail.edit')}</button>
                     <button
                       id="demo-compare-btn"
                       onClick={() => { setCompareMode(!compareMode); setCompareTarget(null); }}
@@ -1462,11 +1480,11 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >{compareMode ? '📄 详情' : '📊 对比'}</button>
+                    >{compareMode ? t('detail.detail') : t('detail.compare')}</button>
                     <button
                       id="demo-export-btn"
                       onClick={async () => {
-                        const blob = await renderMemoryCard(selectedMemory);
+                        const blob = await renderMemoryCard(selectedMemory, language);
                         const date = new Date(selectedMemory.dimensions.temporal.timestamp);
                         const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
                         downloadBlob(blob, `${selectedMemory.id}_${dateStr}.png`);
@@ -1474,14 +1492,14 @@ export default function DetailPanel() {
                       className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                         isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >📸 导出</button>
+                    >{t('detail.export')}</button>
                     <button
                       id="demo-capsule-btn"
                       onClick={() => setCapsuleMode(true)}
                       className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
                         isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >⏳ 封存</button>
+                    >{t('detail.archive')}</button>
                     <button
                       id="demo-find-similar-btn"
                       onClick={() => {
@@ -1496,7 +1514,7 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >🔗 {similarMemoryIds.length > 0 ? '清除相似' : '找相似'}</button>
+                    >🔗 {similarMemoryIds.length > 0 ? t('detail.clearSimilar') : t('detail.findSimilar')}</button>
                     <button
                       id="demo-chain-btn"
                       onClick={() => {
@@ -1511,7 +1529,7 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-purple-500/15 text-purple-400' : 'bg-purple-100 text-purple-600'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >📞 {memoryChain.length > 0 ? '清除链条' : '传声筒'}</button>
+                    >📞 {memoryChain.length > 0 ? t('detail.clearTelephone') : t('detail.telephone')}</button>
                     <button
                       id="demo-boomerang-btn"
                       onClick={() => {
@@ -1526,7 +1544,7 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-orange-500/15 text-orange-400' : 'bg-orange-100 text-orange-600'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >🪃 {boomerangMemoryIds.length > 0 ? '清除回旋镖' : '回旋镖'}</button>
+                    >🪃 {boomerangMemoryIds.length > 0 ? t('detail.clearBoomerang') : t('detail.boomerangBtn')}</button>
                     <button
                       id="demo-antipode-btn"
                       onClick={() => {
@@ -1541,7 +1559,7 @@ export default function DetailPanel() {
                           ? isDark ? 'bg-teal-500/15 text-teal-400' : 'bg-teal-100 text-teal-600'
                           : isDark ? 'bg-[#1a1a2e] hover:bg-[#2a2a3e] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
                       }`}
-                    >🌍 {antipodeMemoryId ? '清除对跖点' : '对跖点'}</button>
+                    >🌍 {antipodeMemoryId ? t('detail.clearAntipode') : t('detail.antipodeBtn')}</button>
                   </>
                 )}
                 <div className="relative">
@@ -1563,9 +1581,9 @@ export default function DetailPanel() {
                         ? 'bg-red-600 hover:bg-red-700 text-white'
                         : 'bg-red-900/20 hover:bg-red-900/40 text-red-400'
                     }`}
-                    title="右键点击进入摆渡模式（仪式性告别）"
+                    title={t('detail.rightClickFarewell')}
                   >
-                    {confirmDelete ? '确认删除？' : '🗑️ 删除'}
+                    {confirmDelete ? t('detail.confirmDelete') : t('detail.delete')}
                   </button>
                 </div>
 
@@ -1582,18 +1600,18 @@ export default function DetailPanel() {
                       }`}
                     >
                       <h3 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                        🕊 记忆摆渡
+                        {t('detail.farewell.title')}
                       </h3>
                       <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        你即将释放这段记忆。它曾在你的生命中留下痕迹，现在你选择让它自由。
+                        {t('detail.farewell.desc')}
                       </p>
 
                       <div className="mb-3">
-                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>告别语（可选）</label>
+                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.farewellNote')}</label>
                         <textarea
                           value={farewellNote}
                           onChange={e => setFarewellNote(e.target.value)}
-                          placeholder="写一段告别的话..."
+                          placeholder={t('detail.farewellPlaceholder')}
                           rows={2}
                           className={`w-full border rounded px-2 py-1.5 text-xs resize-none ${
                             isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
@@ -1602,12 +1620,12 @@ export default function DetailPanel() {
                       </div>
 
                       <div className="mb-4">
-                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>释放方式</label>
+                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.releaseStyle')}</label>
                         <div className="flex gap-2">
                           {([
-                            { value: '深海' as const, emoji: '🌊', label: '沉入深海' },
-                            { value: '星光' as const, emoji: '🔥', label: '化为星光' },
-                            { value: '微风' as const, emoji: '🌬', label: '随风飘散' },
+                            { value: '深海' as const, emoji: '🌊', label: t('detail.farewell.deepSeaLabel') },
+                            { value: '星光' as const, emoji: '🔥', label: t('detail.farewell.starlightLabel') },
+                            { value: '微风' as const, emoji: '🌬', label: t('detail.farewell.breezeLabel') },
                           ]).map(opt => (
                             <button
                               key={opt.value}
@@ -1633,7 +1651,7 @@ export default function DetailPanel() {
                           }}
                           className="flex-1 px-3 py-2 rounded-lg text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer transition-colors"
                         >
-                          🕊 释放记忆
+                          {t('detail.farewell.release')}
                         </button>
                         <button
                           onClick={() => setFarewellMode(false)}
@@ -1641,7 +1659,7 @@ export default function DetailPanel() {
                             isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                         >
-                          取消
+                          {t('detail.cancel')}
                         </button>
                       </div>
                     </motion.div>
@@ -1661,18 +1679,18 @@ export default function DetailPanel() {
                       }`}
                     >
                       <h3 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                        ⏳ 时间胶囊
+                        {t('detail.timeCapsule')}
                       </h3>
                       <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        封存这段记忆，未来的某天再打开。
+                        {t('detail.capsule.desc')}
                       </p>
 
                       <div className="mb-3">
-                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>给未来自己的话</label>
+                        <label className={`text-xs mb-1 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.timeCapsuleNote')}</label>
                         <textarea
                           value={capsuleNote}
                           onChange={e => setCapsuleNote(e.target.value)}
-                          placeholder="未来的我，还记得这天吗？"
+                          placeholder={t('detail.timeCapsulePlaceholder')}
                           rows={2}
                           className={`w-full border rounded px-2 py-1.5 text-xs resize-none ${
                             isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
@@ -1681,7 +1699,7 @@ export default function DetailPanel() {
                       </div>
 
                       <div className="mb-4">
-                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>解锁时间</label>
+                        <label className={`text-xs mb-1.5 block ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('detail.unlockTime')}</label>
                         <div className="flex gap-2">
                           {([3, 6, 12]).map(m => (
                             <button
@@ -1693,7 +1711,7 @@ export default function DetailPanel() {
                                   : isDark ? 'bg-[#ffffff05] text-gray-400 hover:bg-[#ffffff08]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                               }`}
                             >
-                              {m} 个月后
+                              {t('detail.capsule.monthsLater', { count: m })}
                             </button>
                           ))}
                         </div>
@@ -1712,7 +1730,7 @@ export default function DetailPanel() {
                             isDark ? 'bg-[#ffb800]/15 text-[#ffb800] hover:bg-[#ffb800]/25' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                           }`}
                         >
-                          ⏳ 封存记忆
+                          {t('detail.capsule.seal')}
                         </button>
                         <button
                           onClick={() => setCapsuleMode(false)}
@@ -1720,7 +1738,7 @@ export default function DetailPanel() {
                             isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                         >
-                          取消
+                          {t('detail.cancel')}
                         </button>
                       </div>
                     </motion.div>

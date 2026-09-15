@@ -4,6 +4,12 @@ import { rawMemories as defaultRawMemories, insightMemories as defaultInsightMem
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import { isMemoryInCategory } from '../utils/navUtils';
 import { findAntipode as findAntipodeUtil } from '../utils/similarityUtils';
+import {
+  localizeRawMemories,
+  localizeInsightMemories,
+  localizeRawMemory,
+} from '../i18n/localize';
+import { readStoredLanguage, LANGUAGE_CHANGE_EVENT, type Language } from '../i18n';
 
 interface AppState {
   currentView: DimensionView;
@@ -67,6 +73,12 @@ interface AppContextType extends AppState {
   resetAllFilters: () => void;
   rawMemories: RawMemory[];
   insightMemories: InsightMemory[];
+  /**
+   * 未本地化的源数据（中文原文）。
+   * 供「需要基于原文做匹配」的场景使用，例如感官关键词提取：
+   * SENSORY_WORDS 是中文词表，对已翻译成英文的 label/summary 匹配必然落空。
+   */
+  sourceRawMemories: RawMemory[];
   addMemory: (mem: RawMemory) => void;
   deleteMemory: (id: string) => void;
   updateMemory: (id: string, updates: Partial<RawMemory>) => void;
@@ -116,6 +128,25 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [language, setInternalLanguage] = useState<Language>(readStoredLanguage);
+
+  useEffect(() => {
+    const handleLanguageChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail as Language | undefined;
+      if (detail === 'en' || detail === 'zh-CN') setInternalLanguage(detail);
+    };
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, handleLanguageChange);
+    return () => window.removeEventListener(LANGUAGE_CHANGE_EVENT, handleLanguageChange);
+  }, []);
+
+  // 数据出口统一本地化：覆盖 label/summary 及 dimensions 内全部自由文本字段。
+  // 枚举字段（情绪、地点类型等）保持原值，避免破坏配色/筛选/emoji 逻辑。
+  const translateRawMemories = useCallback((mems: RawMemory[]): RawMemory[] =>
+    localizeRawMemories(language, mems), [language]);
+
+  const translateInsightMemories = useCallback((mems: InsightMemory[]): InsightMemory[] =>
+    localizeInsightMemories(language, mems), [language]);
+
   const [state, setState] = useState<AppState>({
     currentView: '全局视图',
     selectedMemory: null,
@@ -486,7 +517,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const target = rawMems.find(m => m.id === memoryId);
     if (!target) return;
     import('../utils/similarityUtils').then(({ findEcho: findEchoFn }) => {
-      const results = findEchoFn(target, rawMems, 2);
+      const results = findEchoFn(target, rawMems, 2, language);
       if (results.length > 0) {
         setState(s => ({
           ...s,
@@ -497,7 +528,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({ ...s, echoMemoryIds: [], echoDescription: '' }));
       }
     });
-  }, [rawMems]);
+  }, [rawMems, language]);
 
   const clearEcho = useCallback(() => {
     setState(s => ({ ...s, echoMemoryIds: [], echoDescription: '' }));
@@ -515,8 +546,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [farewellRecords]);
 
   const farewellMemory = useCallback((memoryId: string, note: string, style: FarewellRecord['releaseStyle']) => {
-    const mem = rawMems.find(m => m.id === memoryId);
-    if (!mem) return;
+    const found = rawMems.find(m => m.id === memoryId);
+    if (!found) return;
+    // rawMems 是未翻译的源数据，落库前先本地化，避免英文模式下存成中文
+    const mem = localizeRawMemory(language, found);
     const record: FarewellRecord = {
       id: `farewell_${Date.now()}`,
       memoryLabel: mem.label,
@@ -527,7 +560,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setFarewellRecords(prev => [...prev, record]);
     deleteMemory(memoryId);
-  }, [rawMems, deleteMemory]);
+  }, [rawMems, deleteMemory, language]);
 
   const [capsules, setCapsules] = useState<TimeCapsule[]>(() => {
     try {
@@ -560,7 +593,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const target = rawMems.find(m => m.id === memoryId);
     if (!target) return;
     import('../utils/similarityUtils').then(({ buildMemoryChain }) => {
-      const chain = buildMemoryChain(target, rawMems, 5);
+      const chain = buildMemoryChain(target, rawMems, 5, language);
       setState(s => ({
         ...s,
         memoryChain: chain.map(link => ({
@@ -569,7 +602,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         })),
       }));
     });
-  }, [rawMems]);
+  }, [rawMems, language]);
 
   const clearChain = useCallback(() => {
     setState(s => ({ ...s, memoryChain: [] }));
@@ -579,7 +612,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const target = rawMems.find(m => m.id === memoryId);
     if (!target) return;
     import('../utils/similarityUtils').then(({ findBoomerang: findBoomerangFn }) => {
-      const results = findBoomerangFn(target, rawMems, 2);
+      const results = findBoomerangFn(target, rawMems, 2, language);
       if (results.length > 0) {
         setState(s => ({
           ...s,
@@ -590,7 +623,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
       }
     });
-  }, [rawMems]);
+  }, [rawMems, language]);
 
   const clearBoomerang = useCallback(() => {
     setState(s => ({ ...s, boomerangMemoryIds: [], boomerangDescription: '' }));
@@ -603,11 +636,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const findAntipode = useCallback((memoryId: string) => {
     const mem = rawMems.find(m => m.id === memoryId);
     if (!mem) return;
-    const result = findAntipodeUtil(mem, rawMems);
+    const result = findAntipodeUtil(mem, rawMems, language);
     if (result) {
       setState(s => ({ ...s, antipodeMemoryId: result.memory.id, antipodeDescription: result.description }));
     }
-  }, [rawMems]);
+  }, [rawMems, language]);
 
   const clearAntipode = useCallback(() => {
     setState(s => ({ ...s, antipodeMemoryId: null, antipodeDescription: '' }));
@@ -616,7 +649,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const reinforceMemory = useCallback((id: string) => {
     setRawMems(prev => {
       const mem = prev.find(m => m.id === id);
-      if (mem) setLastAction('reinforce', { id, label: mem.label, accessCount: mem.dimensions.value.accessCount });
+      if (mem) setLastAction('reinforce', { id, label: localizeRawMemory(language, mem).label, accessCount: mem.dimensions.value.accessCount });
       return prev.map(m => {
         if (m.id !== id) return m;
         return {
@@ -636,7 +669,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
       });
     });
-  }, [setLastAction]);
+  }, [setLastAction, language]);
 
   const navCategory = state.navCategory;
   const navSubCategory = state.navSubCategory;
@@ -645,7 +678,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     showChatGPT ? [...rawMems, ...chatgptRawMemories] : rawMems,
   [rawMems, showChatGPT]);
 
-  const allRawMemories = mergedRawMemories;
+  const allRawMemories = useMemo(() => translateRawMemories(mergedRawMemories), [mergedRawMemories, translateRawMemories]);
 
   const visibleRawMemories = useMemo(() => {
     let result = hiddenMemoryIds.length === 0
@@ -660,21 +693,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, [mergedRawMemories, hiddenMemoryIds, state.emotionFilter, state.tagFilter]);
 
+  const displayRawMemories = useMemo(() => translateRawMemories(visibleRawMemories), [visibleRawMemories, translateRawMemories]);
+
   const mergedInsightMemories = useMemo(() =>
     showChatGPT ? [...insightMems, ...chatgptInsightMemories] : insightMems,
   [insightMems, showChatGPT]);
 
+  const displayInsightMemories = useMemo(() => translateInsightMemories(mergedInsightMemories), [mergedInsightMemories, translateInsightMemories]);
+
   const getVisibleMemories = useCallback(() => {
-    if (!navCategory) return visibleRawMemories;
-    return visibleRawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
-  }, [visibleRawMemories, navCategory, navSubCategory]);
+    if (!navCategory) return displayRawMemories;
+    return displayRawMemories.filter(m => isMemoryInCategory(m, navCategory, navSubCategory));
+  }, [displayRawMemories, navCategory, navSubCategory]);
 
   return (
     <AppContext.Provider value={{
       ...state,
       setCurrentView, selectMemory, focusInsight, setDemoMode, setDemoStep,
       toggleChat, toggleDetail, toggleCrud, toggleTheme, toggleMemoryBank, toggleValueDashboard, setSearchQuery, toggleEmotionFilter, toggleTagFilter, addTag, removeTag, allTags, toggleFavorite, addToast, removeToast, setNavCategory, setNavSubCategory, resetAllFilters,
-      rawMemories: visibleRawMemories, insightMemories: mergedInsightMemories,
+      rawMemories: displayRawMemories, insightMemories: displayInsightMemories,
+      sourceRawMemories: mergedRawMemories,
       addMemory, deleteMemory, updateMemory, updateInsight, importMemories, undoDelete, undoStackCount: undoStack.length, undoStackAction: undoStack[0]?.action ?? null, getVisibleMemories,
       hideRawOnly, hideInsightOnly, toggleHideRaw, toggleHideInsight,
       showChatGPT, toggleShowChatGPT,

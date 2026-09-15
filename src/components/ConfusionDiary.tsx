@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { generateConfusionReport } from '../utils/confusionUtils';
-import { CATEGORY_LABELS, EMOTION_COLORS } from '../types';
+import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import { categoryT } from '../i18n/dataTranslations';
+import { insightStatementT } from '../i18n/memoryData';
 
 interface Props {
   open: boolean;
@@ -11,11 +14,12 @@ interface Props {
 
 export default function ConfusionDiary({ open, onClose }: Props) {
   const { rawMemories, insightMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
 
   const report = useMemo(
-    () => generateConfusionReport(rawMemories, insightMemories),
-    [rawMemories, insightMemories]
+    () => generateConfusionReport(rawMemories, insightMemories, language),
+    [rawMemories, insightMemories, language]
   );
 
   return (
@@ -34,7 +38,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
           <div className={`px-5 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
             <div className="flex items-center justify-between mb-1">
               <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                🤔 小哥的困惑
+                🤔 {t('confusion.title')}
               </h2>
               <button
                 onClick={onClose}
@@ -44,7 +48,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
               </button>
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              {report.hasConfusion ? '关于你，我还有很多不懂的地方…' : '关于你，我目前都很确定 😊'}
+              {report.hasConfusion ? t('confusion.hasConfusion') : t('confusion.noConfusion')}
             </p>
           </div>
 
@@ -54,7 +58,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
             {report.contradictions.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ff6b6b]' : 'text-red-500'}`}>
-                  ⚡ 矛盾发现
+                  ⚡ {t('confusion.contradictions')}
                 </h3>
                 <div className="space-y-2">
                   {report.contradictions.map((c, i) => (
@@ -66,18 +70,18 @@ export default function ConfusionDiary({ open, onClose }: Props) {
                     >
                       <div className="flex items-start gap-2 mb-1">
                         <span className={`font-medium ${isDark ? 'text-[#ff6b6b]' : 'text-red-600'}`}>
-                          {CATEGORY_LABELS[c.insight1.category]}
+                          {categoryT(language, c.insight1.category)}
                         </span>
                         <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>vs</span>
                         <span className={`font-medium ${isDark ? 'text-[#ff6b6b]' : 'text-red-600'}`}>
-                          {CATEGORY_LABELS[c.insight2.category]}
+                          {categoryT(language, c.insight2.category)}
                         </span>
                       </div>
                       <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-                        "{c.insight1.statement.slice(0, 30)}…"
+                        "{insightStatementT(language, c.insight1.id, c.insight1.statement).slice(0, 30)}…"
                       </p>
                       <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-                        "{c.insight2.statement.slice(0, 30)}…"
+                        "{insightStatementT(language, c.insight2.id, c.insight2.statement).slice(0, 30)}…"
                       </p>
                       <p className={`mt-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                         {c.reason}
@@ -92,7 +96,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
             {report.lowConfidenceInsights.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
-                  ❓ 不太确定的发现
+                  ❓ {t('confusion.lowConfidence')}
                 </h3>
                 <div className="space-y-2">
                   {report.lowConfidenceInsights.map((item) => (
@@ -108,14 +112,14 @@ export default function ConfusionDiary({ open, onClose }: Props) {
                           {item.confidenceLevel === 'very-low' ? '❓' : '?'}
                         </span>
                         <span className={`text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {CATEGORY_LABELS[item.insight.category]}
+                          {categoryT(language, item.insight.category)}
                         </span>
                         <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          {Math.round(item.insight.confidence * 100)}% 把握
+                          {t('confusion.confidence', { percent: Math.round(item.insight.confidence * 100) })}
                         </span>
                       </div>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {item.insight.statement}
+                        {insightStatementT(language, item.insight.id, item.insight.statement)}
                       </p>
                     </div>
                   ))}
@@ -127,7 +131,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
             {report.gaps.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
-                  🔍 认知空白
+                  🔍 {t('confusion.gaps')}
                 </h3>
                 <div className="space-y-2">
                   {report.gaps.map((gap) => (
@@ -156,7 +160,7 @@ export default function ConfusionDiary({ open, onClose }: Props) {
             {report.suggestions.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
-                  💬 想问你的问题
+                  💬 {t('confusion.questions')}
                 </h3>
                 <div className="space-y-2">
                   {report.suggestions.map((s, i) => (
@@ -183,10 +187,10 @@ export default function ConfusionDiary({ open, onClose }: Props) {
               <div className={`flex flex-col items-center justify-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                 <span className="text-4xl mb-3">😊</span>
                 <p className="text-sm text-center">
-                  关于你，我目前都很确定。
+                  {t('confusion.noConfusionYet')}
                 </p>
                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                  继续创造更多记忆，我可能会发现新的困惑…
+                  {t('confusion.keepCreating')}
                 </p>
               </div>
             )}

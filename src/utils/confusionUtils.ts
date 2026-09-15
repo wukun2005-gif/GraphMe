@@ -1,4 +1,6 @@
 import type { RawMemory, InsightMemory } from '../types';
+import type { Language } from '../i18n';
+import { categoryT } from '../i18n/dataTranslations';
 
 // ========== Types ==========
 
@@ -44,9 +46,13 @@ function daysSince(timestamp: number, now: number = Date.now()): number {
   return Math.max(0, Math.round((now - timestamp) / MILLIS_PER_DAY));
 }
 
+function pick(lang: Language, zh: string, en: string): string {
+  return lang === 'en' ? en : zh;
+}
+
 // ========== Contradiction Detection ==========
 
-function detectContradictions(insights: InsightMemory[]): Contradiction[] {
+function detectContradictions(insights: InsightMemory[], lang: Language): Contradiction[] {
   const active = insights.filter(i => i.deprecatedAt == null && i.userConfirmed !== true);
   const contradictions: Contradiction[] = [];
 
@@ -73,10 +79,15 @@ function detectContradictions(insights: InsightMemory[]): Contradiction[] {
           const sharedSources = aSources.filter(id => bSources.includes(id));
 
           if (sharedSources.length > 0) {
+            const cat = categoryT(lang, a.category);
             contradictions.push({
               insight1: a,
               insight2: b,
-              reason: `两条同类别洞察（${a.category}）方向相反，且共享 ${sharedSources.length} 条依据记忆`,
+              reason: pick(
+                lang,
+                `两条同类别洞察（${cat}）方向相反，且共享 ${sharedSources.length} 条依据记忆`,
+                `Two insights in the same category (${cat}) point in opposite directions and share ${sharedSources.length} supporting memor${sharedSources.length === 1 ? 'y' : 'ies'}.`,
+              ),
             });
           }
         }
@@ -101,19 +112,30 @@ function findLowConfidenceInsights(insights: InsightMemory[]): LowConfidenceInsi
 
 // ========== Cognitive Gaps ==========
 
-function detectGaps(memories: RawMemory[], now: number = Date.now()): CognitiveGap[] {
+const GAP_LABELS: Record<string, { zh: string; en: string }> = {
+  outdoor: { zh: '户外活动', en: 'Outdoor Activities' },
+  social: { zh: '社交互动', en: 'Social Interaction' },
+  learning: { zh: '学习新知', en: 'Learning' },
+  creative: { zh: '创意活动', en: 'Creative Activities' },
+  exercise: { zh: '体育运动', en: 'Exercise' },
+  emotional_deep: { zh: '深度情感', en: 'Deep Emotions' },
+  milestone: { zh: '里程碑事件', en: 'Milestones' },
+  family: { zh: '家庭互动', en: 'Family Interaction' },
+};
+
+function detectGaps(memories: RawMemory[], lang: Language, now: number = Date.now()): CognitiveGap[] {
   const gaps: CognitiveGap[] = [];
 
   // Check each dimension for recent activity
-  const dimensionChecks: { key: string; label: string; emoji: string; check: (m: RawMemory) => boolean }[] = [
-    { key: 'outdoor', label: '户外活动', emoji: '🌳', check: m => ['公园', '游乐场'].includes(m.dimensions.spatial.placeType) },
-    { key: 'social', label: '社交互动', emoji: '👥', check: m => m.dimensions.social.persons.length >= 2 },
-    { key: 'learning', label: '学习新知', emoji: '📚', check: m => m.dimensions.semantic.knowledge.length > 0 },
-    { key: 'creative', label: '创意活动', emoji: '🎨', check: m => m.dimensions.activity.type === '创作' || m.dimensions.activity.type === '手工' },
-    { key: 'exercise', label: '体育运动', emoji: '⚽', check: m => m.dimensions.activity.type === '运动' || m.dimensions.activity.type === '锻炼' },
-    { key: 'emotional_deep', label: '深度情感', emoji: '💭', check: m => m.dimensions.emotional.intensity > 0.8 },
-    { key: 'milestone', label: '里程碑事件', emoji: '🏆', check: m => m.dimensions.narrative.isMilestone },
-    { key: 'family', label: '家庭互动', emoji: '👨‍👩‍👧', check: m => m.dimensions.social.relationship.some(r => r.includes('父子') || r.includes('母子') || r.includes('家人')) },
+  const dimensionChecks: { key: string; emoji: string; check: (m: RawMemory) => boolean }[] = [
+    { key: 'outdoor', emoji: '🌳', check: m => ['公园', '游乐场'].includes(m.dimensions.spatial.placeType) },
+    { key: 'social', emoji: '👥', check: m => m.dimensions.social.persons.length >= 2 },
+    { key: 'learning', emoji: '📚', check: m => m.dimensions.semantic.knowledge.length > 0 },
+    { key: 'creative', emoji: '🎨', check: m => m.dimensions.activity.type === '创作' || m.dimensions.activity.type === '手工' },
+    { key: 'exercise', emoji: '⚽', check: m => m.dimensions.activity.type === '运动' || m.dimensions.activity.type === '锻炼' },
+    { key: 'emotional_deep', emoji: '💭', check: m => m.dimensions.emotional.intensity > 0.8 },
+    { key: 'milestone', emoji: '🏆', check: m => m.dimensions.narrative.isMilestone },
+    { key: 'family', emoji: '👨‍👩‍👧', check: m => m.dimensions.social.relationship.some(r => r.includes('父子') || r.includes('母子') || r.includes('家人')) },
   ];
 
   for (const dim of dimensionChecks) {
@@ -125,15 +147,17 @@ function detectGaps(memories: RawMemory[], now: number = Date.now()): CognitiveG
       lastSeenDays = daysSince(latest, now);
     }
 
+    const label = pick(lang, GAP_LABELS[dim.key].zh, GAP_LABELS[dim.key].en);
+
     // Consider it a gap if > 30 days or no memories at all
     if (lastSeenDays === null || lastSeenDays > 30) {
       gaps.push({
         dimension: dim.key,
-        label: dim.label,
+        label,
         emoji: dim.emoji,
         description: lastSeenDays === null
-          ? `没有找到任何${dim.label}相关的记忆`
-          : `最近 ${lastSeenDays} 天没有${dim.label}记录`,
+          ? pick(lang, `没有找到任何${label}相关的记忆`, `No memories related to ${label} were found.`)
+          : pick(lang, `最近 ${lastSeenDays} 天没有${label}记录`, `No ${label} recorded in the last ${lastSeenDays} day${lastSeenDays === 1 ? '' : 's'}.`),
         lastSeenDays,
         weight: lastSeenDays === null ? 1 : Math.min(1, lastSeenDays / 60),
       });
@@ -145,44 +169,47 @@ function detectGaps(memories: RawMemory[], now: number = Date.now()): CognitiveG
 
 // ========== Question Suggestions ==========
 
-function generateSuggestions(gaps: CognitiveGap[]): QuestionSuggestion[] {
-  const templates: Record<string, string[]> = {
-    outdoor: [
-      '最近有去户外活动吗？公园或者游乐场？',
-      '好久没看到户外的记忆了，最近有出去走走吗？',
-    ],
-    social: [
-      '最近有和朋友一起玩吗？',
-      '社交方面怎么样？有新的小伙伴吗？',
-    ],
-    learning: [
-      '最近有在学习新东西吗？',
-      '有没有学到什么新知识或新技能？',
-    ],
-    creative: [
-      '最近有做手工或者创作什么吗？',
-      '有没有画过画或者搭过什么？',
-    ],
-    exercise: [
-      '最近有做运动吗？',
-      '有没有跑步、骑车或者打球？',
-    ],
-    emotional_deep: [
-      '最近有什么特别开心或者特别感动的事吗？',
-      '有没有什么特别想分享的时刻？',
-    ],
-    milestone: [
-      '最近有什么值得纪念的里程碑吗？',
-      '有没有完成什么重要的事？',
-    ],
-    family: [
-      '最近和家人一起做了什么有趣的事吗？',
-      '有没有和爸爸/妈妈一起的温馨时刻？',
-    ],
-  };
+const QUESTION_TEMPLATES: Record<string, { zh: string[]; en: string[] }> = {
+  outdoor: {
+    zh: ['最近有去户外活动吗？公园或者游乐场？', '好久没看到户外的记忆了，最近有出去走走吗？'],
+    en: ['Have you been outdoors lately? A park or a playground?', "Haven't seen any outdoor memories in a while — been out and about recently?"],
+  },
+  social: {
+    zh: ['最近有和朋友一起玩吗？', '社交方面怎么样？有新的小伙伴吗？'],
+    en: ['Have you played with friends recently?', 'How is your social life? Any new buddies?'],
+  },
+  learning: {
+    zh: ['最近有在学习新东西吗？', '有没有学到什么新知识或新技能？'],
+    en: ['Have you been learning anything new?', 'Picked up any new knowledge or skills?'],
+  },
+  creative: {
+    zh: ['最近有做手工或者创作什么吗？', '有没有画过画或者搭过什么？'],
+    en: ['Have you crafted or created anything recently?', 'Drawn any pictures or built anything?'],
+  },
+  exercise: {
+    zh: ['最近有做运动吗？', '有没有跑步、骑车或者打球？'],
+    en: ['Have you exercised recently?', 'Any running, cycling, or ball games?'],
+  },
+  emotional_deep: {
+    zh: ['最近有什么特别开心或者特别感动的事吗？', '有没有什么特别想分享的时刻？'],
+    en: ['Anything especially happy or touching happen recently?', 'Any moments you really want to share?'],
+  },
+  milestone: {
+    zh: ['最近有什么值得纪念的里程碑吗？', '有没有完成什么重要的事？'],
+    en: ['Any memorable milestones recently?', 'Accomplished anything important?'],
+  },
+  family: {
+    zh: ['最近和家人一起做了什么有趣的事吗？', '有没有和爸爸/妈妈一起的温馨时刻？'],
+    en: ['Done anything fun with family recently?', 'Any warm moments with Mom or Dad?'],
+  },
+};
 
+function generateSuggestions(gaps: CognitiveGap[], lang: Language): QuestionSuggestion[] {
   return gaps.slice(0, 3).map(gap => {
-    const options = templates[gap.dimension] || [`${gap.label}方面有什么新进展吗？`];
+    const tpl = QUESTION_TEMPLATES[gap.dimension];
+    const options = tpl
+      ? (lang === 'en' ? tpl.en : tpl.zh)
+      : [pick(lang, `${gap.label}方面有什么新进展吗？`, `Any new progress with ${gap.label}?`)];
     const question = options[Math.floor(Math.random() * options.length)];
     return {
       question,
@@ -196,12 +223,13 @@ function generateSuggestions(gaps: CognitiveGap[]): QuestionSuggestion[] {
 
 export function generateConfusionReport(
   rawMemories: RawMemory[],
-  insightMemories: InsightMemory[]
+  insightMemories: InsightMemory[],
+  lang: Language = 'zh-CN',
 ): ConfusionReport {
-  const contradictions = detectContradictions(insightMemories);
+  const contradictions = detectContradictions(insightMemories, lang);
   const lowConfidenceInsights = findLowConfidenceInsights(insightMemories);
-  const gaps = detectGaps(rawMemories);
-  const suggestions = generateSuggestions(gaps);
+  const gaps = detectGaps(rawMemories, lang);
+  const suggestions = generateSuggestions(gaps, lang);
 
   return {
     contradictions,

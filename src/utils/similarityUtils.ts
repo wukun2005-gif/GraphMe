@@ -1,4 +1,6 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
+import { contentT, emotionNameT, joinContentT } from '../i18n/dataTranslations';
 
 export interface SimilarMemory {
   memory: RawMemory;
@@ -127,6 +129,7 @@ export function findEcho(
   target: RawMemory,
   allMemories: RawMemory[],
   limit = 2,
+  lang: Language = 'zh-CN',
 ): EchoMemory[] {
   const candidates = allMemories.filter(m => {
     if (m.id === target.id) return false;
@@ -147,32 +150,46 @@ export function findEcho(
   const scored = candidates.map(candidate => {
     let sharedCount = 0;
     const sharedFeatures: string[] = [];
+    // 独立于展示文本的判断标识：sharedFeatures 会按语言变化，
+    // 若用它做 includes 判断，英文模式下分支将全部失配。
+    const flags = { place: false, emotion: false, persons: false, activity: false, knowledge: false };
+    const isEn = lang === 'en';
+    let sharedPersons: string[] = [];
 
     // 相同地点类型
     if (target.dimensions.spatial.placeType === candidate.dimensions.spatial.placeType) {
       sharedCount++;
-      sharedFeatures.push(`同在${target.dimensions.spatial.placeType}`);
+      flags.place = true;
+      // 用 contentT 而非 placeT：后者带 emoji 前缀，嵌进句子里会显得突兀
+      const p = contentT(lang, target.dimensions.spatial.placeType);
+      sharedFeatures.push(isEn ? `Both at ${p}` : `同在${target.dimensions.spatial.placeType}`);
     }
 
     // 相同情绪
     if (target.dimensions.emotional.primary === candidate.dimensions.emotional.primary) {
       sharedCount++;
-      sharedFeatures.push(`同为${target.dimensions.emotional.primary}情绪`);
+      flags.emotion = true;
+      const e = emotionNameT(lang, target.dimensions.emotional.primary);
+      sharedFeatures.push(isEn ? `Both ${e}` : `同为${target.dimensions.emotional.primary}情绪`);
     }
 
     // 相同人物
-    const sharedPersons = target.dimensions.social.persons.filter(p =>
+    sharedPersons = target.dimensions.social.persons.filter(p =>
       candidate.dimensions.social.persons.includes(p),
     );
     if (sharedPersons.length > 0) {
       sharedCount++;
-      sharedFeatures.push(`都有${sharedPersons.join('、')}`);
+      flags.persons = true;
+      sharedFeatures.push(isEn
+        ? `With ${joinContentT(lang, sharedPersons)}`
+        : `都有${sharedPersons.join('、')}`);
     }
 
     // 相同活动类型
     if (target.dimensions.activity.type === candidate.dimensions.activity.type) {
       sharedCount++;
-      sharedFeatures.push(`同类型活动`);
+      flags.activity = true;
+      sharedFeatures.push(isEn ? `Same activity type` : `同类型活动`);
     }
 
     // 相同知识标签
@@ -181,7 +198,9 @@ export function findEcho(
     );
     if (sharedKnowledge.length > 0) {
       sharedCount++;
-      sharedFeatures.push(`共享知识"${sharedKnowledge.join('、')}"`);
+      flags.knowledge = true;
+      const k = isEn ? joinContentT(lang, sharedKnowledge) : sharedKnowledge.join('、');
+      sharedFeatures.push(isEn ? `Shared knowledge "${k}"` : `共享知识"${k}"`);
     }
 
     // 相同季节
@@ -189,7 +208,7 @@ export function findEcho(
       sharedCount++;
     }
 
-    return { memory: candidate, sharedCount, sharedFeatures };
+    return { memory: candidate, sharedCount, sharedFeatures, flags };
   });
 
   // 只返回共享 3+ 维度特征的记忆
@@ -202,11 +221,12 @@ export function findEcho(
         target.dimensions.temporal.timestamp - s.memory.dimensions.temporal.timestamp,
       );
       const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-      const timeDesc = daysDiff > 30
-        ? `${Math.floor(daysDiff / 30)} 个月前`
-        : `${daysDiff} 天前`;
+      const months = Math.floor(daysDiff / 30);
+      const timeDesc = lang === 'en'
+        ? (daysDiff > 30 ? `${months} month${months > 1 ? 's' : ''} ago` : `${daysDiff} days ago`)
+        : (daysDiff > 30 ? `${months} 个月前` : `${daysDiff} 天前`);
 
-      const description = generateEchoDescription(target, s.memory, timeDesc, s.sharedFeatures);
+      const description = generateEchoDescription(target, s.memory, timeDesc, s.flags, lang);
 
       return {
         memory: s.memory,
@@ -218,32 +238,51 @@ export function findEcho(
   return echoes;
 }
 
+/**
+ * 回声描述生成。
+ * @param flags 共享维度标识 —— 与展示语言无关的布尔判断依据，
+ *              取代了原先对中文 sharedFeatures 做 includes 的写法。
+ */
 function generateEchoDescription(
   target: RawMemory,
   echo: RawMemory,
   timeDesc: string,
-  sharedFeatures: string[],
+  flags: { place: boolean; emotion: boolean; persons: boolean; activity: boolean; knowledge: boolean },
+  lang: Language,
 ): string {
-  const targetPlace = target.dimensions.spatial.landmark || target.dimensions.spatial.placeType;
   const echoPlace = echo.dimensions.spatial.landmark || echo.dimensions.spatial.placeType;
   const emotion = target.dimensions.emotional.primary;
   const persons = target.dimensions.social.persons;
 
-  // 根据共享特征生成自然语言描述
-  if (sharedFeatures.includes(`同在${target.dimensions.spatial.placeType}`) &&
-      sharedFeatures.includes(`同为${emotion}情绪`)) {
+  if (lang === 'en') {
+    const ePlace = contentT(lang, echoPlace);
+    const emo = emotionNameT(lang, emotion);
+    const ePersons = joinContentT(lang, persons);
+    if (flags.place && flags.emotion) {
+      return `${timeDesc}, you also spent ${emo} time at ${ePlace} — memory resonates wonderfully across time and space`;
+    }
+    if (persons.length > 0 && flags.persons) {
+      return `${timeDesc}, you and ${ePersons} also left footprints at ${ePlace} — the same people, a different time`;
+    }
+    if (flags.activity) {
+      return `${timeDesc} at ${ePlace}, a similar ${emo} memory echoes in the distance`;
+    }
+    return `${timeDesc}, a distant memory echoes back with a familiar resonance`;
+  }
+
+  if (flags.place && flags.emotion) {
     return `${timeDesc}，你也在${echoPlace}度过了${emotion}的时光——记忆在时空中产生了奇妙的共鸣`;
   }
 
-  if (persons.length > 0 && sharedFeatures.includes(`都有${persons.join('、')}`)) {
+  if (persons.length > 0 && flags.persons) {
     return `${timeDesc}，你和${persons.join('、')}也在${echoPlace}留下了足迹——同样的人，不同的时光`;
   }
 
-  if (sharedFeatures.includes(`同类型活动`)) {
+  if (flags.activity) {
     return `${timeDesc}的${echoPlace}，一段相似的${emotion}记忆在远处回响`;
   }
 
-  return `${timeDesc}的记忆在远处回响——${sharedFeatures.slice(0, 2).join('、')}`;
+  return `${timeDesc}的记忆在远处回响`;
 }
 
 export interface MemoryChainLink {
@@ -259,8 +298,10 @@ export function buildMemoryChain(
   start: RawMemory,
   allMemories: RawMemory[],
   steps: number = 5,
+  lang: Language = 'zh-CN',
 ): MemoryChainLink[] {
-  const chain: MemoryChainLink[] = [{ memory: start, connectionReason: '起点' }];
+  const R = (en: string, zh: string) => lang === 'en' ? en : zh;
+  const chain: MemoryChainLink[] = [{ memory: start, connectionReason: R('Start', '起点') }];
   const visited = new Set<string>([start.id]);
 
   let current = start;
@@ -282,19 +323,19 @@ export function buildMemoryChain(
       );
       if (sharedPersons.length > 0) {
         score += sharedPersons.length * 20;
-        reasons.push(`共享人物→`);
+        reasons.push(R('Shared person →', '共享人物→'));
       }
 
       // Same placeType
       if (current.dimensions.spatial.placeType === candidate.dimensions.spatial.placeType) {
         score += 15;
-        reasons.push(`同地点→`);
+        reasons.push(R('Same place →', '同地点→'));
       }
 
       // Same emotion
       if (current.dimensions.emotional.primary === candidate.dimensions.emotional.primary) {
         score += 10;
-        reasons.push(`相同情绪→`);
+        reasons.push(R('Same emotion →', '相同情绪→'));
       }
 
       // Same storyline
@@ -303,13 +344,13 @@ export function buildMemoryChain(
         current.dimensions.narrative.storyline === candidate.dimensions.narrative.storyline
       ) {
         score += 25;
-        reasons.push(`同故事线→`);
+        reasons.push(R('Same storyline →', '同故事线→'));
       }
 
       // Same activity type
       if (current.dimensions.activity.type === candidate.dimensions.activity.type) {
         score += 8;
-        reasons.push(`同活动→`);
+        reasons.push(R('Same activity →', '同活动→'));
       }
 
       // Same season
@@ -323,7 +364,7 @@ export function buildMemoryChain(
       );
       if (sharedKnowledge.length > 0) {
         score += sharedKnowledge.length * 5;
-        reasons.push(`共享知识→`);
+        reasons.push(R('Shared knowledge →', '共享知识→'));
       }
 
       return { memory: candidate, score, reasons };
@@ -340,7 +381,7 @@ export function buildMemoryChain(
 
     chain.push({
       memory: selected.memory,
-      connectionReason: selected.reasons[0] || '相关→',
+      connectionReason: selected.reasons[0] || R('Related →', '相关→'),
     });
 
     visited.add(selected.memory.id);
@@ -364,6 +405,7 @@ export function findBoomerang(
   target: RawMemory,
   allMemories: RawMemory[],
   limit = 2,
+  lang: Language = 'zh-CN',
 ): BoomerangResult[] {
   const candidates = allMemories.filter(m => {
     if (m.id === target.id) return false;
@@ -460,7 +502,7 @@ export function findBoomerang(
       const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
       const monthsDiff = Math.floor(daysDiff / 30);
 
-      const description = generateBoomerangDescription(target, s.memory, monthsDiff, s.reasons);
+      const description = generateBoomerangDescription(target, s.memory, monthsDiff, s.reasons, lang);
 
       return {
         memory: s.memory,
@@ -477,11 +519,28 @@ function generateBoomerangDescription(
   boomerang: RawMemory,
   monthsDiff: number,
   reasons: string[],
+  lang: Language,
 ): string {
   const targetPlace = target.dimensions.spatial.landmark || target.dimensions.spatial.placeType;
   const boomerangPlace = boomerang.dimensions.spatial.landmark || boomerang.dimensions.spatial.placeType;
   const targetEmotion = target.dimensions.emotional.primary;
-  const boomerangEmotion = boomerang.dimensions.emotional.primary;
+
+  if (lang === 'en') {
+    const tEmo = emotionNameT(lang, targetEmotion);
+    const actDetail = contentT(lang, target.dimensions.activity.detail);
+    const bPlace = contentT(lang, boomerangPlace);
+    const tPlace = contentT(lang, targetPlace);
+    if (reasons.includes('情绪强度相近') && reasons.includes(`同为${target.dimensions.activity.type}类活动`)) {
+      return `This ${tEmo} pattern of ${actDetail} perfectly reappeared at ${bPlace} ${monthsDiff} months ago`;
+    }
+    if (reasons.includes('相同情绪')) {
+      return `${monthsDiff} months ago at ${bPlace}, you felt the same ${tEmo} — time repeats, but every moment is unique`;
+    }
+    if (reasons.includes(`同为${target.dimensions.activity.type}类活动`)) {
+      return `Your ${actDetail} at ${tPlace} forms a cross-time echo with ${bPlace} from ${monthsDiff} months ago`;
+    }
+    return `A memory from ${monthsDiff} months ago echoes in the distance`;
+  }
 
   if (reasons.includes('情绪强度相近') && reasons.includes(`同为${target.dimensions.activity.type}类活动`)) {
     return `这条${targetEmotion}的${target.dimensions.activity.detail}模式，在 ${monthsDiff} 个月前的${boomerangPlace}也完美重现了`;
@@ -506,7 +565,7 @@ export interface AntipodeResult {
   description: string;
 }
 
-export function findAntipode(target: RawMemory, allMemories: RawMemory[]): AntipodeResult | null {
+export function findAntipode(target: RawMemory, allMemories: RawMemory[], lang: Language = 'zh-CN'): AntipodeResult | null {
   const candidates = allMemories.filter(m => m.id !== target.id);
   if (candidates.length === 0) return null;
 
@@ -578,7 +637,19 @@ export function findAntipode(target: RawMemory, allMemories: RawMemory[]): Antip
   const antipodePlace = antipode.dimensions.spatial.landmark || antipode.dimensions.spatial.placeType;
 
   let description = '';
-  if (targetEmotion !== antipodeEmotion && target.dimensions.activity.type !== antipode.dimensions.activity.type) {
+  if (lang === 'en') {
+    const tEmo = emotionNameT(lang, targetEmotion);
+    const aEmo = emotionNameT(lang, antipodeEmotion);
+    const tPlace = contentT(lang, targetPlace);
+    const aPlace = contentT(lang, antipodePlace);
+    if (targetEmotion !== antipodeEmotion && target.dimensions.activity.type !== antipode.dimensions.activity.type) {
+      description = `This ${tEmo} memory at ${tPlace} and that ${aEmo} memory at ${aPlace} are almost the two poles of your memory universe`;
+    } else if (targetEmotion !== antipodeEmotion) {
+      description = `From ${tEmo} to ${aEmo} — the two ends of your emotional spectrum`;
+    } else {
+      description = `The same ${tEmo} you, in a completely different world — ${tPlace} and ${aPlace}`;
+    }
+  } else if (targetEmotion !== antipodeEmotion && target.dimensions.activity.type !== antipode.dimensions.activity.type) {
     description = `这条${targetEmotion}的${targetPlace}记忆，与那条${antipodeEmotion}的${antipodePlace}记忆，几乎是你记忆宇宙的两极`;
   } else if (targetEmotion !== antipodeEmotion) {
     description = `从${targetEmotion}到${antipodeEmotion}——这是你情感光谱的两端`;

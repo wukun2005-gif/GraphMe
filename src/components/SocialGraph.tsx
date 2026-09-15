@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { generateSocialGraph, type SocialNode } from '../utils/socialUtils';
 import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import { memoryLabelT } from '../i18n/memoryData';
+import { emotionNameT } from '../i18n/dataTranslations';
 
 interface Props {
   open: boolean;
@@ -11,11 +14,12 @@ interface Props {
 
 export default function SocialGraph({ open, onClose }: Props) {
   const { rawMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [hoveredNode, setHoveredNode] = useState<SocialNode | null>(null);
   const [selectedNode, setSelectedNode] = useState<SocialNode | null>(null);
 
-  const graph = useMemo(() => generateSocialGraph(rawMemories), [rawMemories]);
+  const graph = useMemo(() => generateSocialGraph(rawMemories, language), [rawMemories, language]);
 
   const centerX = 200;
   const centerY = 200;
@@ -37,7 +41,7 @@ export default function SocialGraph({ open, onClose }: Props) {
           <div className={`px-5 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
             <div className="flex items-center justify-between mb-2">
               <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                🕸️ 关系星图
+                {t('social.title')}
               </h2>
               <button
                 onClick={onClose}
@@ -84,7 +88,7 @@ export default function SocialGraph({ open, onClose }: Props) {
               {/* Center (user) */}
               <circle cx={centerX} cy={centerY} r={20} fill={isDark ? '#00f2ff' : '#0088cc'} opacity={0.2} />
               <text x={centerX} y={centerY + 4} textAnchor="middle" fill={isDark ? '#ffffff' : '#1a1a1a'} fontSize={12} fontWeight="bold">
-                你
+                {t('social.you')}
               </text>
 
               {/* Nodes */}
@@ -134,7 +138,7 @@ export default function SocialGraph({ open, onClose }: Props) {
                   <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{hoveredNode.name}</span>
                 </div>
                 <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {hoveredNode.count} 条记忆 · 主导情绪{hoveredNode.dominantEmotion} · 亲密度 {hoveredNode.avgIntimacy}
+                  {t('social.memories', { count: hoveredNode.count })} · {t('social.dominantEmotion')}{emotionNameT(language, hoveredNode.dominantEmotion)} · {t('social.intimacy')} {hoveredNode.avgIntimacy}
                 </p>
               </div>
             )}
@@ -143,7 +147,7 @@ export default function SocialGraph({ open, onClose }: Props) {
             {selectedNode && (
               <div className={`mt-3 p-3 rounded-lg border ${isDark ? 'bg-[#ffffff03] border-[#ffffff08]' : 'bg-gray-50 border-gray-200'}`}>
                 <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                  {selectedNode.name} 的记忆
+                  {t('social.personMemories', { name: selectedNode.name })}
                 </h4>
                 <div className="space-y-1">
                   {selectedNode.memoryIds.slice(0, 5).map(id => {
@@ -157,7 +161,7 @@ export default function SocialGraph({ open, onClose }: Props) {
                           isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
                         }`}
                       >
-                        · {mem.label}
+                        · {memoryLabelT(language, mem.id, mem.label)}
                       </button>
                     );
                   })}

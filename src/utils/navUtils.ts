@@ -1,4 +1,14 @@
 import type { RawMemory, InsightMemory } from '../types';
+import type { Language } from '../i18n';
+import {
+  contentT,
+  joinContentT,
+  emotionNameT,
+  dateTypeT,
+  timeOfDayT,
+  categoryT,
+} from '../i18n/dataTranslations';
+import { memoryLabelT, insightStatementT, storylineNameT } from '../i18n/memoryData';
 
 export interface CategoryPath {
   category: string;
@@ -107,8 +117,11 @@ export interface HiddenConnection {
   description: string;
 }
 
-export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | null {
+export function findHiddenConnection(memories: RawMemory[], lang: Language = 'zh-CN'): HiddenConnection | null {
   if (memories.length < 2) return null;
+
+  const lab = (m: RawMemory) => memoryLabelT(lang, m.id, m.label);
+  const place = (m: RawMemory) => contentT(lang, m.dimensions.spatial.landmark || m.dimensions.spatial.placeType);
 
   // Try to find two memories from different categories with shared connections
   const shuffled = [...memories].sort(() => Math.random() - 0.5);
@@ -142,7 +155,9 @@ export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | 
         return {
           memoryA: a,
           memoryB: b,
-          description: `你知道吗？「${a.label}」和「${b.label}」都有${sharedPersons.join('和')}在场，而且分别在${a.dimensions.spatial.landmark || a.dimensions.spatial.placeType}和${b.dimensions.spatial.landmark || b.dimensions.spatial.placeType}。`,
+          description: lang === 'en'
+            ? `Did you know? "${lab(a)}" and "${lab(b)}" both had ${joinContentT(lang, sharedPersons)} present — in ${place(a)} and ${place(b)} respectively.`
+            : `你知道吗？「${a.label}」和「${b.label}」都有${sharedPersons.join('和')}在场，而且分别在${a.dimensions.spatial.landmark || a.dimensions.spatial.placeType}和${b.dimensions.spatial.landmark || b.dimensions.spatial.placeType}。`,
         };
       }
 
@@ -150,7 +165,9 @@ export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | 
         return {
           memoryA: a,
           memoryB: b,
-          description: `有趣的巧合——「${a.label}」和「${b.label}」都发生在${a.dimensions.temporal.dateType}的${a.dimensions.temporal.timeOfDay}，虽然地点不同（${a.dimensions.spatial.placeType} vs ${b.dimensions.spatial.placeType}），但时间节奏惊人地相似。`,
+          description: lang === 'en'
+            ? `A fun coincidence — "${lab(a)}" and "${lab(b)}" both happened on a ${dateTypeT(lang, a.dimensions.temporal.dateType)} ${timeOfDayT(lang, a.dimensions.temporal.timeOfDay)}. Different places (${contentT(lang, a.dimensions.spatial.placeType)} vs ${contentT(lang, b.dimensions.spatial.placeType)}), but the timing rhythm is remarkably similar.`
+            : `有趣的巧合——「${a.label}」和「${b.label}」都发生在${a.dimensions.temporal.dateType}的${a.dimensions.temporal.timeOfDay}，虽然地点不同（${a.dimensions.spatial.placeType} vs ${b.dimensions.spatial.placeType}），但时间节奏惊人地相似。`,
         };
       }
 
@@ -158,7 +175,9 @@ export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | 
         return {
           memoryA: a,
           memoryB: b,
-          description: `同一个地方，两种心情——在${a.dimensions.spatial.placeType}，「${a.label}」时感到${a.dimensions.emotional.primary}，而「${b.label}」时却是${b.dimensions.emotional.primary}。`,
+          description: lang === 'en'
+            ? `Same place, different moods — at ${contentT(lang, a.dimensions.spatial.placeType)}, you felt ${emotionNameT(lang, a.dimensions.emotional.primary)} during "${lab(a)}", but ${emotionNameT(lang, b.dimensions.emotional.primary)} during "${lab(b)}".`
+            : `同一个地方，两种心情——在${a.dimensions.spatial.placeType}，「${a.label}」时感到${a.dimensions.emotional.primary}，而「${b.label}」时却是${b.dimensions.emotional.primary}。`,
         };
       }
     }
@@ -171,7 +190,9 @@ export function findHiddenConnection(memories: RawMemory[]): HiddenConnection | 
     return {
       memoryA: a,
       memoryB: b,
-      description: `意外的连接——「${a.label}」（${a.dimensions.emotional.primary}）和「${b.label}」（${b.dimensions.emotional.primary}），虽然看似无关，但都是你记忆星云中闪亮的星。`,
+      description: lang === 'en'
+        ? `An unexpected connection — "${lab(a)}" (${emotionNameT(lang, a.dimensions.emotional.primary)}) and "${lab(b)}" (${emotionNameT(lang, b.dimensions.emotional.primary)}). Seemingly unrelated, but both are shining stars in your memory nebula.`
+        : `意外的连接——「${a.label}」（${a.dimensions.emotional.primary}）和「${b.label}」（${b.dimensions.emotional.primary}），虽然看似无关，但都是你记忆星云中闪亮的星。`,
     };
   }
 
@@ -192,6 +213,7 @@ export function getMemoryConnections(
   memoryId: string,
   rawMemories: RawMemory[],
   insightMemories: InsightMemory[],
+  lang: Language = 'zh-CN',
 ): MemoryConnection[] {
   const target = rawMemories.find(m => m.id === memoryId);
   if (!target) return [];
@@ -203,9 +225,9 @@ export function getMemoryConnections(
     if (ins.sourceRawMemoryIds.includes(memoryId)) {
       connections.push({
         id: ins.id,
-        label: ins.statement,
+        label: insightStatementT(lang, ins.id, ins.statement),
         type: 'insight',
-        detail: `${ins.category}洞察`,
+        detail: lang === 'en' ? `${categoryT(lang, ins.category)} insight` : `${ins.category}洞察`,
         memory: ins,
       });
     }
@@ -220,9 +242,9 @@ export function getMemoryConnections(
     for (const m of sameStory) {
       connections.push({
         id: m.id,
-        label: m.label,
+        label: memoryLabelT(lang, m.id, m.label),
         type: 'storyline',
-        detail: `同故事线"${storyline}"`,
+        detail: lang === 'en' ? `Same storyline "${storylineNameT(lang, storyline)}"` : `同故事线"${storyline}"`,
         memory: m,
       });
     }
@@ -240,9 +262,9 @@ export function getMemoryConnections(
       const shared = m.dimensions.social.persons.filter(p => persons.includes(p));
       connections.push({
         id: m.id,
-        label: m.label,
+        label: memoryLabelT(lang, m.id, m.label),
         type: 'person',
-        detail: `和${shared.join('、')}在一起`,
+        detail: lang === 'en' ? `with ${joinContentT(lang, shared)}` : `和${shared.join('、')}在一起`,
         memory: m,
       });
     }

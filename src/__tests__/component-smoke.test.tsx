@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render } from '@testing-library/react';
 import { AppProvider } from '../store/AppContext';
+import { I18nProvider } from '../i18n';
 
 // Components to smoke test (highest risk by bug-fix frequency)
 import NavigationSidebar from '../components/Navigation';
@@ -33,7 +34,11 @@ beforeEach(() => {
 
 function renderWithProvider(ui: React.ReactElement) {
   return render(ui, {
-    wrapper: ({ children }) => <AppProvider>{children}</AppProvider>,
+    wrapper: ({ children }) => (
+      <I18nProvider>
+        <AppProvider>{children}</AppProvider>
+      </I18nProvider>
+    ),
   });
 }
 

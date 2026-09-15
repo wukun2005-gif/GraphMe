@@ -1,4 +1,7 @@
 import type { RawMemory, InsightMemory } from '../types';
+import type { Language } from '../i18n';
+import { contentT } from '../i18n/dataTranslations';
+import { insightStatementT } from '../i18n/memoryData';
 
 export interface PreferenceNode {
   id: string;
@@ -15,9 +18,22 @@ export interface PreferenceTree {
   description: string;
 }
 
+function prefT(lang: Language, key: string, params?: Record<string, string | number>): string {
+  const T: Record<string, { zh: string; en: string }> = {
+    inferredFrom: { zh: '基于 {{count}} 条记忆推断', en: 'Inferred from {{count}} memories' },
+    extractedFrom: { zh: '从 {{count}} 条记忆中提取', en: 'Extracted from {{count}} memories' },
+  };
+  const tpl = T[key];
+  if (!tpl) return key;
+  const raw = lang === 'en' ? tpl.en : tpl.zh;
+  if (!params) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k) => (k in params ? String(params[k]) : `{{${k}}}`));
+}
+
 export function buildPreferenceTrees(
   rawMemories: RawMemory[],
-  insightMemories: InsightMemory[]
+  insightMemories: InsightMemory[],
+  lang: Language = 'zh-CN',
 ): PreferenceTree[] {
   const trees: PreferenceTree[] = [];
 
@@ -39,10 +55,11 @@ export function buildPreferenceTrees(
 
   // Build trees from insight preferences
   prefInsights.forEach(insight => {
-    const domain = insight.statement.slice(0, 15);
+    const statement = insightStatementT(lang, insight.id, insight.statement);
+    const domain = statement.slice(0, 15);
     const node: PreferenceNode = {
       id: insight.id,
-      label: insight.statement,
+      label: statement,
       timestamp: insight.generatedAt,
       confidence: insight.confidence,
       memoryIds: insight.sourceRawMemoryIds,
@@ -59,7 +76,7 @@ export function buildPreferenceTrees(
       data.values.forEach(value => {
         node.children.push({
           id: `explicit-${key}-${value}`,
-          label: `${key}：${value}`,
+          label: `${contentT(lang, key)}: ${contentT(lang, value)}`,
           timestamp: insight.generatedAt,
           confidence: 1,
           memoryIds: data.memoryIds,
@@ -71,7 +88,7 @@ export function buildPreferenceTrees(
     trees.push({
       domain,
       root: node,
-      description: `基于 ${insight.sourceRawMemoryIds.length} 条记忆推断`,
+      description: prefT(lang, 'inferredFrom', { count: insight.sourceRawMemoryIds.length }),
     });
   });
 
@@ -80,13 +97,13 @@ export function buildPreferenceTrees(
     explicitPrefs.forEach((data, key) => {
       const root: PreferenceNode = {
         id: `root-${key}`,
-        label: key,
+        label: contentT(lang, key),
         timestamp: rawMemories[0]?.dimensions.temporal.timestamp || Date.now(),
         confidence: 0.8,
         memoryIds: data.memoryIds,
         children: data.values.map(value => ({
           id: `pref-${key}-${value}`,
-          label: value,
+          label: contentT(lang, value),
           timestamp: rawMemories[0]?.dimensions.temporal.timestamp || Date.now(),
           confidence: 0.8,
           memoryIds: data.memoryIds,
@@ -94,9 +111,9 @@ export function buildPreferenceTrees(
         })),
       };
       trees.push({
-        domain: key,
+        domain: contentT(lang, key),
         root,
-        description: `从 ${data.memoryIds.length} 条记忆中提取`,
+        description: prefT(lang, 'extractedFrom', { count: data.memoryIds.length }),
       });
     });
   }

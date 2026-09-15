@@ -1,4 +1,7 @@
 import type { RawMemory, InsightMemory } from '../types';
+import type { Language } from '../i18n';
+import { emotionNameT, contentT } from '../i18n/dataTranslations';
+import { insightStatementT, insightDescriptionT } from '../i18n/memoryData';
 
 // ========== Types ==========
 
@@ -48,34 +51,57 @@ export interface UserProfileData {
 
 // ========== Helpers ==========
 
-function formatDate(ts: number): string {
+const PROFILE_EMOTION_LABELS: Record<string, { zh: string; en: string }> = {
+  '快乐': { zh: '开心快乐的时刻', en: 'Moments of happiness' },
+  '悲伤': { zh: '需要安慰的时刻', en: 'Moments needing comfort' },
+  '好奇': { zh: '充满好奇的探索', en: 'Explorations full of curiosity' },
+  '骄傲': { zh: '值得骄傲的成就', en: 'Achievements to be proud of' },
+  '感激': { zh: '心怀感激的瞬间', en: 'Moments of gratitude' },
+  '愤怒': { zh: '需要理解的情绪', en: 'Emotions needing understanding' },
+  '沮丧': { zh: '遇到挫折的时候', en: 'Times of setback' },
+  '惊讶': { zh: '出乎意料的发现', en: 'Unexpected discoveries' },
+  '恐惧': { zh: '需要勇气的时刻', en: 'Moments needing courage' },
+  '厌恶': { zh: '不喜欢的事物', en: 'Things disliked' },
+  '思念': { zh: '远方的牵挂', en: 'Longing for faraway' },
+  '中性': { zh: '平静的日常', en: 'Peaceful everyday' },
+};
+
+function formatDate(ts: number, lang: Language = 'zh-CN'): string {
   const d = new Date(ts);
+  if (lang === 'en') {
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  }
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
-function getEmotionLabel(emotion: string): string {
-  const map: Record<string, string> = {
-    '快乐': '开心快乐的时刻',
-    '悲伤': '需要安慰的时刻',
-    '好奇': '充满好奇的探索',
-    '骄傲': '值得骄傲的成就',
-    '感激': '心怀感激的瞬间',
-    '愤怒': '需要理解的情绪',
-    '沮丧': '遇到挫折的时候',
-    '惊讶': '出乎意料的发现',
-    '恐惧': '需要勇气的时刻',
-    '厌恶': '不喜欢的事物',
-    '思念': '远方的牵挂',
-    '中性': '平静的日常',
-  };
-  return map[emotion] || emotion;
+function getEmotionLabel(emotion: string, lang: Language = 'zh-CN'): string {
+  const labels = PROFILE_EMOTION_LABELS[emotion];
+  if (!labels) return emotion;
+  return lang === 'en' ? labels.en : labels.zh;
+}
+
+const PROFILE_SUMMARY: Record<string, { zh: string; en: string }> = {
+  summary: { zh: '关于你，小哥记住了 {{memories}} 件事、{{persons}} 个人、{{habits}} 个习惯。最常见的情绪是{{emotion}}，最常出没的地方是{{place}}。', en: 'About you, Xiaoge remembers {{memories}} things, {{persons}} people, and {{habits}} habits. The most common emotion is {{emotion}}, and the most frequent place is {{place}}.' },
+  highFreq: { zh: '高频', en: 'High' },
+  midFreq: { zh: '中频', en: 'Medium' },
+  lowFreq: { zh: '低频', en: 'Low' },
+  inferredFrom: { zh: '基于 {{count}} 条记忆推断', en: 'Inferred from {{count}} memories' },
+};
+
+export function profileT(lang: Language, key: string, params?: Record<string, string | number>): string {
+  const template = PROFILE_SUMMARY[key];
+  if (!template) return key;
+  const raw = lang === 'en' ? template.en : template.zh;
+  if (!params) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k) => k in params ? String(params[k]) : `{{${k}}}`);
 }
 
 // ========== Main ==========
 
 export function generateUserProfile(
   rawMemories: RawMemory[],
-  insightMemories: InsightMemory[]
+  insightMemories: InsightMemory[],
+  lang: Language = 'zh-CN',
 ): UserProfileData {
   const now = Date.now();
 
@@ -128,8 +154,8 @@ export function generateUserProfile(
   // Habits from insights
   const habitInsights = insightMemories.filter(i => i.category === 'habit' && !i.deprecatedAt);
   const habits: ProfileHabit[] = habitInsights.map(i => ({
-    description: i.statement,
-    frequency: i.confidence > 0.8 ? '高频' : i.confidence > 0.5 ? '中频' : '低频',
+    description: insightStatementT(lang, i.id, i.statement),
+    frequency: i.confidence > 0.8 ? profileT(lang, 'highFreq') : i.confidence > 0.5 ? profileT(lang, 'midFreq') : profileT(lang, 'lowFreq'),
     confidence: i.confidence,
     memoryIds: i.sourceRawMemoryIds,
   }));
@@ -137,16 +163,16 @@ export function generateUserProfile(
   // Preferences from insights + raw memories
   const prefInsights = insightMemories.filter(i => i.category === 'preference' && !i.deprecatedAt);
   const preferences: ProfilePreference[] = prefInsights.map(i => ({
-    label: i.statement,
+    label: insightStatementT(lang, i.id, i.statement),
     type: 'implicit' as const,
-    source: `基于 ${i.sourceRawMemoryIds.length} 条记忆推断`,
+    source: profileT(lang, 'inferredFrom', { count: i.sourceRawMemoryIds.length }),
   }));
 
   // Add explicit preferences from raw memories
   rawMemories.forEach(m => {
     Object.entries(m.dimensions.semantic.preferences).forEach(([key, value]) => {
       if (!preferences.some(p => p.label.includes(value))) {
-        preferences.push({ label: `${key}：${value}`, type: 'explicit', source: m.id });
+        preferences.push({ label: `${contentT(lang, key)}: ${contentT(lang, value)}`, type: 'explicit', source: m.id });
       }
     });
   });
@@ -154,22 +180,22 @@ export function generateUserProfile(
   // Growth from insights
   const growthInsights = insightMemories.filter(i => i.category === 'growth' && !i.deprecatedAt);
   const growth: ProfileGrowth[] = growthInsights.map(i => ({
-    area: i.statement,
+    area: insightStatementT(lang, i.id, i.statement),
     trend: i.version > 1 ? 'up' as const : 'stable' as const,
-    description: i.description || i.statement,
+    description: insightDescriptionT(lang, i.id, i.description || i.statement),
     memoryIds: i.sourceRawMemoryIds || [],
   }));
 
   // Summary text
-  const summaryText = `关于你，小哥记住了 ${rawMemories.length} 件事、${persons.length} 个人、${habits.length} 个习惯。最常见的情绪是${topEmotion}，最常出没的地方是${topPlace}。`;
+  const summaryText = profileT(lang, 'summary', { memories: rawMemories.length, persons: persons.length, habits: habits.length, emotion: emotionNameT(lang, topEmotion), place: contentT(lang, topPlace) });
 
   return {
     totalMemories: rawMemories.length,
     totalPersons: persons.length,
     totalHabits: habits.length,
     timeSpanDays,
-    oldestDate: formatDate(oldest),
-    newestDate: formatDate(newest),
+    oldestDate: formatDate(oldest, lang),
+    newestDate: formatDate(newest, lang),
     topEmotion,
     topPlace,
     persons,

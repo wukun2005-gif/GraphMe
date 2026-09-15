@@ -4,8 +4,12 @@ import { useAppState } from '../store/AppContext';
 import type { RawMemory, InsightMemory } from '../types';
 import { getTop5HighValue, getForgettingRiskWarnings, computeDecayCurve, computeDailyEmotionMap, getReviewCandidates, computeEmotionCurve, computeWeeklyReport } from '../utils/valueUtils';
 import { computeRhythm } from '../utils/rhythmUtils';
-import { computeSensoryProfile, extractSensoryKeywords } from '../utils/sensoryUtils';
+import { computeSensoryProfile, extractSensoryKeywords, sensoryWordT } from '../utils/sensoryUtils';
 import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import type { Language } from '../i18n';
+import { emotionT, emotionNameT, activityT } from '../i18n/dataTranslations';
+import { memoryLabelT, storylineNameT } from '../i18n/memoryData';
 
 const RISK_COLORS: Record<string, string> = {
   high: '#ff4444',
@@ -19,16 +23,23 @@ const RISK_DARK_COLORS: Record<string, string> = {
   low: '#66ddbb',
 };
 
-const RISK_LABELS: Record<string, string> = {
-  high: '⚠️ 高',
-  medium: '⚡ 中',
-  low: '✓ 低',
-};
+function getRiskLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    high: t('valueDashboard.risk.high'),
+    medium: t('valueDashboard.risk.medium'),
+    low: t('valueDashboard.risk.low'),
+  };
+}
 
-const DIM_LABELS = ['时间', '空间', '社交', '情感', '活动', '感官', '语义', '价值', '叙事', '智能体'];
+const DIM_KEYS = ['dim.time', 'dim.space', 'dim.social', 'dim.emotion', 'dim.activity', 'dim.sensory', 'dim.semantic', 'dim.value', 'dim.narrative', 'dim.agent'];
 
-function calcDimensionCoverage(memories: RawMemory[]): number[] {
-  if (memories.length === 0) return DIM_LABELS.map(() => 0);
+function getDimLabels(t: (key: string) => string): string[] {
+  return DIM_KEYS.map(k => t(k));
+}
+
+function calcDimensionCoverage(memories: RawMemory[], t: (key: string) => string): number[] {
+  const dimLabels = getDimLabels(t);
+  if (memories.length === 0) return dimLabels.map(() => 0);
   const total = memories.length;
   const counts = [
     memories.filter(m => m.dimensions.temporal.timestamp > 0).length,
@@ -82,7 +93,8 @@ function polarToCartesian(cx: number, cy: number, r: number, angle: number): [nu
   return [cx + r * Math.cos(angle - Math.PI / 2), cy + r * Math.sin(angle - Math.PI / 2)];
 }
 
-function RadarChart({ coverage }: { coverage: number[] }) {
+function RadarChart({ coverage, t }: { coverage: number[]; t: (key: string) => string }) {
+  const dimLabels = getDimLabels(t);
   const n = coverage.length;
   const angleStep = (2 * Math.PI) / n;
 
@@ -103,7 +115,7 @@ function RadarChart({ coverage }: { coverage: number[] }) {
 
   const labelPoints = coverage.map((_, i) => {
     const [x, y] = polarToCartesian(RADAR_CX, RADAR_CY, RADAR_R + 16, i * angleStep);
-    return { x, y, label: DIM_LABELS[i] };
+    return { x, y, label: dimLabels[i] };
   });
 
   return (
@@ -200,11 +212,13 @@ const CHART_PAD = { top: 20, right: 15, bottom: 30, left: 35 };
 const PLOT_W = CHART_W - CHART_PAD.left - CHART_PAD.right;
 const PLOT_H = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
 
-function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
+function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect, t, language }: {
   rawMemories: RawMemory[];
   theme: 'dark' | 'light';
   onReinforce: (id: string) => void;
   onSelect: (m: RawMemory) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  language: Language;
 }) {
   const isDark = theme === 'dark';
   const [hovered, setHovered] = useState<{ x: number; y: number; memory: RawMemory; retention: number } | null>(null);
@@ -229,7 +243,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
         <div className="flex items-center gap-2">
           {curve.abyssCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">
-              ⚠ {curve.abyssCount} 条记忆濒临遗忘
+              ⚠ {t('valueDashboard.memoriesNearForgetting', { count: curve.abyssCount })}
             </span>
           )}
         </div>
@@ -250,7 +264,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
             <line x1={toX(d)} y1={CHART_PAD.top} x2={toX(d)} y2={CHART_PAD.top + PLOT_H}
               stroke={isDark ? '#ffffff08' : '#00000008'} strokeWidth="0.5" />
             <text x={toX(d)} y={CHART_H - 8} textAnchor="middle"
-              fontSize="8" fill={isDark ? '#555' : '#999'}>{d}天</text>
+              fontSize="8" fill={isDark ? '#555' : '#999'}>{t('valueDashboard.timeDays', { d })}</text>
           </g>
         ))}
 
@@ -260,7 +274,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
         <line x1={CHART_PAD.left} y1={abyssY} x2={CHART_W - CHART_PAD.right} y2={abyssY}
           stroke="#ff444430" strokeWidth="0.5" strokeDasharray="4,3" />
         <text x={CHART_W - CHART_PAD.right - 2} y={abyssY - 3} textAnchor="end"
-          fontSize="7" fill="#ff444480">遗忘深渊</text>
+          fontSize="7" fill="#ff444480">{t('valueDashboard.memoryAbyss')}</text>
 
         {/* Theoretical Ebbinghaus curve */}
         <path d={theoryPath} fill="none" stroke={isDark ? '#00f2ff40' : '#0088cc40'} strokeWidth="1.5" />
@@ -292,11 +306,11 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
 
         {/* Axes labels */}
         <text x={CHART_W / 2} y={CHART_H - 1} textAnchor="middle" fontSize="8" fill={isDark ? '#666' : '#aaa'}>
-          时间（天）
+          {t('valueDashboard.timeAxis')}
         </text>
         <text x={6} y={CHART_H / 2} textAnchor="middle" fontSize="8" fill={isDark ? '#666' : '#aaa'}
           transform={`rotate(-90, 6, ${CHART_H / 2})`}>
-          记忆留存
+          {t('valueDashboard.retentionAxis')}
         </text>
       </svg>
 
@@ -308,9 +322,9 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
           }`}
           style={{ left: `${(hovered.x / CHART_W) * 100}%`, top: `${(hovered.y / CHART_H) * 100 - 15}%` }}
         >
-          <div className="font-medium">{hovered.memory.label}</div>
+          <div className="font-medium">{memoryLabelT(language, hovered.memory.id, hovered.memory.label)}</div>
           <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
-            留存 {(hovered.retention * 100).toFixed(0)}% · {hovered.memory.dimensions.emotional.primary}
+            {t('valueDashboard.retention')} {(hovered.retention * 100).toFixed(0)}% · {emotionT(language, hovered.memory.dimensions.emotional.primary)}
           </div>
         </div>
       )}
@@ -319,11 +333,11 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
       <div className="flex items-center gap-3 mt-2">
         <div className="flex items-center gap-1">
           <div className="w-4 h-0.5 rounded" style={{ background: isDark ? '#00f2ff40' : '#0088cc40' }} />
-          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>理论衰减</span>
+          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('valueDashboard.theoreticalDecay')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-gray-500" />
-          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>实际记忆</span>
+          <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('valueDashboard.actualMemory')}</span>
         </div>
       </div>
 
@@ -331,7 +345,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
       {curve.actual.filter(p => p.risk >= 0.5).length > 0 && (
         <div className="mt-2.5 pt-2 border-t border-[#ffffff08]">
           <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            📌 建议重温
+            {t('valueDashboard.suggestedReview')}
           </div>
           <div className="space-y-1">
             {curve.actual
@@ -343,7 +357,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
                   <div className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: EMOTION_COLORS[p.memory.dimensions.emotional.primary] || '#888' }} />
                   <span className={`text-[10px] flex-1 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {p.memory.label}
+                    {memoryLabelT(language, p.memory.id, p.memory.label)}
                   </span>
                   <button
                     onClick={() => onReinforce(p.memory.id)}
@@ -351,7 +365,7 @@ function DecayCurveChart({ rawMemories, theme, onReinforce, onSelect }: {
                       isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
                     }`}
                   >
-                    温故
+                    {t('valueDashboard.reviewBtn')}
                   </button>
                 </div>
               ))}
@@ -366,7 +380,7 @@ const CAL_CELL = 11;
 const CAL_GAP = 2;
 const CAL_WEEKS = 13; // ~3 months
 
-function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+function EmotionCalendar({ rawMemories, theme, t, language }: { rawMemories: RawMemory[]; theme: 'dark' | 'light'; t: (key: string, params?: Record<string, string | number>) => string; language: Language }) {
   const isDark = theme === 'dark';
   const [hovered, setHovered] = useState<{ x: number; y: number; entry: { date: string; emotion: string; count: number; summaries: string[] } } | null>(null);
 
@@ -401,7 +415,7 @@ function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; the
     <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
       <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-auto">
         {/* Day labels */}
-        {['日', '一', '二', '三', '四', '五', '六'].map((label, i) => (
+        {(language === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['日', '一', '二', '三', '四', '五', '六']).map((label, i) => (
           <text key={i} x={10} y={12 + i * (CAL_CELL + CAL_GAP) + CAL_CELL / 2}
             textAnchor="middle" dominantBaseline="central" fontSize="7"
             fill={isDark ? '#555' : '#999'}>{label}</text>
@@ -449,7 +463,7 @@ function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; the
           <div className="font-medium">{hovered.entry.date}</div>
           <div className="flex items-center gap-1 mt-0.5">
             <span className="w-2 h-2 rounded-full" style={{ background: EMOTION_COLORS[hovered.entry.emotion as keyof typeof EMOTION_COLORS] || '#888' }} />
-            <span>{hovered.entry.emotion} · {hovered.entry.count} 条</span>
+            <span>{emotionT(language, hovered.entry.emotion)} · {hovered.entry.count} {t('valueDashboard.countUnit')}</span>
           </div>
           {hovered.entry.summaries.length > 0 && (
             <div className={`mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -472,10 +486,12 @@ function EmotionCalendar({ rawMemories, theme }: { rawMemories: RawMemory[]; the
   );
 }
 
-function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
+function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory, t, language }: {
   rawMemories: RawMemory[];
   theme: 'dark' | 'light';
   onSelectMemory: (m: RawMemory) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  language: Language;
 }) {
   const isDark = theme === 'dark';
   const [selectedStoryline, setSelectedStoryline] = useState<string | null>(null);
@@ -492,10 +508,10 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
     return (
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          🌊 情感旅程
+          🌊 {t('valueDashboard.emotionJourney')}
         </h4>
         <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-          需要至少 2 条记忆才能绘制情感曲线
+          {t('valueDashboard.needsAtLeast2')}
         </p>
       </section>
     );
@@ -535,10 +551,10 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
     <section>
       <div className="flex items-center justify-between mb-2">
         <h4 className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          🌊 情感旅程
+          🌊 {t('valueDashboard.emotionJourney')}
         </h4>
         <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-          {filteredPoints.length} 条记忆
+          {t('valueDashboard.memoriesCount', { count: filteredPoints.length })}
         </span>
       </div>
 
@@ -558,7 +574,7 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
                   : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              全部
+              {t('valueDashboard.all')}
             </button>
             {validStorylines.map(sl => (
               <button
@@ -570,7 +586,7 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
                     : isDark ? 'text-gray-500 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                {sl}
+                {storylineNameT(language, sl)}
               </button>
             ))}
           </div>
@@ -705,13 +721,13 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
           >
             <div className="flex items-center gap-1 mb-0.5">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: filteredPoints[hoveredPoint].color }} />
-              <span className="font-medium">{filteredPoints[hoveredPoint].emotion}</span>
+              <span className="font-medium">{emotionNameT(language, filteredPoints[hoveredPoint].emotion)}</span>
               <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>
                 ({filteredPoints[hoveredPoint].intensity.toFixed(2)})
               </span>
             </div>
             <div className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-              {filteredPoints[hoveredPoint].label}
+              {memoryLabelT(language, filteredPoints[hoveredPoint].memoryId, filteredPoints[hoveredPoint].label)}
             </div>
             <div className={isDark ? 'text-gray-600' : 'text-gray-400'}>
               {filteredPoints[hoveredPoint].date}
@@ -723,7 +739,7 @@ function EmotionJourneyPanel({ rawMemories, theme, onSelectMemory }: {
   );
 }
 
-function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: RawMemory[]; insightMemories: InsightMemory[]; theme: 'dark' | 'light' }) {
+function FlywheelPanel({ rawMemories, insightMemories, theme, t }: { rawMemories: RawMemory[]; insightMemories: InsightMemory[]; theme: 'dark' | 'light'; t: (key: string, params?: Record<string, string | number>) => string }) {
   const isDark = theme === 'dark';
 
   const stats = useMemo(() => {
@@ -749,23 +765,23 @@ function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: R
     <div className="space-y-4">
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
-          🔄 飞轮指标
+          {t('valueDashboard.flywheelMetrics')}
         </h4>
         <div className={`grid grid-cols-2 gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
           <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>记忆总数</span>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.totalMemories')}</span>
             <div className="text-lg font-medium">{stats.totalMemories}</div>
           </div>
           <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>活跃洞察</span>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.activeInsights')}</span>
             <div className="text-lg font-medium">{stats.totalInsights}</div>
           </div>
           <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>已确认洞察</span>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.confirmedInsights')}</span>
             <div className="text-lg font-medium">{stats.confirmed}</div>
           </div>
           <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>平均置信度</span>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.avgConfidence')}</span>
             <div className="text-lg font-medium">{stats.avgConfidence}%</div>
           </div>
         </div>
@@ -773,12 +789,12 @@ function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: R
 
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
-          ⭐ 记忆活跃度
+          {t('valueDashboard.memoryActivity')}
         </h4>
         <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff03] border border-[#ffffff08]' : 'bg-gray-50 border border-gray-200'}`}>
           <div className="flex items-center justify-between mb-1">
             <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              被多次回顾的记忆
+              {t('valueDashboard.multipleReviews')}
             </span>
             <span className={`text-xs font-medium ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
               {stats.highAccess}
@@ -791,19 +807,19 @@ function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: R
             />
           </div>
           <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            总回顾次数：{stats.totalAccess}
+            {t('valueDashboard.totalReviews', { count: stats.totalAccess })}
           </p>
         </div>
       </section>
 
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
-          📊 洞察质量
+          {t('valueDashboard.insightQuality')}
         </h4>
         <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff03] border border-[#ffffff08]' : 'bg-gray-50 border border-gray-200'}`}>
           <div className="flex items-center justify-between mb-1">
             <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              确认率
+              {t('valueDashboard.confirmRate')}
             </span>
             <span className={`text-xs font-medium ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
               {stats.totalInsights > 0 ? Math.round((stats.confirmed / stats.totalInsights) * 100) : 0}%
@@ -816,29 +832,31 @@ function FlywheelPanel({ rawMemories, insightMemories, theme }: { rawMemories: R
             />
           </div>
           <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            {stats.confirmed} / {stats.totalInsights} 条洞察已被确认
+            {t('valueDashboard.insightsConfirmed', { confirmed: stats.confirmed, total: stats.totalInsights })}
           </p>
         </div>
       </section>
 
       <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-        每一次互动，都在让这个记忆星云更懂你。
+        {t('valueDashboard.interactionMessage')}
       </p>
     </div>
   );
 }
 
-function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: RawMemory[]; theme: 'dark' | 'light'; onSelectMemory?: (m: RawMemory) => void }) {
+function SensoryPanel({ rawMemories, sourceMemories, theme, onSelectMemory, t, language }: { rawMemories: RawMemory[]; sourceMemories: RawMemory[]; theme: 'dark' | 'light'; onSelectMemory?: (m: RawMemory) => void; t: (key: string, params?: Record<string, string | number>) => string; language: Language }) {
   const isDark = theme === 'dark';
-  const profile = useMemo(() => computeSensoryProfile(rawMemories), [rawMemories]);
+  const profile = useMemo(() => computeSensoryProfile(sourceMemories, language), [sourceMemories, language]);
 
   // Find memories with sensory keywords
   const sensoryMemories = useMemo(() => {
     return rawMemories.filter(m => {
-      const text = m.summary + ' ' + m.label;
+      // 用未本地化原文匹配中文感官词表
+      const src = sourceMemories.find(s => s.id === m.id);
+      const text = src ? src.summary + ' ' + src.label : m.summary + ' ' + m.label;
       return extractSensoryKeywords(text).length > 0 || m.dimensions.sensory.images.length > 0;
     }).slice(0, 5);
-  }, [rawMemories]);
+  }, [rawMemories, sourceMemories]);
 
   return (
     <div className="space-y-4">
@@ -850,7 +868,7 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
       {profile.keywords.length > 0 && (
         <section>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
-            🏷️ 感官词云
+            {t('valueDashboard.sensoryWordCloud')}
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {profile.keywords.map((kw, i) => (
@@ -861,7 +879,7 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
                 }`}
                 style={{ fontSize: `${10 + kw.count * 2}px` }}
               >
-                {kw.word}
+                {sensoryWordT(language, kw.word)}
                 <span className={`ml-1 text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                   {kw.count}
                 </span>
@@ -874,16 +892,16 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
       {/* Stats */}
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          📊 感官统计
+          {t('valueDashboard.sensoryStats')}
         </h4>
         <div className={`grid grid-cols-2 gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
           <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>有感官记录</span>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.withSensory')}</span>
             <div className="text-lg font-medium">{profile.totalWithSensory}</div>
           </div>
           <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>最常见感官词</span>
-            <div>{profile.topKeyword}</div>
+            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('valueDashboard.topSensoryWord')}</span>
+            <div>{sensoryWordT(language, profile.topKeyword)}</div>
           </div>
         </div>
       </section>
@@ -892,11 +910,13 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
       {sensoryMemories.length > 0 && (
         <section>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
-            📸 有感官记录的记忆
+            {t('valueDashboard.memoriesWithSensory')}
           </h4>
           <div className="space-y-1">
             {sensoryMemories.map(m => {
-              const keywords = extractSensoryKeywords(m.summary + ' ' + m.label);
+              const src = sourceMemories.find(s => s.id === m.id);
+              const text = src ? src.summary + ' ' + src.label : m.summary + ' ' + m.label;
+              const keywords = extractSensoryKeywords(text);
               return (
                 <button
                   key={m.id}
@@ -907,7 +927,7 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
                 >
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {m.label}
+                      {memoryLabelT(language, m.id, m.label)}
                     </span>
                   </div>
                   {keywords.length > 0 && (
@@ -916,7 +936,7 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
                         <span key={i} className={`text-[9px] px-1 py-0.5 rounded ${
                           isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
                         }`}>
-                          {kw}
+                          {sensoryWordT(language, kw)}
                         </span>
                       ))}
                     </div>
@@ -931,9 +951,9 @@ function SensoryPanel({ rawMemories, theme, onSelectMemory }: { rawMemories: Raw
   );
 }
 
-function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 'dark' | 'light' }) {
+function RhythmPanel({ rawMemories, theme, t, language }: { rawMemories: RawMemory[]; theme: 'dark' | 'light'; t: (key: string, params?: Record<string, string | number>) => string; language: Language }) {
   const isDark = theme === 'dark';
-  const rhythm = useMemo(() => computeRhythm(rawMemories), [rawMemories]);
+  const rhythm = useMemo(() => computeRhythm(rawMemories, language), [rawMemories, language]);
   const maxCount = Math.max(...rhythm.heatmap.map(c => c.count), 1);
 
   return (
@@ -941,7 +961,7 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
       {/* Heatmap */}
       <section>
         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          ⏰ 24h × 7d 热力网格
+          {t('valueDashboard.rhythmGrid')}
         </h4>
         <div className="overflow-x-auto">
           <div className="inline-grid grid-cols-[auto_repeat(24,1fr)] gap-0.5 text-[8px]">
@@ -953,7 +973,7 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
               </div>
             ))}
             {/* Data rows */}
-            {['一', '二', '三', '四', '五', '六', '日'].map((dayLabel, d) => (
+            {(language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['一', '二', '三', '四', '五', '六', '日']).map((dayLabel, d) => (
               <>
                 <div key={`label-${d}`} className={`pr-1 flex items-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                   {dayLabel}
@@ -967,7 +987,7 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
                       key={`${d}-${h}`}
                       className={`w-3 h-3 rounded-sm ${isDark ? 'bg-[#00f2ff]' : 'bg-[#0088cc]'}`}
                       style={{ opacity }}
-                      title={count > 0 ? `${['周一','周二','周三','周四','周五','周六','周日'][d]} ${h}:00\n${count} 条记忆\n${cell?.topActivity} · ${cell?.topEmotion}` : ''}
+                      title={count > 0 ? `${[t('valueDashboard.monday'),t('valueDashboard.tuesday'),t('valueDashboard.wednesday'),t('valueDashboard.thursday'),t('valueDashboard.friday'),t('valueDashboard.saturday'),t('valueDashboard.sunday')][d]} ${h}:00\n${t('valueDashboard.memoriesCount', { count })}\n${cell?.topActivity ? activityT(language, cell.topActivity) : ''} · ${cell?.topEmotion ? emotionNameT(language, cell.topEmotion) : ''}` : ''}
                     />
                   );
                 })}
@@ -981,7 +1001,7 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
       {rhythm.insights.length > 0 && (
         <section>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
-            🔍 AI 发现的节律
+            {t('valueDashboard.aiDiscoveredRhythm')}
           </h4>
           <div className="space-y-1.5">
             {rhythm.insights.map((insight, i) => (
@@ -1001,14 +1021,14 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
       {rhythm.monthly.length > 0 && (
         <section>
           <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            📅 月份活跃度
+            {t('valueDashboard.monthlyActivity')}
           </h4>
           <div className="space-y-1">
             {rhythm.monthly.map((m, i) => {
               const maxMonthly = Math.max(...rhythm.monthly.map(x => x.count), 1);
               return (
                 <div key={i} className="flex items-center gap-2">
-                  <span className={`w-8 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{m.month}月</span>
+                  <span className={`w-8 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('valueDashboard.monthFormat', { month: m.month })}</span>
                   <div className={`flex-1 h-2 rounded-full ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
                     <div
                       className={`h-full rounded-full ${isDark ? 'bg-[#44ccaa]' : 'bg-teal-500'}`}
@@ -1026,10 +1046,12 @@ function RhythmPanel({ rawMemories, theme }: { rawMemories: RawMemory[]; theme: 
   );
 }
 
-function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
+function WeeklyReportPanel({ rawMemories, theme, onSelectMemory, t, language }: {
   rawMemories: RawMemory[];
   theme: 'dark' | 'light';
   onSelectMemory: (m: RawMemory) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  language: Language;
 }) {
   const isDark = theme === 'dark';
   const report = useMemo(() => computeWeeklyReport(rawMemories), [rawMemories]);
@@ -1043,7 +1065,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
   return (
     <section>
       <h4 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-        📋 本周回顾
+        {t('valueDashboard.weeklyReview')}
       </h4>
 
       {/* Stats */}
@@ -1053,15 +1075,15 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
             {report.thisWeekCount}
           </div>
           <div className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            本周新增记忆
+            {t('valueDashboard.newMemoriesThisWeek')}
           </div>
         </div>
         <div className={`p-2.5 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
           <div className={`text-lg font-medium ${trendColor}`}>
-            {trendIcon} {report.emotionTrendPercent > 0 ? `${report.emotionTrendPercent}%` : '持平'}
+            {trendIcon} {report.emotionTrendPercent > 0 ? `${report.emotionTrendPercent}%` : t('valueDashboard.flat')}
           </div>
           <div className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            情绪趋势（vs 上周）
+            {t('valueDashboard.emotionTrend')}
           </div>
         </div>
       </div>
@@ -1070,7 +1092,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
       {emotionEntries.length > 0 && (
         <div className="mb-3">
           <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            情绪分布
+            {t('valueDashboard.emotionDist')}
           </div>
           <div className="flex gap-1 flex-wrap">
             {emotionEntries.map(([emotion, count]) => (
@@ -1096,7 +1118,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
       {report.happiestMemory && (
         <div className="mb-2">
           <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            😊 本周最快乐的时刻
+            {t('valueDashboard.happiestMoment')}
           </div>
           <button
             onClick={() => onSelectMemory(report.happiestMemory!)}
@@ -1106,7 +1128,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
           >
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: EMOTION_COLORS[report.happiestMemory.dimensions.emotional.primary] }} />
-              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{report.happiestMemory.label}</span>
+              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{memoryLabelT(language, report.happiestMemory.id, report.happiestMemory.label)}</span>
             </div>
           </button>
         </div>
@@ -1116,7 +1138,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
       {report.noteworthyMemory && report.noteworthyMemory.id !== report.happiestMemory?.id && (
         <div className="mb-2">
           <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            ⭐ 本周值得关注的记忆
+            {t('valueDashboard.noteworthyMemory')}
           </div>
           <button
             onClick={() => onSelectMemory(report.noteworthyMemory!)}
@@ -1126,7 +1148,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
           >
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: EMOTION_COLORS[report.noteworthyMemory.dimensions.emotional.primary] }} />
-              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{report.noteworthyMemory.label}</span>
+              <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{memoryLabelT(language, report.noteworthyMemory.id, report.noteworthyMemory.label)}</span>
             </div>
           </button>
         </div>
@@ -1135,7 +1157,7 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
       {/* Empty state */}
       {report.thisWeekCount === 0 && (
         <div className={`text-xs py-4 text-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-          本周暂无新记忆，去看看过去的回忆吧
+          {t('valueDashboard.noNewMemories')}
         </div>
       )}
     </section>
@@ -1143,7 +1165,8 @@ function WeeklyReportPanel({ rawMemories, theme, onSelectMemory }: {
 }
 
 export default function ValueDashboard() {
-  const { rawMemories, insightMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
+  const { rawMemories, insightMemories, sourceRawMemories, detailOpen, selectMemory, theme, valueDashboardOpen, toggleValueDashboard, reinforceMemory, addToast } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const open = valueDashboardOpen;
   const [tab, setTab] = useState<'value' | 'health' | 'decay' | 'calendar' | 'journey' | 'weekly' | 'rhythm' | 'sensory' | 'flywheel'>('value');
@@ -1151,7 +1174,7 @@ export default function ValueDashboard() {
   const top5 = useMemo(() => getTop5HighValue(rawMemories), [rawMemories]);
   const riskWarnings = useMemo(() => getForgettingRiskWarnings(rawMemories), [rawMemories]);
 
-  const dimensionCoverage = useMemo(() => calcDimensionCoverage(rawMemories), [rawMemories]);
+  const dimensionCoverage = useMemo(() => calcDimensionCoverage(rawMemories, t), [rawMemories, t]);
   const forgetfulnessIndex = useMemo(() => calcForgetfulnessIndex(rawMemories), [rawMemories]);
   const emotionDistribution = useMemo(() => calcEmotionDistribution(rawMemories), [rawMemories]);
 
@@ -1165,7 +1188,7 @@ export default function ValueDashboard() {
         className={`fixed bottom-20 w-12 h-12 bg-[#ffb800]/15 border border-[#ffb800]/20 rounded-full flex items-center justify-center text-xl hover:bg-[#ffb800]/25 transition-all z-20 shadow-[0_0_15px_rgba(255,184,0,0.1)] ${
           detailOpen ? 'right-[436px]' : 'right-6'
         }`}
-        title="价值看板"
+        title={t('valueDashboard.title')}
       >
         📊
       </button>
@@ -1193,7 +1216,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  📊 价值看板
+                  📊 {t('valueDashboard.tabs.value')}
                 </button>
                 <button
                   id="val-dash-health-tab"
@@ -1204,7 +1227,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  ❤️ 记忆健康
+                  ❤️ {t('valueDashboard.tabs.health')}
                 </button>
                 <button
                   id="val-dash-decay-tab"
@@ -1215,7 +1238,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  📉 遗忘曲线
+                  📉 {t('valueDashboard.tabs.decay')}
                 </button>
                 <button
                   id="val-dash-calendar-tab"
@@ -1226,7 +1249,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  🗓 情绪日历
+                  🗓 {t('valueDashboard.tabs.calendar')}
                 </button>
                 <button
                   id="val-dash-journey-tab"
@@ -1237,7 +1260,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  🌊 情感旅程
+                  🌊 {t('valueDashboard.tabs.journey')}
                 </button>
                 <button
                   id="val-dash-weekly-tab"
@@ -1248,7 +1271,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  📋 本周回顾
+                  📋 {t('valueDashboard.tabs.weekly')}
                 </button>
                 <button
                   onClick={() => setTab('rhythm')}
@@ -1258,7 +1281,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  ⏰ 时间指纹
+                  ⏰ {t('valueDashboard.tabs.rhythm')}
                 </button>
                 <button
                   onClick={() => setTab('sensory')}
@@ -1268,7 +1291,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  👁️ 感官档案
+                  👁️ {t('valueDashboard.tabs.sensory')}
                 </button>
                 <button
                   id="val-dash-flywheel-tab"
@@ -1279,7 +1302,7 @@ export default function ValueDashboard() {
                       : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
-                  🔄 记忆飞轮
+                  🔄 {t('valueDashboard.tabs.flywheel')}
                 </button>
               </div>
               <button
@@ -1298,7 +1321,7 @@ export default function ValueDashboard() {
                 <>
                   <section>
                     <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      🏆 高价值记忆 Top 5
+                      {t('valueDashboard.highValueTop5')}
                     </h4>
                     <div className="space-y-1.5">
                       {top5.map((item) => (
@@ -1317,18 +1340,18 @@ export default function ValueDashboard() {
                               style={{ backgroundColor: EMOTION_COLORS[item.memory.dimensions.emotional.primary] }}
                             />
                             <span className={`text-xs flex-1 truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {item.memory.label}
+                              {memoryLabelT(language, item.memory.id, item.memory.label)}
                             </span>
                             <span className={`text-xs font-mono flex-shrink-0 ${
                               isDark ? 'text-gray-500' : 'text-gray-400'
                             }`}>
-                              {item.score.toFixed(0)}分
+                              {item.score.toFixed(0)}{t('valueDashboard.score')}
                             </span>
                           </div>
                           <div className={`flex gap-3 mt-1 pl-4 text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            <span>重要性 {item.breakdown.importance.toFixed(0)}</span>
+                            <span>{t('valueDashboard.importance')} {item.breakdown.importance.toFixed(0)}</span>
                             <span>CQI {item.breakdown.cqi.toFixed(0)}</span>
-                            <span>情感 {item.breakdown.emotionalIntensity.toFixed(0)}</span>
+                            <span>{t('valueDashboard.emotionalIntensity')} {item.breakdown.emotionalIntensity.toFixed(0)}</span>
                           </div>
                         </button>
                       ))}
@@ -1337,11 +1360,11 @@ export default function ValueDashboard() {
 
                   <section>
                     <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      🔔 遗忘风险预警
+                      {t('valueDashboard.forgettingRiskAlert')}
                     </h4>
                     {riskWarnings.length === 0 ? (
                       <div className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        ✅ 当前无高风险记忆
+                        {t('valueDashboard.noHighRisk')}
                       </div>
                     ) : (
                       <div className="space-y-1.5">
@@ -1363,15 +1386,15 @@ export default function ValueDashboard() {
                                   backgroundColor: `${riskColorMap[item.level]}15`,
                                 }}
                               >
-                                {RISK_LABELS[item.level]}
+                                {getRiskLabels(t)[item.level]}
                               </span>
                               <span className={`text-xs flex-1 truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                {item.memory.label}
+                                {memoryLabelT(language, item.memory.id, item.memory.label)}
                               </span>
                               <span className={`text-xs flex-shrink-0 ${
                                 isDark ? 'text-gray-500' : 'text-gray-400'
                               }`}>
-                                {item.daysSinceCreation.toFixed(0)}天前
+                                {t('memoryBank.daysAgo', { count: item.daysSinceCreation.toFixed(0) })}
                               </span>
                             </div>
                           </button>
@@ -1385,7 +1408,7 @@ export default function ValueDashboard() {
                     return reviewCandidates.length > 0 ? (
                       <section>
                         <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          📌 今日推荐重温
+                          {t('valueDashboard.suggestedReviewToday')}
                         </h4>
                         <div className="space-y-1.5">
                           {reviewCandidates.map(item => {
@@ -1397,23 +1420,23 @@ export default function ValueDashboard() {
                                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: emoColor }} />
                                 <div className="flex-1 min-w-0">
                                   <p className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    {item.memory.label}
+                                    {memoryLabelT(language, item.memory.id, item.memory.label)}
                                   </p>
                                   <p className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                    {item.memory.dimensions.emotional.primary} · 风险 {(item.risk * 100).toFixed(0)}%
+                                    {emotionT(language, item.memory.dimensions.emotional.primary)} · {t('valueDashboard.forgettingRisk')} {(item.risk * 100).toFixed(0)}%
                                   </p>
                                 </div>
                                 <button
                                   id="demo-review-btn"
                                   onClick={() => {
                                     reinforceMemory(item.memory.id);
-                                    addToast('已重温，遗忘曲线已重置', 'success');
+                                    addToast(t('valueDashboard.revisitedReset'), 'success');
                                   }}
                                   className={`text-[10px] px-2 py-0.5 rounded cursor-pointer transition-colors flex-shrink-0 ${
                                     isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
                                   }`}
                                 >
-                                  温故
+                                  {t('valueDashboard.reviewBtn2')}
                                 </button>
                               </div>
                             );
@@ -1429,15 +1452,15 @@ export default function ValueDashboard() {
                 <>
                   <section>
                     <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      🎯 10 维度覆盖率雷达图
+                      {t('valueDashboard.coverageRadar')}
                     </h4>
                     <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
-                      <RadarChart coverage={dimensionCoverage} />
+                      <RadarChart coverage={dimensionCoverage} t={t} />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {dimensionCoverage.map((v, i) => (
                         <div key={i} className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-[#ffffff05] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                          {DIM_LABELS[i]} {(v * 100).toFixed(0)}%
+                          {getDimLabels(t)[i]} {(v * 100).toFixed(0)}%
                         </div>
                       ))}
                     </div>
@@ -1445,7 +1468,7 @@ export default function ValueDashboard() {
 
                   <section>
                     <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      ⏳ 遗忘指数
+                      {t('valueDashboard.forgettingIndex')}
                     </h4>
                     <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
                       <div className="flex items-end gap-2 mb-1">
@@ -1459,7 +1482,7 @@ export default function ValueDashboard() {
                           {(forgetfulnessIndex * 100).toFixed(1)}%
                         </span>
                         <span className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          平均遗忘风险
+                          {t('valueDashboard.avgForgettingRisk')}
                         </span>
                       </div>
                       <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#ffffff08]' : 'bg-gray-200'}`}>
@@ -1473,17 +1496,17 @@ export default function ValueDashboard() {
                       </div>
                       <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                         {forgetfulnessIndex > 0.5
-                          ? '部分记忆面临较高遗忘风险，建议定期回顾'
+                          ? t('valueDashboard.partialHighRisk')
                           : forgetfulnessIndex > 0.3
-                          ? '遗忘风险适中，可适当关注久远的记忆'
-                          : '记忆状态良好，遗忘风险较低'}
+                          ? t('valueDashboard.mediumRisk')
+                          : t('valueDashboard.lowRisk')}
                       </p>
                     </div>
                   </section>
 
                   <section>
                     <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      🌈 情绪分布（Top {TOP_EMOTIONS_COUNT}）
+                      {t('valueDashboard.emotionDistTop', { count: TOP_EMOTIONS_COUNT })}
                     </h4>
                     <div className={`rounded-lg p-3 ${isDark ? 'bg-[#ffffff03]' : 'bg-gray-50'}`}>
                       <EmotionBars distribution={emotionDistribution} total={rawMemories.length} />
@@ -1495,7 +1518,7 @@ export default function ValueDashboard() {
               {tab === 'decay' && (
                 <section>
                   <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    📉 遗忘曲线（艾宾浩斯）
+                      {t('valueDashboard.forgettingCurveEbbinghaus')}
                   </h4>
                   <div className="relative">
                     <DecayCurveChart
@@ -1503,9 +1526,11 @@ export default function ValueDashboard() {
                       theme={theme}
                       onReinforce={(id) => {
                         reinforceMemory(id);
-                        addToast('已重温，遗忘曲线已重置', 'success');
+                        addToast(t('valueDashboard.revisitedReset'), 'success');
                       }}
                       onSelect={(m) => { selectMemory(m); toggleValueDashboard(); }}
+                      t={t}
+                      language={language}
                     />
                   </div>
                 </section>
@@ -1514,29 +1539,29 @@ export default function ValueDashboard() {
               {tab === 'calendar' && (
                 <section>
                   <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    🗓 情绪日历（近 3 个月）
+                      {t('valueDashboard.emotionCalendar3m')}
                   </h4>
                   <div className="relative">
-                    <EmotionCalendar rawMemories={rawMemories} theme={theme} />
+                    <EmotionCalendar rawMemories={rawMemories} theme={theme} t={t} language={language} />
                   </div>
                 </section>
               )}
 
               {tab === 'journey' && (
-                <EmotionJourneyPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
+                <EmotionJourneyPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} t={t} language={language} />
               )}
 
               {tab === 'weekly' && (
-                <WeeklyReportPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
+                <WeeklyReportPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} t={t} language={language} />
               )}
               {tab === 'rhythm' && (
-                <RhythmPanel rawMemories={rawMemories} theme={theme} />
+                <RhythmPanel rawMemories={rawMemories} theme={theme} t={t} language={language} />
               )}
               {tab === 'sensory' && (
-                <SensoryPanel rawMemories={rawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} />
+                <SensoryPanel rawMemories={rawMemories} sourceMemories={sourceRawMemories} theme={theme} onSelectMemory={(m) => { selectMemory(m); toggleValueDashboard(); }} t={t} language={language} />
               )}
               {tab === 'flywheel' && (
-                <FlywheelPanel rawMemories={rawMemories} insightMemories={insightMemories} theme={theme} />
+                <FlywheelPanel rawMemories={rawMemories} insightMemories={insightMemories} theme={theme} t={t} />
               )}
             </div>
           </motion.div>

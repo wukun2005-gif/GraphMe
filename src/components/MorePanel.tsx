@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '../i18n';
 
 interface FeatureItem {
   id: string;
@@ -18,6 +19,7 @@ interface Props {
 
 export default function MorePanel({ features, theme, isShow, onClose }: Props) {
   const isDark = theme === 'dark';
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   return (
@@ -35,7 +37,7 @@ export default function MorePanel({ features, theme, isShow, onClose }: Props) {
           <div className={`px-4 py-2 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
             <div className="flex items-center justify-between">
               <h3 className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                更多功能
+                {t('more.title')}
               </h3>
               <button
                 onClick={onClose}

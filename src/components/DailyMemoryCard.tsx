@@ -2,9 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppState } from '../store/AppContext';
 import { getDailyMemory } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import { timeLabelT, emotionNameT, joinContentT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
 export default function DailyMemoryCard() {
   const { rawMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -58,11 +62,7 @@ export default function DailyMemoryCard() {
     scheduleDismiss();
   };
 
-  const timeLabel = daysAgo < 1
-    ? '今天'
-    : daysAgo < 365
-      ? `${daysAgo} 天前`
-      : `${Math.floor(daysAgo / 365)} 年前`;
+  const timeLabel = timeLabelT(language, daysAgo);
 
   return (
     <div
@@ -105,7 +105,7 @@ export default function DailyMemoryCard() {
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                 isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'
               }`}>
-                {reason === 'anniversary' ? '那年今日' : '记忆提醒'}
+                {reason === 'anniversary' ? t('daily.onThisDay') : t('daily.memoryReminder')}
               </span>
               <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                 {timeLabel}
@@ -114,12 +114,12 @@ export default function DailyMemoryCard() {
             <p className={`text-sm font-medium leading-snug truncate ${
               isDark ? 'text-gray-200' : 'text-gray-800'
             }`}>
-              {memory.label}
+              {memoryLabelT(language, memory.id, memory.label)}
             </p>
             <p className={`text-xs mt-0.5 line-clamp-2 leading-relaxed ${
               isDark ? 'text-gray-500' : 'text-gray-500'
             }`}>
-              {memory.summary}
+              {memorySummaryT(language, memory.id, memory.summary)}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
               <span
@@ -127,11 +127,11 @@ export default function DailyMemoryCard() {
                 style={{ background: emotionColor }}
               />
               <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {memory.dimensions.emotional.primary}
+                {emotionNameT(language, memory.dimensions.emotional.primary)}
               </span>
               {memory.dimensions.social.persons.length > 0 && (
                 <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                  · {memory.dimensions.social.persons.join('、')}
+                  · {joinContentT(language, memory.dimensions.social.persons)}
                 </span>
               )}
             </div>

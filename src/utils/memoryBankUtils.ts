@@ -1,6 +1,10 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
+import { memoryLabelT } from '../i18n/memoryData';
 
 export type TimeRange = '周' | '月' | '季';
+
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
 export interface DimensionItem {
   id: string;
@@ -30,6 +34,7 @@ export interface PotentialItem {
   icon: string;
   stars: number;
   invest: string;
+  investKey: string;
   suggestion: string;
 }
 
@@ -87,7 +92,8 @@ function computeDimensionValue(memories: RawMemory[], dimId: string): number {
         if (d.social.persons.length >= 2) { count++; intensitySum += d.social.intimacy; }
         break;
       case 'creativity':
-        if (d.activity.type === '绘画' || d.activity.type === '创作' || d.activity.detail.includes('画') || d.activity.detail.includes('创')) count++;
+        // 基于 activity.type 枚举判断；activity.detail 已本地化，不可用于中文子串匹配
+        if (['绘画', '创作', '手工', '艺术'].includes(d.activity.type)) count++;
         break;
       case 'logic':
         if (d.semantic.knowledge.length > 0 || d.activity.type === '学习' || d.activity.type === '编程') count++;
@@ -112,35 +118,34 @@ function trendFromValues(current: number, prev: number): { trend: 'up' | 'down' 
   return { trend: diff > 0 ? 'up' : 'down', trendPct: Math.min(pct, 99) };
 }
 
-function predictionFromTrend(trend: 'up' | 'down' | 'stable', value: number): { prediction: 'up' | 'down' | 'warn'; predictionLabel: string } {
-  if (trend === 'up' || (trend === 'stable' && value >= 50)) return { prediction: 'up', predictionLabel: '↗ 保持' };
-  if (value < 30) return { prediction: 'warn', predictionLabel: '⚠ 预警' };
-  return { prediction: 'down', predictionLabel: '↘ 下降' };
+function predictionFromTrend(trend: 'up' | 'down' | 'stable', value: number, t: TranslateFn): { prediction: 'up' | 'down' | 'warn'; predictionLabel: string } {
+  if (trend === 'up' || (trend === 'stable' && value >= 50)) return { prediction: 'up', predictionLabel: t('memoryBank.prediction.maintain') };
+  if (value < 30) return { prediction: 'warn', predictionLabel: t('memoryBank.prediction.warning') };
+  return { prediction: 'down', predictionLabel: t('memoryBank.prediction.decline') };
 }
 
-function actionForDimension(dimId: string, value: number): string {
-  const actions: Record<string, { low: string; mid: string; high: string }> = {
-    happiness: { low: '增加快乐活动', mid: '保持平衡', high: '保持当前节奏' },
-    social: { low: '建议安排聚会', mid: '适度社交', high: '社交状态良好' },
-    creativity: { low: '尝试新创意活动', mid: '持续创作', high: '创意表现优秀' },
-    logic: { low: '增加学习活动', mid: '保持学习', high: '学习状态良好' },
-    outdoor: { low: '建议周末出游', mid: '增加户外', high: '户外活动充足' },
-  };
-  const a = actions[dimId] || { low: '增加投入', mid: '保持', high: '良好' };
-  if (value < 30) return a.low;
-  if (value < 60) return a.mid;
-  return a.high;
+function actionForDimension(dimId: string, value: number, t: TranslateFn): string {
+  const low = value < 30;
+  const mid = value >= 30 && value < 60;
+  const high = value >= 60;
+
+  if (dimId === 'happiness') return low ? t('memoryBank.action.happiness.low') : mid ? t('memoryBank.action.happiness.mid') : t('memoryBank.action.happiness.high');
+  if (dimId === 'social') return low ? t('memoryBank.action.social.low') : mid ? t('memoryBank.action.social.mid') : t('memoryBank.action.social.high');
+  if (dimId === 'creativity') return low ? t('memoryBank.action.creativity.low') : mid ? t('memoryBank.action.creativity.mid') : t('memoryBank.action.creativity.high');
+  if (dimId === 'logic') return low ? t('memoryBank.action.logic.low') : mid ? t('memoryBank.action.logic.mid') : t('memoryBank.action.logic.high');
+  if (dimId === 'outdoor') return low ? t('memoryBank.action.outdoor.low') : mid ? t('memoryBank.action.outdoor.mid') : t('memoryBank.action.outdoor.high');
+  return low ? t('memoryBank.action.default.low') : mid ? t('memoryBank.action.default.mid') : t('memoryBank.action.default.high');
 }
 
 const DIM_DEFS = [
-  { id: 'happiness', emoji: '😊', label: '快乐' },
-  { id: 'logic', emoji: '🧠', label: '逻辑' },
-  { id: 'social', emoji: '👫', label: '社交' },
-  { id: 'outdoor', emoji: '🏃', label: '户外活动' },
-  { id: 'creativity', emoji: '🎨', label: '创意' },
+  { id: 'happiness', emoji: '😊', labelKey: 'dim.happiness' },
+  { id: 'logic', emoji: '🧠', labelKey: 'dim.logic' },
+  { id: 'social', emoji: '👫', labelKey: 'dim.social' },
+  { id: 'outdoor', emoji: '🏃', labelKey: 'dim.outdoor' },
+  { id: 'creativity', emoji: '🎨', labelKey: 'dim.creativity' },
 ];
 
-export function computeDimensionData(memories: RawMemory[], range: TimeRange, now: number = Date.now()): DimensionItem[] {
+export function computeDimensionData(memories: RawMemory[], range: TimeRange, t: TranslateFn, now: number = Date.now()): DimensionItem[] {
   const current = filterByTimeRange(memories, range, now);
   const prev = filterPrevPeriod(memories, range, now);
 
@@ -148,18 +153,18 @@ export function computeDimensionData(memories: RawMemory[], range: TimeRange, no
     const value = computeDimensionValue(current, def.id);
     const prevValue = computeDimensionValue(prev, def.id);
     const { trend, trendPct } = trendFromValues(value, prevValue);
-    const { prediction, predictionLabel } = predictionFromTrend(trend, value);
+    const { prediction, predictionLabel } = predictionFromTrend(trend, value, t);
 
     return {
       id: def.id,
       emoji: def.emoji,
-      label: def.label,
+      label: t(def.labelKey),
       value,
       trend,
       trendPct,
       prediction,
       predictionLabel,
-      actionLabel: actionForDimension(def.id, value),
+      actionLabel: actionForDimension(def.id, value, t),
     };
   });
 }
@@ -196,11 +201,11 @@ export function computeAssetStats(memories: RawMemory[]): AssetStats {
   return { positive, negative, ratio, total: memories.length };
 }
 
-export function computeTemperament(memories: RawMemory[]): TemperamentResult {
+export function computeTemperament(memories: RawMemory[], t: TranslateFn, lang: Language = 'zh-CN'): TemperamentResult {
   if (memories.length === 0) {
     return {
-      type: '未知气质',
-      label: '数据不足',
+      type: t('memoryBank.temperament.unknown'),
+      label: t('memoryBank.temperament.insufficient'),
       confidence: 0,
       traits: [],
       representativeMems: [],
@@ -235,46 +240,46 @@ export function computeTemperament(memories: RawMemory[]): TemperamentResult {
   );
 
   const traits = [
-    { emoji: '🟡', name: '情感驱动', pct: emotionalPct },
-    { emoji: '🟣', name: '安全依赖', pct: securityPct },
-    { emoji: '🔵', name: '创造力导向', pct: creativePct },
+    { emoji: '🟡', name: t('memoryBank.temperament.emotionalDrive'), pct: emotionalPct },
+    { emoji: '🟣', name: t('memoryBank.temperament.securityDependence'), pct: securityPct },
+    { emoji: '🔵', name: t('memoryBank.temperament.creativityDrive'), pct: creativePct },
   ].sort((a, b) => b.pct - a.pct);
 
   const dominantTrait = traits[0];
   const typeMap: Record<string, string> = {
-    '情感驱动': '俄耳甫斯气质',
-    '安全依赖': '雅努斯气质',
-    '创造力导向': '普罗米修斯气质',
+    [t('memoryBank.temperament.emotionalDrive')]: t('memoryBank.temperament.orpheus'),
+    [t('memoryBank.temperament.securityDependence')]: t('memoryBank.temperament.janus'),
+    [t('memoryBank.temperament.creativityDrive')]: t('memoryBank.temperament.prometheus'),
   };
   const labelMap: Record<string, string> = {
-    '情感驱动': '情感驱动型学习者',
-    '安全依赖': '安全导向型探索者',
-    '创造力导向': '创造力驱动型思考者',
+    [t('memoryBank.temperament.emotionalDrive')]: t('memoryBank.temperament.emotionalLearner'),
+    [t('memoryBank.temperament.securityDependence')]: t('memoryBank.temperament.securityExplorer'),
+    [t('memoryBank.temperament.creativityDrive')]: t('memoryBank.temperament.creativityThinker'),
   };
 
   const sorted = [...memories].sort((a, b) => b.dimensions.value.importance - a.dimensions.value.importance);
   const representativeMems = sorted.slice(0, 3).map(m => {
     const ts = m.dimensions.temporal.timestamp;
-    const date = new Date(ts).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
+    const date = new Date(ts).toLocaleDateString(t('memoryBank.dateLocale'), { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
     const positiveEmotions2 = ['快乐', '好奇', '骄傲', '感激'];
-    const type = positiveEmotions2.includes(m.dimensions.emotional.primary) ? '正资产' : '待改善';
+    const type = positiveEmotions2.includes(m.dimensions.emotional.primary) ? t('memoryBank.positiveAssets') : t('memoryBank.toImprove');
     const emoji = m.dimensions.activity.type === '绘画' || m.dimensions.activity.type === '创作' ? '🎨'
       : m.dimensions.social.persons.length > 1 ? '🤗'
       : m.dimensions.semantic.knowledge.length > 0 ? '📖'
       : '🧠';
-    return { emoji, label: m.label, date, type };
+    return { emoji, label: memoryLabelT(lang, m.id, m.label), date, type };
   });
 
   return {
-    type: typeMap[dominantTrait.name] || '综合气质',
-    label: labelMap[dominantTrait.name] || '多元发展型',
+    type: typeMap[dominantTrait.name] || t('memoryBank.temperament.comprehensive'),
+    label: labelMap[dominantTrait.name] || t('memoryBank.temperament.diversified'),
     confidence: Math.round(dominantTrait.pct),
     traits,
     representativeMems,
   };
 }
 
-export function computeDimensionRates(memories: RawMemory[], range: TimeRange, now: number = Date.now()): RateItem[] {
+export function computeDimensionRates(memories: RawMemory[], range: TimeRange, t: TranslateFn, now: number = Date.now()): RateItem[] {
   const current = filterByTimeRange(memories, range, now);
   const prev = filterPrevPeriod(memories, range, now);
 
@@ -289,7 +294,7 @@ export function computeDimensionRates(memories: RawMemory[], range: TimeRange, n
     return {
       rank: i + 1,
       emoji: def.emoji,
-      name: def.label,
+      name: t(def.labelKey),
       rate,
       change: changeStr,
       up: diff >= 0,
@@ -298,15 +303,15 @@ export function computeDimensionRates(memories: RawMemory[], range: TimeRange, n
   }).sort((a, b) => b.rate - a.rate).map((item, i) => ({ ...item, rank: i + 1 }));
 }
 
-export function computeMemoryTypePotential(memories: RawMemory[]): PotentialItem[] {
+export function computeMemoryTypePotential(memories: RawMemory[], t: TranslateFn): PotentialItem[] {
   if (memories.length === 0) return [];
 
   const categories = [
-    { label: '亲子互动记忆', icon: '👨‍👧', filter: (m: RawMemory) => m.dimensions.social.persons.some(p => p.includes('爸') || p.includes('妈') || p.includes('父') || p.includes('母')) },
-    { label: '学习成长记忆', icon: '📚', filter: (m: RawMemory) => m.dimensions.activity.type === '学习' || m.dimensions.semantic.knowledge.length > 0 },
-    { label: '社交情感记忆', icon: '💬', filter: (m: RawMemory) => m.dimensions.social.persons.length >= 2 },
-    { label: '户外探索记忆', icon: '🌲', filter: (m: RawMemory) => m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场' },
-    { label: '日常习惯记忆', icon: '🏠', filter: (m: RawMemory) => m.dimensions.spatial.placeType === '家' },
+    { labelKey: 'memoryBank.potential.familyInteraction', icon: '👨‍👧', filter: (m: RawMemory) => m.dimensions.social.persons.some(p => p.includes('爸') || p.includes('妈') || p.includes('父') || p.includes('母')) },
+    { labelKey: 'memoryBank.potential.learningGrowth', icon: '📚', filter: (m: RawMemory) => m.dimensions.activity.type === '学习' || m.dimensions.semantic.knowledge.length > 0 },
+    { labelKey: 'memoryBank.potential.socialEmotional', icon: '💬', filter: (m: RawMemory) => m.dimensions.social.persons.length >= 2 },
+    { labelKey: 'memoryBank.potential.outdoorExploration', icon: '🌲', filter: (m: RawMemory) => m.dimensions.spatial.placeType === '公园' || m.dimensions.spatial.placeType === '游乐场' },
+    { labelKey: 'memoryBank.potential.dailyHabits', icon: '🏠', filter: (m: RawMemory) => m.dimensions.spatial.placeType === '家' },
   ];
 
   const results = categories.map(cat => {
@@ -320,20 +325,19 @@ export function computeMemoryTypePotential(memories: RawMemory[]): PotentialItem
       : 0;
     const score = (count / memories.length) * 50 + avgImportance * 30 + avgCqi * 20;
     const stars = Math.max(1, Math.min(5, Math.round(score / 20)));
-    const invest = stars >= 4 ? '高' : stars >= 3 ? '中' : '低';
-    const suggestions: Record<string, string> = {
-      '高': '持续高回报资产，保持投入',
-      '中': '稳定增值，可适度增加',
-      '低': '需增加投入，提升价值',
-    };
+    const investKey = stars >= 4 ? '高' : stars >= 3 ? '中' : '低';
+    const investTKey = stars >= 4 ? 'memoryBank.investHigh' : stars >= 3 ? 'memoryBank.investMedium' : 'memoryBank.investLow';
+    const investLabel = t(investTKey);
+    const suggestionKey = stars >= 4 ? 'memoryBank.potential.suggestion.high' : stars >= 3 ? 'memoryBank.potential.suggestion.medium' : 'memoryBank.potential.suggestion.low';
 
     return {
       rank: 0,
-      label: cat.label,
+      label: t(cat.labelKey),
       icon: cat.icon,
       stars,
-      invest,
-      suggestion: suggestions[invest],
+      invest: investLabel,
+      investKey,
+      suggestion: t(suggestionKey),
       score,
     };
   });
@@ -345,6 +349,7 @@ export function computeMemoryTypePotential(memories: RawMemory[]): PotentialItem
     icon: r.icon,
     stars: r.stars,
     invest: r.invest,
+    investKey: r.investKey,
     suggestion: r.suggestion,
   }));
 }
@@ -402,47 +407,19 @@ function computeRadarForMemories(memories: RawMemory[]): PersonaRadarData {
   };
 }
 
-function classifyPersona(radar: PersonaRadarData): string {
+function classifyPersona(radar: PersonaRadarData, t: TranslateFn): string {
   const { emotionalRichness, socialDensity, knowledgeDepth, narrativeCoherence, reviewFrequency } = radar;
   const max = Math.max(emotionalRichness, socialDensity, knowledgeDepth, narrativeCoherence, reviewFrequency);
-  if (max === 0) return '记录者';
-  if (emotionalRichness === max) return '情感驱动';
-  if (socialDensity === max) return '连接者';
-  if (knowledgeDepth === max) return '探索者';
-  if (narrativeCoherence === max) return '叙事者';
-  if (reviewFrequency === max) return '守护者';
-  return '综合气质';
+  if (max === 0) return t('memoryBank.persona.recorder');
+  if (emotionalRichness === max) return t('memoryBank.persona.emotionalDriver');
+  if (socialDensity === max) return t('memoryBank.persona.connector');
+  if (knowledgeDepth === max) return t('memoryBank.persona.explorer');
+  if (narrativeCoherence === max) return t('memoryBank.persona.narrator');
+  if (reviewFrequency === max) return t('memoryBank.persona.guardian');
+  return t('memoryBank.persona.recorder');
 }
 
-const EVOLUTION_TEMPLATES: Record<string, Record<string, string>> = {
-  '情感驱动': {
-    '连接者': '你开始更关注记忆中的人物关系了',
-    '探索者': '你对知识和新体验的渴望在增长',
-    '叙事者': '你开始用故事串联记忆',
-    '守护者': '你更频繁地回顾珍贵记忆',
-  },
-  '连接者': {
-    '情感驱动': '你对情感的感知变得更加细腻',
-    '探索者': '你的视野在拓宽，探索欲增强',
-    '叙事者': '你开始构建记忆之间的叙事线',
-  },
-  '探索者': {
-    '情感驱动': '你开始更关注内心感受',
-    '连接者': '你更重视与他人的连接',
-    '守护者': '你开始珍惜和回顾过往',
-  },
-};
-
-const PERSONA_SUGGESTIONS: Record<string, string[]> = {
-  '情感驱动': ['尝试为每条记忆标注更多情绪细节', '关注情绪变化的趋势'],
-  '连接者': ['多记录与他人的互动', '建立更多故事线连接'],
-  '探索者': ['记录学习心得和知识标签', '尝试新领域的记忆'],
-  '叙事者': ['为记忆添加前后引用', '构建完整的故事线'],
-  '守护者': ['定期回顾高价值记忆', '设置记忆强化提醒'],
-  '记录者': ['开始记录更多维度的信息', '尝试不同类型的记忆'],
-};
-
-export function computePersonaEvolution(memories: RawMemory[]): PersonaEvolutionData {
+export function computePersonaEvolution(memories: RawMemory[], t: TranslateFn): PersonaEvolutionData {
   const now = Date.now();
   const threeMonths = 90 * 24 * 60 * 60 * 1000;
   const recentMemories = memories.filter(m => now - m.dimensions.temporal.timestamp < threeMonths);
@@ -451,15 +428,58 @@ export function computePersonaEvolution(memories: RawMemory[]): PersonaEvolution
   const current = computeRadarForMemories(recentMemories.length > 0 ? recentMemories : memories);
   const previous = computeRadarForMemories(olderMemories.length > 0 ? olderMemories : memories);
 
-  const currentType = classifyPersona(current);
-  const previousType = classifyPersona(previous);
+  const currentType = classifyPersona(current, t);
+  const previousType = classifyPersona(previous, t);
+
+  const personaTypeMap: Record<string, string> = {
+    [t('memoryBank.persona.emotionalDriver')]: 'memoryBank.persona.emotionalDriver',
+    [t('memoryBank.persona.connector')]: 'memoryBank.persona.connector',
+    [t('memoryBank.persona.explorer')]: 'memoryBank.persona.explorer',
+    [t('memoryBank.persona.narrator')]: 'memoryBank.persona.narrator',
+    [t('memoryBank.persona.guardian')]: 'memoryBank.persona.guardian',
+    [t('memoryBank.persona.recorder')]: 'memoryBank.persona.recorder',
+  };
+
+  const prevKey = personaTypeMap[previousType];
+  const currKey = personaTypeMap[currentType];
+
+  const EVOLUTION_KEYS: Record<string, Record<string, string>> = {
+    'memoryBank.persona.emotionalDriver': {
+      'memoryBank.persona.connector': 'memoryBank.evolution.toConnector',
+      'memoryBank.persona.explorer': 'memoryBank.evolution.toExplorer',
+      'memoryBank.persona.narrator': 'memoryBank.evolution.toNarrator',
+      'memoryBank.persona.guardian': 'memoryBank.evolution.toGuardian',
+    },
+    'memoryBank.persona.connector': {
+      'memoryBank.persona.emotionalDriver': 'memoryBank.evolution.toEmotionalDriver',
+      'memoryBank.persona.explorer': 'memoryBank.evolution.toExplorerFromConnector',
+      'memoryBank.persona.narrator': 'memoryBank.evolution.toNarratorFromConnector',
+    },
+    'memoryBank.persona.explorer': {
+      'memoryBank.persona.emotionalDriver': 'memoryBank.evolution.toEmotionalDriverFromExplorer',
+      'memoryBank.persona.connector': 'memoryBank.evolution.toConnectorFromExplorer',
+      'memoryBank.persona.guardian': 'memoryBank.evolution.toGuardianFromExplorer',
+    },
+  };
 
   let evolutionDescription = '';
   if (currentType !== previousType) {
-    evolutionDescription = EVOLUTION_TEMPLATES[previousType]?.[currentType] || `从"${previousType}"型转变为"${currentType}"型`;
+    const evoKey = prevKey && currKey ? EVOLUTION_KEYS[prevKey]?.[currKey] : undefined;
+    evolutionDescription = evoKey ? t(evoKey) : t('memoryBank.evolution.currentSame', { type: currentType });
   } else {
-    evolutionDescription = `你一直是"${currentType}"型的记忆者`;
+    evolutionDescription = t('memoryBank.evolution.currentSame', { type: currentType });
   }
+
+  const SUGGESTION_KEYS: Record<string, string[]> = {
+    'memoryBank.persona.emotionalDriver': ['memoryBank.suggestion.emotionalDetail', 'memoryBank.suggestion.emotionalTrend'],
+    'memoryBank.persona.connector': ['memoryBank.suggestion.socialRecord', 'memoryBank.suggestion.storylineConnect'],
+    'memoryBank.persona.explorer': ['memoryBank.suggestion.learningNotes', 'memoryBank.suggestion.newDomain'],
+    'memoryBank.persona.narrator': ['memoryBank.suggestion前后引用', 'memoryBank.suggestion.storylineComplete'],
+    'memoryBank.persona.guardian': ['memoryBank.suggestion.regularReview', 'memoryBank.suggestion.reinforceReminder'],
+    'memoryBank.persona.recorder': ['memoryBank.suggestion.multiDimension', 'memoryBank.suggestion.variety'],
+  };
+
+  const suggestionKeys = SUGGESTION_KEYS[currKey || 'memoryBank.persona.recorder'] || SUGGESTION_KEYS['memoryBank.persona.recorder'];
 
   return {
     current,
@@ -467,6 +487,6 @@ export function computePersonaEvolution(memories: RawMemory[]): PersonaEvolution
     currentType,
     previousType,
     evolutionDescription,
-    suggestions: PERSONA_SUGGESTIONS[currentType] || PERSONA_SUGGESTIONS['记录者'],
+    suggestions: suggestionKeys.map(k => t(k)),
   };
 }

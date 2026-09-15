@@ -1,8 +1,11 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useAppState } from '../store/AppContext';
+import { useI18n } from '../i18n';
+import { dateT } from '../i18n/dataTranslations';
 
 export default function TimelineScrubber() {
   const { rawMemories, theme, timeRangeFilter, setTimeRangeFilter, detailOpen } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<'start' | 'end' | null>(null);
@@ -54,10 +57,7 @@ export default function TimelineScrubber() {
   }, [dragging, fromPercent, setTimeRangeFilter]);
 
   const formatDate = (ts: number) => {
-    const d = new Date(ts);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    return `${month}月${day}日`;
+    return dateT(language, ts);
   };
 
   const isFiltered = timeRangeFilter !== null;
@@ -155,12 +155,12 @@ export default function TimelineScrubber() {
                 isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
               }`}
             >
-              全部
+              {t('timeline.all')}
             </button>
           )}
 
           <span className={`text-[10px] flex-shrink-0 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-            {inRangeCount} 条
+            {t('timeline.count', { count: inRangeCount })}
           </span>
         </div>
       </div>

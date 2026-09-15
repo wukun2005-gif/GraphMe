@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { computeKnowledgeGap } from '../utils/gapUtils';
+import { useI18n } from '../i18n';
 
 interface Props {
   open: boolean;
@@ -10,6 +11,7 @@ interface Props {
 
 export default function KnowledgeGap({ open, onClose }: Props) {
   const { rawMemories, insightMemories, theme } = useAppState();
+  const { t } = useI18n();
   const isDark = theme === 'dark';
 
   const gapData = useMemo(
@@ -33,7 +35,7 @@ export default function KnowledgeGap({ open, onClose }: Props) {
           <div className={`px-5 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
             <div className="flex items-center justify-between mb-2">
               <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                🧩 了解程度
+                {t('gap.title')}
               </h2>
               <button
                 onClick={onClose}

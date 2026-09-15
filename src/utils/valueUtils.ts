@@ -1,5 +1,34 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
 import { EMOTION_COLORS } from '../types';
+import { emotionNameT, contentT, timeOfDayT } from '../i18n/dataTranslations';
+import { memorySummaryT } from '../i18n/memoryData';
+
+const VALUE_LABELS: Record<string, { zh: string; en: string }> = {
+  importance: { zh: '重要性', en: 'Importance' },
+  cqi: { zh: 'CQI', en: 'CQI' },
+  intensity: { zh: '情感强度', en: 'Emotion Intensity' },
+  accessCount: { zh: '访问次数', en: 'Access Count' },
+  intimacy: { zh: '亲密度', en: 'Intimacy' },
+  personality_sunny: { zh: '阳光开朗型', en: 'Sunny & Outgoing' },
+  personality_explorer: { zh: '探索发现型', en: 'Explorer' },
+  personality_achiever: { zh: '成就驱动型', en: 'Achievement-Driven' },
+  personality_grateful: { zh: '温暖感恩型', en: 'Warm & Grateful' },
+  personality_deep: { zh: '深度感受型', en: 'Deep Feeler' },
+  personality_observer: { zh: '沉稳观察型', en: 'Calm Observer' },
+  personality_diverse: { zh: '多元体验型', en: 'Diverse Experiencer' },
+  summary: { zh: '你的记忆人格是「{{personality}}」——{{emotion}}是你最常出现的情绪。全年共 {{total}} 条记忆，{{milestones}} 个里程碑，最常出现的人是{{person}}。', en: 'Your memory personality is "{{personality}}" — {{emotion}} is your most frequent emotion. {{total}} memories throughout the year, {{milestones}} milestones, and the most frequent person is {{person}}.' },
+  trajectory: { zh: '{{fromTime}}→{{toTime}} 情绪从{{fromEmo}}变为{{toEmo}}', en: '{{fromTime}}→{{toTime}} Emotion changed from {{fromEmo}} to {{toEmo}}' },
+  unknown: { zh: '未知', en: 'unknown' },
+};
+
+export function valueT(lang: Language, key: string, params?: Record<string, string | number>): string {
+  const labels = VALUE_LABELS[key];
+  if (!labels) return key;
+  const raw = lang === 'en' ? labels.en : labels.zh;
+  if (!params) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k) => k in params ? String(params[k]) : `{{${k}}}`);
+}
 
 export interface ValueScoreResult {
   memory: RawMemory;
@@ -90,7 +119,7 @@ export interface DailyTrajectory {
   pairs: TrajectoryPair[];
 }
 
-export function computeDailyTrajectories(memories: RawMemory[]): DailyTrajectory[] {
+export function computeDailyTrajectories(memories: RawMemory[], lang: Language = 'zh-CN'): DailyTrajectory[] {
   const dayMap = new Map<string, RawMemory[]>();
 
   memories.forEach(m => {
@@ -116,7 +145,12 @@ export function computeDailyTrajectories(memories: RawMemory[]): DailyTrajectory
       pairs.push({
         from,
         to,
-        description: `${fromTime}→${toTime} 情绪从${fromEmo}变为${toEmo}`,
+        description: valueT(lang, 'trajectory', {
+          fromTime: timeOfDayT(lang, fromTime),
+          toTime: timeOfDayT(lang, toTime),
+          fromEmo: emotionNameT(lang, fromEmo),
+          toEmo: emotionNameT(lang, toEmo),
+        }),
       });
     }
     trajectories.push({ date, pairs });
@@ -136,7 +170,7 @@ export interface AnnualStats {
   summaryText: string;
 }
 
-export function computeAnnualStats(memories: RawMemory[]): AnnualStats {
+export function computeAnnualStats(memories: RawMemory[], lang: Language = 'zh-CN'): AnnualStats {
   const emotionDist: Record<string, number> = {};
   const monthMap = new Map<string, number>();
   const personMap = new Map<string, number>();
@@ -163,7 +197,14 @@ export function computeAnnualStats(memories: RawMemory[]): AnnualStats {
     if (loc) locationMap.set(loc, (locationMap.get(loc) || 0) + 1);
 
     // Keywords from summary
-    const words = m.summary.replace(/[，。！？、；：""''（）\s]+/g, ' ').split(' ').filter(w => w.length >= 2);
+    let words: string[];
+    if (lang === 'en') {
+      const stop = new Set(['the', 'a', 'an', 'and', 'to', 'of', 'in', 'for', 'with', 'on', 'was', 'his', 'her', 'he', 'she', 'it', 'my', 'that', 'this', 'from', 'by', 'at', 'but', 'not', 'be', 'were', 'is', 'are', 'as', 'then', 'there', 'which', 'when', 'our', 'you', 'they', 'we', 'or', 'so', 'all', 'its']);
+      const summary = memorySummaryT(lang, m.id, m.summary);
+      words = summary.toLowerCase().replace(/[^a-z\s']/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stop.has(w));
+    } else {
+      words = m.summary.replace(/[，。！？、；：""''（）\s]+/g, ' ').split(' ').filter(w => w.length >= 2);
+    }
     words.forEach(w => wordMap.set(w, (wordMap.get(w) || 0) + 1));
   });
 
@@ -190,18 +231,23 @@ export function computeAnnualStats(memories: RawMemory[]): AnnualStats {
 
   // Summary text
   const topEmotion = Object.entries(emotionDist).sort(([, a], [, b]) => b - a)[0]?.[0] || '中性';
-  const personalityMap: Record<string, string> = {
-    '快乐': '阳光开朗型',
-    '好奇': '探索发现型',
-    '骄傲': '成就驱动型',
-    '感激': '温暖感恩型',
-    '悲伤': '深度感受型',
-    '中性': '沉稳观察型',
+  const personalityKeyMap: Record<string, string> = {
+    '快乐': 'personality_sunny',
+    '好奇': 'personality_explorer',
+    '骄傲': 'personality_achiever',
+    '感激': 'personality_grateful',
+    '悲伤': 'personality_deep',
+    '中性': 'personality_observer',
   };
-  const personality = personalityMap[topEmotion] || '多元体验型';
-  const summaryText = `你的记忆人格是「${personality}」——${topEmotion}是你最常出现的情绪。`
-    + `全年共 ${memories.length} 条记忆，${milestones.length} 个里程碑，`
-    + `最常出现的人是${topPersons[0]?.name || '未知'}。`;
+  const personalityKey = personalityKeyMap[topEmotion] || 'personality_diverse';
+  const personality = valueT(lang, personalityKey);
+  const summaryText = valueT(lang, 'summary', {
+    personality,
+    emotion: emotionNameT(lang, topEmotion),
+    total: memories.length,
+    milestones: milestones.length,
+    person: topPersons[0]?.name ? contentT(lang, topPersons[0].name) : valueT(lang, 'unknown'),
+  });
 
   return {
     totalMemories: memories.length,
@@ -260,17 +306,17 @@ export interface DimensionDiff {
   delta: number;
 }
 
-export function computeDiff(memA: RawMemory, memB: RawMemory): DimensionDiff[] {
+export function computeDiff(memA: RawMemory, memB: RawMemory, lang: Language = 'zh-CN'): DimensionDiff[] {
   // memA = earlier, memB = later
   const [earlier, later] = memA.dimensions.temporal.timestamp <= memB.dimensions.temporal.timestamp
     ? [memA, memB] : [memB, memA];
 
-  const dims: { key: string; label: string; getValue: (m: RawMemory) => number }[] = [
-    { key: 'importance', label: '重要性', getValue: m => m.dimensions.value.importance },
-    { key: 'cqi', label: 'CQI', getValue: m => m.dimensions.value.cqi },
-    { key: 'intensity', label: '情感强度', getValue: m => m.dimensions.emotional.intensity },
-    { key: 'accessCount', label: '访问次数', getValue: m => Math.min(m.dimensions.value.accessCount / 10, 1) },
-    { key: 'intimacy', label: '亲密度', getValue: m => m.dimensions.social.intimacy },
+  const dims: { key: string; labelKey: string; getValue: (m: RawMemory) => number }[] = [
+    { key: 'importance', labelKey: 'importance', getValue: m => m.dimensions.value.importance },
+    { key: 'cqi', labelKey: 'cqi', getValue: m => m.dimensions.value.cqi },
+    { key: 'intensity', labelKey: 'intensity', getValue: m => m.dimensions.emotional.intensity },
+    { key: 'accessCount', labelKey: 'accessCount', getValue: m => Math.min(m.dimensions.value.accessCount / 10, 1) },
+    { key: 'intimacy', labelKey: 'intimacy', getValue: m => m.dimensions.social.intimacy },
   ];
 
   return dims.map(d => {
@@ -279,7 +325,7 @@ export function computeDiff(memA: RawMemory, memB: RawMemory): DimensionDiff[] {
     const delta = to - from;
     return {
       dimension: d.key,
-      label: d.label,
+      label: valueT(lang, d.labelKey),
       from: Math.round(from * 100) / 100,
       to: Math.round(to * 100) / 100,
       direction: delta > 0.01 ? '↑' : delta < -0.01 ? '↓' : '→',

@@ -1,4 +1,5 @@
 import { AppProvider, useAppState } from './store/AppContext';
+import { I18nProvider, useI18n } from './i18n';
 import { motion, AnimatePresence } from 'framer-motion';
 import MemCloud3D from './components/MemCloud3D';
 import NavigationSidebar from './components/Navigation';
@@ -32,6 +33,7 @@ const DEFAULT_BG_LIGHT = '#f5f6f8';
 
 function AppInner() {
   const { rawMemories, insightMemories, detailOpen, theme, toggleTheme, selectMemory, currentView, setCurrentView, searchQuery, setSearchQuery, resetAllFilters } = useAppState();
+  const { t, language, toggleLanguage } = useI18n();
   const isDark = theme === 'dark';
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -50,8 +52,8 @@ function AppInner() {
   const handleStopDemo = useCallback(() => setIsDemoPlaying(false), []);
 
   const hasConfusion = useMemo(
-    () => generateConfusionReport(rawMemories, insightMemories).hasConfusion,
-    [rawMemories, insightMemories]
+    () => generateConfusionReport(rawMemories, insightMemories, language).hasConfusion,
+    [rawMemories, insightMemories, language]
   );
 
   // Global keyboard shortcuts
@@ -75,10 +77,10 @@ function AppInner() {
 
       if (isInput) return;
 
-      if (e.key === '1') { setCurrentView('全局视图'); return; }
-      if (e.key === '2') { setCurrentView('家庭视图'); return; }
-      if (e.key === '3') { setCurrentView('学习视图'); return; }
-      if (e.key === '4') { setCurrentView('情绪视图'); return; }
+      if (e.key === '1') { setCurrentView(t('view.globalFull') as any); return; }
+      if (e.key === '2') { setCurrentView(t('view.familyFull') as any); return; }
+      if (e.key === '3') { setCurrentView(t('view.learningFull') as any); return; }
+      if (e.key === '4') { setCurrentView(t('view.emotionFull') as any); return; }
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
@@ -200,27 +202,32 @@ function AppInner() {
         <div className={`flex rounded-lg p-0.5 text-xs backdrop-blur-sm ${
           isDark ? 'bg-[#ffffff08]' : 'bg-black/5'
         }`}>
-          {(['全局视图', '家庭视图', '学习视图', '情绪视图'] as const).map(view => (
+          {([
+            { key: 'global', full: 'view.globalFull', short: 'view.global' },
+            { key: 'family', full: 'view.familyFull', short: 'view.family' },
+            { key: 'learning', full: 'view.learningFull', short: 'view.learning' },
+            { key: 'emotion', full: 'view.emotionFull', short: 'view.emotion' },
+          ] as const).map(view => (
             <button
-              key={view}
-              id={`btn-view-${view}`}
-              onClick={() => setCurrentView(view)}
+              key={view.key}
+              id={`btn-view-${t(view.full)}`}
+              onClick={() => setCurrentView(t(view.full) as any)}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                currentView === view
+                currentView === t(view.full)
                   ? isDark ? 'bg-[#00f2ff]/20 text-[#00f2ff]' : 'bg-[#0088cc]/20 text-[#0088cc]'
                   : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {view === '全局视图' ? '🌐 全局' : view === '家庭视图' ? '🏠 家庭' : view === '学习视图' ? '🎓 学习' : '😊 情绪'}
+              {t(view.short)}
             </button>
           ))}
         </div>
       </div>
 
       <div className={`absolute bottom-6 left-[240px] z-10 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-        <span>{rawMemories.length} 记忆原子</span>
+        <span>{t('app.memCount', { count: rawMemories.length })}</span>
         <span className="mx-2">·</span>
-        <span>{insightMemories.length} 洞察记忆</span>
+        <span>{t('app.insightCount', { count: insightMemories.length })}</span>
       </div>
 
       {/* Watermark — same style as memory count, right-aligned to timeline endpoint */}
@@ -242,7 +249,7 @@ function AppInner() {
         {!isDemoPlaying && (
           <button
             id="btn-auto-demo"
-            title="一键演示"
+            title={t('btn.demoTitle')}
             onClick={() => setIsDemoPlaying(true)}
             className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all font-medium cursor-pointer ${
               isDark
@@ -260,7 +267,7 @@ function AppInner() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="搜索记忆..."
+              placeholder={t('btn.searchPlaceholder')}
               autoFocus
               onBlur={() => { if (!searchQuery) setShowSearch(false); }}
               className={`px-3 pr-7 py-1.5 text-xs rounded-lg backdrop-blur-sm border focus:outline-none w-48 ${
@@ -294,7 +301,7 @@ function AppInner() {
         </button>
         <button
           id="btn-serendipity"
-          title="碰碰对"
+          title={t('btn.serendipity')}
           onClick={() => setShowSerendipity(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -302,11 +309,11 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎲 碰碰对
+          {t('btn.serendipity')}
         </button>
         <button
           id="btn-cinema"
-          title="记忆微电影"
+          title={t('btn.cinema')}
           onClick={() => setShowCinema(true)}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
@@ -314,12 +321,12 @@ function AppInner() {
               : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎬 微电影
+          {t('btn.cinema')}
         </button>
         <div className="relative">
           <button
             id="btn-more"
-            title="更多功能"
+            title={t('btn.more')}
             onClick={() => setShowMore(!showMore)}
             className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
               showMore
@@ -328,26 +335,37 @@ function AppInner() {
                 : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
             }`}
           >
-            ⋯ 更多
+            {t('btn.moreLabel')}
           </button>
           <MorePanel
             theme={theme}
             isShow={showMore}
             onClose={() => setShowMore(false)}
             features={[
-              { id: 'profile', emoji: '👤', label: '小哥眼中的你', description: 'AI 对你的结构化认知', onClick: () => setShowProfile(true) },
-              { id: 'social', emoji: '🕸️', label: '关系星图', description: 'AI 眼中的你的社交宇宙', onClick: () => setShowSocial(true) },
-              { id: 'gap', emoji: '🧩', label: '了解程度', description: 'AI 对你了解多少？', onClick: () => setShowGap(true) },
-              { id: 'annual', emoji: '📈', label: '记忆年报', description: '你的年度记忆报告', onClick: () => setShowAnnualReport(true) },
-              { id: 'dream', emoji: '🌙', label: '记忆梦境', description: 'AI 重组记忆碎片', onClick: () => setShowDream(true) },
-              { id: 'reader', emoji: '📖', label: '阅读模式', description: '沉浸式翻阅记忆', onClick: () => setShowReader(true) },
-              ...(hasConfusion ? [{ id: 'confusion', emoji: '🤔', label: '困惑日记', description: 'AI 还有哪些不解', onClick: () => setShowConfusion(true) }] : []),
+              { id: 'profile', emoji: '👤', label: t('more.profile'), description: t('more.profileDesc'), onClick: () => setShowProfile(true) },
+              { id: 'social', emoji: '🕸️', label: t('more.social'), description: t('more.socialDesc'), onClick: () => setShowSocial(true) },
+              { id: 'gap', emoji: '🧩', label: t('more.gap'), description: t('more.gapDesc'), onClick: () => setShowGap(true) },
+              { id: 'annual', emoji: '📈', label: t('more.annual'), description: t('more.annualDesc'), onClick: () => setShowAnnualReport(true) },
+              { id: 'dream', emoji: '🌙', label: t('more.dream'), description: t('more.dreamDesc'), onClick: () => setShowDream(true) },
+              { id: 'reader', emoji: '📖', label: t('more.reader'), description: t('more.readerDesc'), onClick: () => setShowReader(true) },
+              ...(hasConfusion ? [{ id: 'confusion', emoji: '🤔', label: t('more.confusion'), description: t('more.confusionDesc'), onClick: () => setShowConfusion(true) }] : []),
             ]}
           />
         </div>
         <button
+          onClick={toggleLanguage}
+          title={language === 'zh-CN' ? 'Switch to English' : t('btn.themeToggle.dark')}
+          className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all font-medium cursor-pointer ${
+            isDark
+              ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
+              : 'bg-black/5 hover:bg-black/10 text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          {language === 'zh-CN' ? 'EN' : '中'}
+        </button>
+        <button
           onClick={toggleTheme}
-          title={isDark ? '切换亮色' : '切换暗色'}
+          title={isDark ? t('btn.themeToggle.light') : t('btn.themeToggle.dark')}
           className={`px-3 py-1.5 text-xs rounded-lg backdrop-blur-sm transition-all ${
             isDark
               ? 'bg-[#ffffff10] hover:bg-[#ffffff18] text-gray-400 hover:text-gray-200'
@@ -402,9 +420,11 @@ function AppInner() {
 
 function App() {
   return (
-    <AppProvider>
-      <AppInner />
-    </AppProvider>
+    <I18nProvider>
+      <AppProvider>
+        <AppInner />
+      </AppProvider>
+    </I18nProvider>
   );
 }
 

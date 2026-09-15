@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { RawMemory } from '../types';
 import { EMOTION_COLORS, Z_INDEX } from '../types';
 import { generateFirstPersonNarrative } from '../utils/narrativeUtils';
+import { useI18n } from '../i18n';
+import { timeOfDayT, seasonT, contentT, joinContentT, emotionNameT, dateT } from '../i18n/dataTranslations';
+import { storylineNameT, memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
 // Stars for background effect
 const STARS = Array.from({ length: 20 }, (_, i) => ({
@@ -26,6 +29,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
   const [direction, setDirection] = useState(0); // -1 for left, 1 for right
   const [firstPerson, setFirstPerson] = useState(false);
   const isDark = theme === 'dark';
+  const { t, language } = useI18n();
 
   // Sort by time (newest first)
   const sortedMemories = [...memories].sort(
@@ -75,8 +79,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
   const d = currentMemory?.dimensions;
   if (!d) return null;
   const emoColor = EMOTION_COLORS[d.emotional.primary] || '#888';
-  const date = new Date(d.temporal.timestamp);
-  const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  const dateStr = dateT(language, d.temporal.timestamp);
 
   const timeOfDayEmoji: Record<string, string> = {
     '清晨': '🌅',
@@ -167,10 +170,10 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
                 <div className="flex items-center gap-3">
                   <span className="text-lg">📖</span>
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    记忆阅读
+                    {t('reader.title')}
                   </span>
                   <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    第 {currentIndex + 1} / {sortedMemories.length} 页
+                    {t('reader.page', { current: currentIndex + 1, total: sortedMemories.length })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -182,7 +185,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
                         : isDark ? 'bg-[#ffffff08] hover:bg-[#ffffff12] text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                     }`}
                   >
-                    {firstPerson ? '第一人称' : '第三人称'}
+                    {firstPerson ? t('reader.firstPerson') : t('reader.thirdPerson')}
                   </button>
                   <button
                     onClick={onClose}
@@ -213,13 +216,13 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">{timeOfDayEmoji[d.temporal.timeOfDay] || '📅'}</span>
               <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {dateStr}，一个{d.temporal.season}天的{d.temporal.timeOfDay}
+                {dateStr} · {t('reader.narrative', { season: seasonT(language, d.temporal.season), timeOfDay: timeOfDayT(language, d.temporal.timeOfDay) })}
               </span>
             </div>
 
             {/* Title */}
             <h2 className={`text-2xl font-light mb-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-              {currentMemory.label}
+              {memoryLabelT(language, currentMemory.id, currentMemory.label)}
             </h2>
 
             {/* Emotion badge */}
@@ -232,27 +235,27 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
                   border: `1px solid ${emoColor}40`,
                 }}
               >
-                {d.emotional.primary}
+                {emotionNameT(language, d.emotional.primary)}
               </span>
               <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                强度 {d.emotional.intensity.toFixed(2)}
+                {t('reader.intensity')} {d.emotional.intensity.toFixed(2)}
               </span>
             </div>
 
             {/* Summary */}
             <p className={`text-base leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              {firstPerson ? generateFirstPersonNarrative(currentMemory) : currentMemory.summary}
+              {firstPerson ? generateFirstPersonNarrative(currentMemory, language) : memorySummaryT(language, currentMemory.id, currentMemory.summary)}
             </p>
 
             {/* Metadata */}
             <div className={`flex flex-wrap gap-4 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              <span>📍 {d.spatial.landmark || d.spatial.placeType}</span>
+              <span>📍 {contentT(language, d.spatial.landmark || d.spatial.placeType)}</span>
               {d.social.persons.length > 0 && (
-                <span>👤 {d.social.persons.join('、')}</span>
+                <span>👤 {joinContentT(language, d.social.persons)}</span>
               )}
-              <span>🎮 {d.activity.detail}</span>
+              <span>🎮 {contentT(language, d.activity.detail)}</span>
               {d.narrative.storyline && (
-                <span>🔗 {d.narrative.storyline}</span>
+                <span>🔗 {storylineNameT(language, d.narrative.storyline)}</span>
               )}
             </div>
 
@@ -288,7 +291,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
                       : isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff08]' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
                 >
-                  ← 上一页
+                  {t('reader.prevPage')}
                 </button>
 
                 {/* Page dots */}
@@ -321,7 +324,7 @@ export default function MemoryReader({ memories, theme, onClose, onMemoryChange 
                       : isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-[#ffffff08]' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
                 >
-                  下一页 →
+                  {t('reader.nextPage')}
                 </button>
               </div>
             </motion.div>

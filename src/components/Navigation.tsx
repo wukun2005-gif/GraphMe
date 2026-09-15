@@ -1,12 +1,15 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import { useI18n } from '../i18n';
+import { navCategoryT, navSubCategoryT, emotionT, emotionNameT, placeT, activityT, privacyT, joinContentT } from '../i18n/dataTranslations';
 import type { RawMemory, EmotionType } from '../types';
 import { EMOTION_COLORS, Z_INDEX } from '../types';
 import { chatgptRawMemories, chatgptInsightMemories } from '../data/chatgptData';
 import StoryWeaver from './StoryWeaver';
 import { getMemoryCategoryPaths } from '../utils/navUtils';
 import { parseImportJSON } from '../utils/importUtils';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
 const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: string }[] }> = {
   '家庭生活': { icon: '🏠', sub: [
@@ -27,21 +30,6 @@ const NAV_STRUCTURE: Record<string, { icon: string; sub: { id: string; icon: str
     { id: '户外活动', icon: '🏃' },
     { id: '科幻兴趣', icon: '🚀' },
   ]},
-};
-
-const EMOTION_LABELS: Record<EmotionType, string> = {
-  '快乐': '😊 快乐',
-  '悲伤': '😢 悲伤',
-  '愤怒': '😠 愤怒',
-  '惊讶': '😲 惊讶',
-  '恐惧': '😨 恐惧',
-  '厌恶': '🤢 厌恶',
-  '中性': '😐 中性',
-  '好奇': '🤔 好奇',
-  '骄傲': '😎 骄傲',
-  '沮丧': '😞 沮丧',
-  '感激': '🥹 感激',
-  '思念': '💭 思念',
 };
 
 let createIdCounter = Date.now();
@@ -66,6 +54,7 @@ export default function NavigationSidebar() {
     undoDelete, undoStackCount, undoStackAction,
     collections, addCollection, removeCollection, addToCollection, removeFromCollection,
   } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const chatgptCount = chatgptRawMemories.length + chatgptInsightMemories.length;
   const allRawMemoriesRef = useRef(allRawMemories);
@@ -184,7 +173,7 @@ export default function NavigationSidebar() {
     };
 
     addMemory(newMem);
-    addToast('记忆原子已创建');
+                                  addToast(t('toast.memoryCreated'));
     setLabel('');
     setSummary('');
     setEmotion('快乐');
@@ -218,7 +207,7 @@ export default function NavigationSidebar() {
           id="nav-expand"
           onClick={() => setCollapsed(false)}
           className={`transition-colors mb-3 cursor-pointer ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-          title="展开导航"
+          title={t('nav.expand')}
         >
           ▶
         </button>
@@ -244,28 +233,28 @@ export default function NavigationSidebar() {
           <button
             onClick={() => { setCollapsed(false); setShowLegend(true); }}
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
-            title="图例说明"
+            title={t('nav.legend')}
           >
             🎨
           </button>
           <button
             onClick={() => { setCollapsed(false); setShowStoryBoard(true); }}
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
-            title="我的侧写"
+            title={t('nav.storyboard')}
           >
             📖
           </button>
           <button
             onClick={() => { setCollapsed(false); setShowTags(true); }}
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
-            title="我的标签"
+            title={t('nav.tags')}
           >
             🏷
           </button>
           <button
             onClick={() => { setCollapsed(false); setShowMemoryMgr(true); }}
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer ${isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-300' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'}`}
-            title="记忆管理"
+            title={t('nav.memoryMgr')}
           >
             ⚙️
           </button>
@@ -282,12 +271,12 @@ export default function NavigationSidebar() {
   return (<>
     <div className="w-[220px] flex flex-col h-full">
       <div className={`p-4 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-200'} flex items-center justify-between`}>
-        <h2 className={`font-medium text-sm tracking-wide ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>🧭 记忆导航</h2>
+        <h2 className={`font-medium text-sm tracking-wide ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('nav.memoryNav')}</h2>
         <button
           id="nav-collapse"
           onClick={() => setCollapsed(true)}
           className={`transition-colors cursor-pointer ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}
-          title="收起导航"
+          title={t('nav.collapse')}
         >
           ◀
         </button>
@@ -296,12 +285,12 @@ export default function NavigationSidebar() {
       {connectionPaths.length > 0 && (
         <div className={`px-4 py-2 border-b text-xs ${isDark ? 'border-[#ffffff08] bg-[#ffb800]/5' : 'border-gray-200 bg-[#cc8800]/5'}`}>
           <div className={`font-medium mb-1 ${isDark ? 'text-[#ffb800]' : 'text-[#cc8800]'}`}>
-            🔗 连接路径 ({connectionPaths.length})
+            🔗 {t('nav.connectionPaths', { count: connectionPaths.length })}
           </div>
           <div className="space-y-0.5">
             {connectionPaths.map(p => (
               <div key={`${p.category}/${p.subCategory}`} className={`${isDark ? 'text-[#ffb800]/80' : 'text-[#cc8800]/80'}`}>
-                {p.categoryIcon} {p.category} → {p.subCategoryIcon} {p.subCategory}
+                {p.categoryIcon} {navCategoryT(language, p.category)} → {p.subCategoryIcon} {navSubCategoryT(language, p.subCategory)}
               </div>
             ))}
           </div>
@@ -326,7 +315,7 @@ export default function NavigationSidebar() {
               }`}
             >
               <span>{icon}</span>
-              <span>{category}</span>
+              <span>{navCategoryT(language, category)}</span>
             </button>
 
             {navCategory === category && (
@@ -348,7 +337,7 @@ export default function NavigationSidebar() {
                           : isDark ? 'text-gray-500 hover:bg-[#ffffff05] hover:text-gray-400' : 'text-gray-400 hover:bg-black/5 hover:text-gray-600'
                     }`}
                   >
-                    {s.icon} {s.id}
+                    {s.icon} {navSubCategoryT(language, s.id)}
                   </button>
                 ))}
               </motion.div>
@@ -365,7 +354,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>📖 图例说明</span>
+          <span>📖 {t('nav.legend')}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showLegend ? '▲' : '▼'}</span>
         </button>
         <AnimatePresence>
@@ -378,30 +367,30 @@ export default function NavigationSidebar() {
             >
               <div className={`px-4 pb-3 text-xs space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <div className="space-y-1.5">
-                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>记忆点类型</div>
+                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>{t('nav.legend.memoryTypes')}</div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#00f2ff] inline-block flex-shrink-0" />
-                    <span>彩色粒子 — 原始记忆原子</span>
+                    <span>{t('nav.legend.rawParticle')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#ffb800] inline-block flex-shrink-0" style={{ boxShadow: '0 0 6px #ffb800' }} />
-                    <span>金色圆环 — 洞察记忆</span>
+                    <span>{t('nav.legend.insightRing')}</span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>连线含义</div>
+                  <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>{t('nav.legend.lineTypes')}</div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-[2px] bg-[#ffb800]/40 flex-shrink-0" />
-                    <span>金色实线 — 因果关系</span>
+                    <span>{t('nav.legend.causalLine')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-[2px] bg-[#ffb800]/20 flex-shrink-0" />
-                    <span>金色虚线 — 支撑关系</span>
+                    <span>{t('nav.legend.supportLine')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-[2px] bg-[#4488ff]/20 flex-shrink-0" />
-                    <span>蓝色虚线 — 关联关系</span>
+                    <span>{t('nav.legend.relationLine')}</span>
                   </div>
                 </div>
 
@@ -413,7 +402,7 @@ export default function NavigationSidebar() {
                       hideRawOnly ? `${isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'}` : `${isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff]' : 'bg-[#0088cc]/10 text-[#0088cc]'}`
                     }`}
                   >
-                    🔵 原始记忆 {hideRawOnly ? '(隐藏)' : rawMemories.length}
+                    🔵 {t('nav.legend.rawMemory')} {hideRawOnly ? t('nav.legend.hidden') : rawMemories.length}
                   </button>
                   <button
                     onClick={toggleHideInsight}
@@ -421,15 +410,15 @@ export default function NavigationSidebar() {
                       hideInsightOnly ? `${isDark ? 'bg-[#1a1a2e] text-gray-500' : 'bg-gray-100 text-gray-400'}` : `${isDark ? 'bg-[#ffb800]/10 text-[#ffb800]' : 'bg-[#cc8800]/10 text-[#cc8800]'}`
                     }`}
                   >
-                    🟡 洞察记忆 {hideInsightOnly ? '(隐藏)' : insightMemories.length}
+                    🟡 {t('nav.legend.insightMemory')} {hideInsightOnly ? t('nav.legend.hidden') : insightMemories.length}
                   </button>
                 </div>
 
                 <div className="space-y-1">
                   <div className={`font-medium ${isDark ? 'text-gray-500' : 'text-gray-700'}`}>
-                    粒子颜色 = 情绪色彩
+                    {t('nav.legend.particleColor')}
                     {emotionFilter.length > 0 && (
-                      <span className={`ml-1 text-[10px] ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>(已筛选)</span>
+                      <span className={`ml-1 text-[10px] ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>({t('nav.legend.filtered')})</span>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
@@ -447,7 +436,7 @@ export default function NavigationSidebar() {
                           } ${emotionFilter.length > 0 && !isActive ? 'opacity-30' : ''}`}
                         >
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                          <span className={`${isDark ? 'text-gray-600' : 'text-gray-500'}`}>{EMOTION_LABELS[emotion as EmotionType] || emotion}</span>
+                          <span className={`${isDark ? 'text-gray-600' : 'text-gray-500'}`}>{emotionT(language, emotion)}</span>
                         </button>
                       );
                     })}
@@ -467,7 +456,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>📖 我的侧写</span>
+          <span>📖 {t('nav.storyboard')}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showStoryBoard ? '▲' : '▼'}</span>
         </button>
       </div>
@@ -480,7 +469,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>🏷 我的标签 {allTags.length > 0 ? `(${allTags.length})` : ''}</span>
+          <span>🏷 {t('nav.tags')} {allTags.length > 0 ? `(${allTags.length})` : ''}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showTags ? '▲' : '▼'}</span>
         </button>
         <AnimatePresence>
@@ -493,7 +482,7 @@ export default function NavigationSidebar() {
             >
               <div className={`px-3 pb-3 text-xs max-h-[40vh] overflow-y-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 {allTags.length === 0 ? (
-                  <p className={`${isDark ? 'text-gray-600' : 'text-gray-400'} py-2`}>暂无标签，在记忆详情中添加</p>
+                  <p className={`${isDark ? 'text-gray-600' : 'text-gray-400'} py-2`}>{t('nav.noTags')}</p>
                 ) : (
                   <div className="space-y-1">
                     {allTags.map(tag => {
@@ -525,7 +514,7 @@ export default function NavigationSidebar() {
                       isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}
                   >
-                    清除标签筛选
+                    {t('nav.clearTagFilter')}
                   </button>
                 )}
               </div>
@@ -542,7 +531,7 @@ export default function NavigationSidebar() {
             isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-[#ffffff05]' : 'text-gray-500 hover:text-gray-700 hover:bg-black/5'
           }`}
         >
-          <span>⚙️ 记忆管理</span>
+          <span>⚙️ {t('nav.memoryMgr')}</span>
           <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{showMemoryMgr ? '▲' : '▼'}</span>
         </button>
         <AnimatePresence>
@@ -556,7 +545,7 @@ export default function NavigationSidebar() {
               <div className="px-3 pb-3 space-y-2 max-h-[50vh] overflow-y-auto">
                 <input
                   type="text"
-                  placeholder="搜索记忆 ID / 标签 / 摘要..."
+                  placeholder={t('nav.mgr.searchPlaceholder')}
                   value={searchText}
                   onChange={e => setSearchText(e.target.value)}
                   className={`w-full border rounded px-2 py-1.5 text-xs placeholder-gray-600 ${
@@ -569,7 +558,7 @@ export default function NavigationSidebar() {
                 }`}>
                   <div className={`text-[11px] font-semibold mb-2 tracking-wide ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00f2ff] mr-1.5 animate-pulse" />
-                    🤖 外部 Agent 记忆
+                    🤖 {t('nav.mgr.externalAgent')}
                   </div>
                   <button
                     id="nav-chatgpt-import"
@@ -586,13 +575,13 @@ export default function NavigationSidebar() {
                     <div className="flex items-center justify-between">
                       <span>ChatGPT {
                         chatgptImportStatus === 'importing'
-                          ? `导入中 ${chatgptImportProgress}%`
+                          ? t('nav.mgr.chatgptImporting', { progress: chatgptImportProgress })
                           : chatgptImportStatus === 'done'
-                            ? '已导入'
-                            : `未导入 (${chatgptCount})`
+                            ? t('nav.mgr.chatgptDone')
+                            : t('nav.mgr.chatgptNotImported', { count: chatgptCount })
                       }</span>
                       {chatgptImportStatus === 'idle' && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'}`}>导入</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff]' : 'bg-[#0088cc]/15 text-[#0088cc]'}`}>{t('nav.mgr.importBtn')}</span>
                       )}
                     </div>
                     {chatgptImportStatus === 'importing' && (
@@ -616,13 +605,13 @@ export default function NavigationSidebar() {
                       const reader = new FileReader();
                       reader.onload = () => {
                         const text = reader.result as string;
-                        const result = parseImportJSON(text);
+                        const result = parseImportJSON(text, language);
                         if (result.rawMemories.length > 0 || result.insightMemories.length > 0) {
                           importMemories(result.rawMemories, result.insightMemories);
-                          addToast(`已导入 ${result.rawMemories.length + result.insightMemories.length} 条记忆`);
+                          addToast(t('toast.imported', { count: result.rawMemories.length + result.insightMemories.length }));
                         }
                         if (result.errors.length > 0) {
-                          alert(`导入错误：\n${result.errors.join('\n')}`);
+                          alert(`${t('nav.mgr.importError')}\n${result.errors.join('\n')}`);
                         }
                       };
                       reader.readAsText(file);
@@ -637,7 +626,7 @@ export default function NavigationSidebar() {
                       isDark ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20' : 'bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100'
                     }`}
                   >
-                    📁 导入 JSON 记忆文件
+                    📁 {t('nav.mgr.importJson')}
                   </label>
                 </div>
                 <a
@@ -647,7 +636,7 @@ export default function NavigationSidebar() {
                     isDark ? 'bg-[#ffffff05] border-[#ffffff08] text-gray-400 hover:bg-[#ffffff10] hover:text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                   }`}
                 >
-                  ⬇️ 下载示例 JSON 文件
+                  ⬇️ {t('nav.mgr.downloadSample')}
                 </a>
 
                 <button
@@ -656,7 +645,7 @@ export default function NavigationSidebar() {
                     isDark ? 'bg-[#00f2ff]/10 border-[#00f2ff]/20 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 border-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/20'
                   }`}
                 >
-                  {formOpen ? '取消' : '➕ 新建记忆原子'}
+                  {formOpen ? t('nav.mgr.cancel') : t('nav.mgr.newMemory')}
                 </button>
 
                 <AnimatePresence>
@@ -672,7 +661,7 @@ export default function NavigationSidebar() {
                       }`}>
                         <input
                           type="text"
-                          placeholder="标签（必填）"
+                          placeholder={t('nav.mgr.labelPlaceholder')}
                           value={label}
                           onChange={e => setLabel(e.target.value)}
                           className={`w-full border rounded px-2 py-1 text-xs placeholder-gray-600 ${
@@ -680,7 +669,7 @@ export default function NavigationSidebar() {
                           }`}
                         />
                         <textarea
-                          placeholder="摘要描述（必填）"
+                          placeholder={t('nav.mgr.summaryPlaceholder')}
                           value={summary}
                           onChange={e => setSummary(e.target.value)}
                           rows={2}
@@ -697,7 +686,7 @@ export default function NavigationSidebar() {
                             }`}
                           >
                             {Object.keys(EMOTION_COLORS).map(e => (
-                              <option key={e} value={e}>{e}</option>
+                              <option key={e} value={e}>{emotionT(language, e)}</option>
                             ))}
                           </select>
                           <select
@@ -707,17 +696,17 @@ export default function NavigationSidebar() {
                               isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
                             }`}
                           >
-                            <option value="家">🏠 家</option>
-                            <option value="学校">🏫 学校</option>
-                            <option value="公园">🌳 公园</option>
-                            <option value="游乐场">🎡 游乐场</option>
-                            <option value="商场">🛍️ 商场</option>
-                            <option value="其他">📍 其他</option>
+                            <option value="家">{placeT(language, '家')}</option>
+                            <option value="学校">{placeT(language, '学校')}</option>
+                            <option value="公园">{placeT(language, '公园')}</option>
+                            <option value="游乐场">{placeT(language, '游乐场')}</option>
+                            <option value="商场">{placeT(language, '商场')}</option>
+                            <option value="其他">{placeT(language, '其他')}</option>
                           </select>
                         </div>
                         <input
                           type="text"
-                          placeholder="故事线标签（可选）"
+                          placeholder={t('nav.mgr.storylinePlaceholder')}
                           value={storyline}
                           onChange={e => setStoryline(e.target.value)}
                           className={`w-full border rounded px-2 py-1 text-xs placeholder-gray-600 ${
@@ -726,7 +715,7 @@ export default function NavigationSidebar() {
                         />
                         <input
                           type="text"
-                          placeholder="人物（用、分隔，如：爸爸、小明）"
+                          placeholder={t('nav.mgr.personsPlaceholder')}
                           value={persons}
                           onChange={e => setPersons(e.target.value)}
                           className={`w-full border rounded px-2 py-1 text-xs placeholder-gray-600 ${
@@ -741,13 +730,13 @@ export default function NavigationSidebar() {
                               isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
                             }`}
                           >
-                            <option value="活动">🎮 活动</option>
-                            <option value="学习">📚 学习</option>
-                            <option value="游戏">🎯 游戏</option>
-                            <option value="对话">💬 对话</option>
-                            <option value="探索">🔍 探索</option>
-                            <option value="创作">🎨 创作</option>
-                            <option value="运动">🏃 运动</option>
+                            <option value="活动">{activityT(language, '活动')}</option>
+                            <option value="学习">{activityT(language, '学习')}</option>
+                            <option value="游戏">{activityT(language, '游戏')}</option>
+                            <option value="对话">{activityT(language, '对话')}</option>
+                            <option value="探索">{activityT(language, '探索')}</option>
+                            <option value="创作">{activityT(language, '创作')}</option>
+                            <option value="运动">{activityT(language, '运动')}</option>
                           </select>
                           <div className="flex-1 flex items-center gap-1">
                             <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>⭐</span>
@@ -772,10 +761,10 @@ export default function NavigationSidebar() {
                             isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
                           }`}
                         >
-                          <option value="公开">🌐 公开</option>
-                          <option value="家庭可见">👨‍👩‍👧 家庭可见</option>
-                          <option value="仅自己">🔒 仅自己</option>
-                          <option value="加密">🔐 加密</option>
+                          <option value="公开">{privacyT(language, '公开')}</option>
+                          <option value="家庭可见">{privacyT(language, '家庭可见')}</option>
+                          <option value="仅自己">{privacyT(language, '仅自己')}</option>
+                          <option value="加密">{privacyT(language, '加密')}</option>
                         </select>
                         <button
                           onClick={handleCreate}
@@ -783,7 +772,7 @@ export default function NavigationSidebar() {
                             isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'
                           }`}
                         >
-                          创建记忆原子
+                          {t('nav.mgr.createMemory')}
                         </button>
                       </div>
                     </motion.div>
@@ -794,7 +783,7 @@ export default function NavigationSidebar() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        共 {filtered.length} 条 {searchText ? '（已筛选）' : ''}
+                        {t('nav.mgr.totalCount', { count: filtered.length })} {searchText ? t('nav.mgr.filtered') : ''}
                       </p>
                       {undoStackCount > 0 && (
                         <button
@@ -802,9 +791,9 @@ export default function NavigationSidebar() {
                           className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
                             isDark ? 'bg-[#ffffff08] text-[#00f2ff] hover:bg-[#ffffff12]' : 'bg-gray-100 text-[#0088cc] hover:bg-gray-200'
                           }`}
-                          title={`撤销上次${undoStackAction === 'edit' ? '编辑' : '删除'}`}
+                          title={t('nav.mgr.undo', { action: undoStackAction === 'edit' ? t('nav.mgr.undoEdit') : t('nav.mgr.undoDelete'), count: undoStackCount })}
                         >
-                          ↩ 撤销{undoStackAction === 'edit' ? '编辑' : '删除'} ({undoStackCount})
+                          ↩ {t('nav.mgr.undo', { action: undoStackAction === 'edit' ? t('nav.mgr.undoEdit') : t('nav.mgr.undoDelete'), count: undoStackCount })}
                         </button>
                       )}
                     </div>
@@ -815,13 +804,13 @@ export default function NavigationSidebar() {
                         onChange={toggleAllMemories}
                         className="w-3 h-3 cursor-pointer"
                       />
-                      全选
+                      {t('nav.mgr.selectAll')}
                     </label>
                   </div>
                   {favoriteIds.length > 0 && (
                     <div className="mb-2">
                       <div className={`text-[10px] mb-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                        ⭐ 收藏 ({favoriteIds.length})
+                        ⭐ {t('nav.mgr.favorites', { count: favoriteIds.length })}
                       </div>
                       <div className="space-y-0.5">
                         {favoriteIds.map(id => {
@@ -836,7 +825,7 @@ export default function NavigationSidebar() {
                               }`}
                             >
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
-                              <span className="truncate">{mem.label}</span>
+                              <span className="truncate">{memoryLabelT(language, mem.id, mem.label)}</span>
                             </button>
                           );
                         })}
@@ -848,13 +837,13 @@ export default function NavigationSidebar() {
                     <div className="mb-2">
                       <div className="flex items-center justify-between mb-1">
                         <div className={`text-[10px] ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
-                          🔗 相似记忆 ({similarMemoryIds.length})
+                          🔗 {t('nav.mgr.similarMemories', { count: similarMemoryIds.length })}
                         </div>
                         <button
                           onClick={clearSimilar}
                           className={`text-[9px] cursor-pointer ${isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                          清除
+                          {t('nav.mgr.clear')}
                         </button>
                       </div>
                       <div className="space-y-0.5">
@@ -870,7 +859,7 @@ export default function NavigationSidebar() {
                               }`}
                             >
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
-                              <span className="truncate">{mem.label}</span>
+                              <span className="truncate">{memoryLabelT(language, mem.id, mem.label)}</span>
                             </button>
                           );
                         })}
@@ -881,7 +870,7 @@ export default function NavigationSidebar() {
                   {capsules.length > 0 && (
                     <div className="mb-2">
                       <div className={`text-[10px] mb-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                        ⏳ 时间胶囊 ({capsules.length})
+                        ⏳ {t('nav.mgr.timeCapsules', { count: capsules.length })}
                       </div>
                       <div className="space-y-0.5">
                         {capsules.map(cap => {
@@ -897,8 +886,8 @@ export default function NavigationSidebar() {
                               }`}
                             >
                               <span>{cap.opened ? '📬' : isReady ? '🎁' : '🔒'}</span>
-                              <span className="truncate">{mem?.label || cap.memoryId}</span>
-                              <span className="ml-auto flex-shrink-0">{cap.opened ? '已开启' : dateStr}</span>
+                              <span className="truncate">{mem ? memoryLabelT(language, mem.id, mem.label) : cap.memoryId}</span>
+                              <span className="ml-auto flex-shrink-0">{cap.opened ? t('timecapsule.opened') : dateStr}</span>
                               {isReady && (
                                 <button
                                   onClick={() => openCapsule(cap.id)}
@@ -906,7 +895,7 @@ export default function NavigationSidebar() {
                                     isDark ? 'bg-[#ffb800]/15 text-[#ffb800]' : 'bg-amber-100 text-amber-700'
                                   }`}
                                 >
-                                  开启
+                                  {t('timecapsule.open')}
                                 </button>
                               )}
                             </div>
@@ -919,7 +908,7 @@ export default function NavigationSidebar() {
                   {farewellRecords.length > 0 && (
                     <div className="mb-2">
                       <div className={`text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        🪦 已释放的记忆 ({farewellRecords.length})
+                        🪦 {t('nav.mgr.releasedMemories', { count: farewellRecords.length })}
                       </div>
                       <div className="space-y-0.5">
                         {farewellRecords.map(rec => {
@@ -946,7 +935,7 @@ export default function NavigationSidebar() {
                   {collections.length > 0 && (
                     <div className="mb-2">
                       <div className={`text-[10px] mb-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                        📁 精选集 ({collections.length})
+                        📁 {t('nav.mgr.collections', { count: collections.length })}
                       </div>
                       {collections.map(col => (
                         <div key={col.id} className="mb-1">
@@ -976,12 +965,12 @@ export default function NavigationSidebar() {
                                     }`}
                                   >
                                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
-                                    <span className="truncate">{mem.label}</span>
+                                    <span className="truncate">{memoryLabelT(language, mem.id, mem.label)}</span>
                                   </button>
                                 );
                               })}
                               {col.memoryIds.length === 0 && (
-                                <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>暂无记忆</span>
+                                <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{t('nav.mgr.noMemories')}</span>
                               )}
                             </div>
                           )}
@@ -1021,7 +1010,7 @@ export default function NavigationSidebar() {
                                   isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
                                 }`}
                               >
-                                保存
+                                {t('nav.mgr.save')}
                               </button>
                               <button
                                 id={`mem-item-cancel-${i}`}
@@ -1030,7 +1019,7 @@ export default function NavigationSidebar() {
                                   isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff10]' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
                                 }`}
                               >
-                                取消
+                                {t('nav.mgr.cancel')}
                               </button>
                             </div>
                           </div>
@@ -1055,7 +1044,7 @@ export default function NavigationSidebar() {
                                 {(mem.dimensions.value.privacyLevel === '仅自己' || mem.dimensions.value.privacyLevel === '加密') && (
                                   <span className="mr-1">🔒</span>
                                 )}
-                                <span className={mem.dimensions.value.privacyLevel === '仅自己' ? 'blur-[3px] select-none' : ''}>{mem.label}</span>
+                                <span className={mem.dimensions.value.privacyLevel === '仅自己' ? 'blur-[3px] select-none' : ''}>{memoryLabelT(language, mem.id, mem.label)}</span>
                               </div>
                               {mem.tags && mem.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-0.5 mt-0.5">
@@ -1076,7 +1065,7 @@ export default function NavigationSidebar() {
                               id={`mem-item-tag-trigger-${i}`}
                               onClick={() => { setTagInputId(tagInputId === mem.id ? null : mem.id); setTagInputValue(''); }}
                               className={`text-xs cursor-pointer ${isDark ? 'text-gray-600 hover:text-[#00f2ff]' : 'text-gray-400 hover:text-[#0088cc]'}`}
-                              title="添加标签"
+                              title={t('nav.mgr.addTag')}
                             >
                               🏷
                             </button>
@@ -1091,7 +1080,7 @@ export default function NavigationSidebar() {
                               onClick={() => {
                                 if (confirmDeleteId === mem.id) {
                                   deleteMemory(mem.id);
-                                  addToast('已删除，可撤销');
+                                  addToast(t('toast.deleted'));
                                   setConfirmDeleteId(null);
                                 } else {
                                   setConfirmDeleteId(mem.id);
@@ -1103,29 +1092,29 @@ export default function NavigationSidebar() {
                                   : 'text-gray-600 hover:text-red-400'
                               }`}
                             >
-                              {confirmDeleteId === mem.id ? '确认删除？' : '🗑'}
+                              {confirmDeleteId === mem.id ? t('nav.mgr.confirmDelete') : '🗑'}
                             </button>
                             {hoveredId === mem.id && (
                               <div className={`absolute left-0 top-full mt-1 w-64 p-3 rounded-lg shadow-2xl border text-xs ${
                                 isDark ? 'bg-[#0d1525] border-[#ffffff20] text-gray-200' : 'bg-white border-gray-200 text-gray-700'
                               }`} style={{ backdropFilter: 'none', zIndex: Z_INDEX.DROPDOWN }}>
                                 <p className={`mb-1.5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                  {mem.summary.length > 60 ? mem.summary.slice(0, 60) + '...' : mem.summary}
+                                  {memorySummaryT(language, mem.id, mem.summary).length > 60 ? memorySummaryT(language, mem.id, mem.summary).slice(0, 60) + '...' : memorySummaryT(language, mem.id, mem.summary)}
                                 </p>
                                 <div className="flex items-center gap-1.5 mb-1">
                                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: mem.color }} />
-                                  <span>{mem.dimensions.emotional.primary}</span>
+                                  <span>{emotionNameT(language, mem.dimensions.emotional.primary)}</span>
                                   <span className={`${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                                     ({mem.dimensions.emotional.intensity.toFixed(2)})
                                   </span>
                                 </div>
                                 {mem.dimensions.social.persons.length > 0 && (
                                   <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
-                                    👤 {mem.dimensions.social.persons.join('、')}
+                                    👤 {joinContentT(language, mem.dimensions.social.persons)}
                                   </div>
                                 )}
                                 <div className={isDark ? 'text-gray-500' : 'text-gray-400'}>
-                                  📍 {mem.dimensions.spatial.placeType}
+                                  📍 {placeT(language, mem.dimensions.spatial.placeType)}
                                 </div>
                                 {mem.tags && mem.tags.length > 0 && (
                                   <div className="flex flex-wrap gap-0.5 mt-1.5">
@@ -1151,7 +1140,7 @@ export default function NavigationSidebar() {
                                         setTagInputValue('');
                                       }
                                     }}
-                                    placeholder="输入标签，回车确认"
+                                    placeholder={t('nav.mgr.tagInputPlaceholder')}
                                     autoFocus
                                     className={`flex-1 border rounded px-2 py-1 text-[10px] ${
                                       isDark ? 'bg-[#0a0a0f] border-[#ffffff08] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
@@ -1180,7 +1169,7 @@ export default function NavigationSidebar() {
                                         className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] cursor-pointer transition-colors ${
                                           isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-red-500/20 hover:text-red-400' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-red-100 hover:text-red-600'
                                         }`}
-                                        title={`删除标签 "${tag}"`}
+                                        title={t('nav.mgr.deleteTag', { tag })}
                                       >
                                         {tag} ×
                                       </button>
@@ -1201,7 +1190,7 @@ export default function NavigationSidebar() {
                         isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                       }`}
                     >
-                      加载更多（还有 {filtered.length - displayCount} 条）
+                      {t('nav.mgr.loadMore', { count: filtered.length - displayCount })}
                     </button>
                   )}
                 </div>
@@ -1217,13 +1206,13 @@ export default function NavigationSidebar() {
             <div className="flex items-center gap-1">
               {breadcrumbs.map((crumb, i) => (
                 <span key={i}>
-                  {crumb}
+                  {i === 0 ? navCategoryT(language, crumb) : navSubCategoryT(language, crumb)}
                   {i < breadcrumbs.length - 1 && <span className="text-gray-700 mx-1">→</span>}
                 </span>
               ))}
             </div>
           ) : (
-            <span>选择分类以导航记忆</span>
+            <span>{t('nav.selectCategory')}</span>
           )}
         </div>
       </div>
@@ -1242,7 +1231,7 @@ export default function NavigationSidebar() {
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-inherit flex-shrink-0">
             <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              📖 我的侧写
+              📖 {t('nav.storyboard')}
             </h2>
             <button
               onClick={() => setShowStoryBoard(false)}

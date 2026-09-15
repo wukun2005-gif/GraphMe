@@ -1,5 +1,8 @@
 import type { RawMemory, InsightMemory } from '../types';
+import type { Language } from '../i18n';
 import { CATEGORY_LABELS } from '../types';
+import { contentT, emotionNameT, seasonT, dateTypeT, categoryT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT, insightStatementT, insightDescriptionT, storylineNameT } from '../i18n/memoryData';
 
 export interface StoryCitation {
   memoryId: string;
@@ -15,16 +18,43 @@ export interface StoryChapter {
   citations: StoryCitation[][];
 }
 
-function getEmotionLabel(emotion: string): string {
-  const map: Record<string, string> = {
-    '快乐': '开心', '悲伤': '难过', '愤怒': '生气', '惊讶': '惊叹',
-    '好奇': '好奇', '骄傲': '自豪', '沮丧': '沮丧', '感激': '感恩', '思念': '想念',
-  };
-  return map[emotion] || emotion;
+const STORY_EMOTION_LABELS: Record<string, { zh: string; en: string }> = {
+  '快乐': { zh: '开心', en: 'happy' },
+  '悲伤': { zh: '难过', en: 'sad' },
+  '愤怒': { zh: '生气', en: 'angry' },
+  '惊讶': { zh: '惊叹', en: 'amazed' },
+  '好奇': { zh: '好奇', en: 'curious' },
+  '骄傲': { zh: '自豪', en: 'proud' },
+  '沮丧': { zh: '沮丧', en: 'frustrated' },
+  '感激': { zh: '感恩', en: 'grateful' },
+  '思念': { zh: '想念', en: 'missing' },
+};
+
+function getEmotionLabel(emotion: string, lang: Language = 'zh-CN'): string {
+  const labels = STORY_EMOTION_LABELS[emotion];
+  if (!labels) return emotionNameT(lang, emotion);
+  return lang === 'en' ? labels.en : labels.zh;
 }
 
-function citationLabel(m: RawMemory): string {
-  return m.label || m.summary.slice(0, 30);
+const STORY_LABELS: Record<string, { zh: string; en: string }> = {
+  pastFootprints: { zh: '过去的脚印', en: 'Footprints of the Past' },
+  futureProjection: { zh: '未来的投射', en: 'Projections of the Future' },
+  dreamTooFew: { zh: '记忆太少，无法编织梦境。请先记录更多记忆。', en: 'Too few memories to weave a dream. Please record more memories first.' },
+  someone: { zh: '某个人', en: 'someone' },
+  strangerPlace: { zh: '一个陌生的地方', en: 'a strange place' },
+  doingWhat: { zh: '做着什么', en: 'doing something' },
+  blurFigure: { zh: '一个模糊的身影', en: 'a blurred figure' },
+  everything: { zh: '一切都', en: 'everything' },
+};
+
+export function storyT(lang: Language, key: string): string {
+  const labels = STORY_LABELS[key];
+  if (!labels) return key;
+  return lang === 'en' ? labels.en : labels.zh;
+}
+
+function citationLabel(m: RawMemory, lang: Language): string {
+  return memoryLabelT(lang, m.id, m.label) || memorySummaryT(lang, m.id, m.summary).slice(0, 30);
 }
 
 export interface StorylineNode {
@@ -48,7 +78,7 @@ export interface WovenStoryline {
 
 import { EMOTION_COLORS } from '../types';
 
-export function weaveStoryline(rawMemories: RawMemory[], storylineName: string): WovenStoryline | null {
+export function weaveStoryline(rawMemories: RawMemory[], storylineName: string, lang: Language = 'zh-CN'): WovenStoryline | null {
   const members = rawMemories
     .filter(m => m.dimensions.narrative.storyline === storylineName)
     .sort((a, b) => a.dimensions.temporal.timestamp - b.dimensions.temporal.timestamp);
@@ -70,7 +100,9 @@ export function weaveStoryline(rawMemories: RawMemory[], storylineName: string):
     connections.push({
       from,
       to,
-      emotionTransition: fromEmo === toEmo ? fromEmo : `${fromEmo} → ${toEmo}`,
+      emotionTransition: fromEmo === toEmo
+        ? emotionNameT(lang, fromEmo)
+        : `${emotionNameT(lang, fromEmo)} → ${emotionNameT(lang, toEmo)}`,
     });
   }
 
@@ -86,12 +118,19 @@ export function weaveStoryline(rawMemories: RawMemory[], storylineName: string):
   const monthDiff = Math.max(1, Math.round((lastDate.getTime() - firstDate.getTime()) / (30 * 86400000)));
 
   const emotionStr = emotions.length <= 2
-    ? emotions.join('和')
-    : emotions.slice(0, 3).join('、') + '等';
-  const placeStr = places.length > 0 ? `在${places.slice(0, 2).join('和')}` : '';
-  const personStr = persons.length > 0 ? `和${persons.slice(0, 2).join('、')}` : '';
+    ? emotions.map(e => emotionNameT(lang, e)).join(lang === 'en' ? ' and ' : '和')
+    : emotions.slice(0, 3).map(e => emotionNameT(lang, e)).join(lang === 'en' ? ', ' : '、') + (lang === 'en' ? ' etc.' : '等');
+  const placeStr = places.length > 0 ? (lang === 'en' ? `at ${places.slice(0, 2).map(p => contentT(lang, p)).join(' and ')}` : `在${places.slice(0, 2).map(p => contentT(lang, p)).join('和')}`) : '';
+  const personStr = persons.length > 0 ? (lang === 'en' ? `with ${persons.slice(0, 2).map(p => contentT(lang, p)).join(', ')}` : `和${persons.slice(0, 2).map(p => contentT(lang, p)).join('、')}`) : '';
 
-  const narrative = `${storylineName}的故事跨越了 ${monthDiff} 个月，共 ${members.length} 条记忆。`
+  const displayName = storylineNameT(lang, storylineName);
+
+  const narrative = lang === 'en'
+    ? `The story of ${displayName} spans ${monthDiff} months, with ${members.length} memories. `
+    + `Starting from "${memoryLabelT(lang, first.id, first.label)}" in ${firstDate.getMonth() + 1}, `
+    + `${placeStr} ${personStr} experienced ${emotionStr} moments together. `
+    + `The most recent one is "${memoryLabelT(lang, last.id, last.label)}".`
+    : `${storylineName}的故事跨越了 ${monthDiff} 个月，共 ${members.length} 条记忆。`
     + `从${firstDate.getMonth() + 1}月的"${first.label}"开始，`
     + `${placeStr}${personStr}一起经历了${emotionStr}的时刻。`
     + `最近的一条是"${last.label}"。`;
@@ -106,7 +145,8 @@ export function getStorylineNames(rawMemories: RawMemory[]): string[] {
 
 export function generateStory(
   rawMemories: RawMemory[],
-  insightMemories: InsightMemory[]
+  insightMemories: InsightMemory[],
+  lang: Language = 'zh-CN',
 ): StoryChapter[] {
   const chapters: StoryChapter[] = [];
   const rawMap = new Map(rawMemories.map(m => [m.id, m]));
@@ -120,10 +160,18 @@ export function generateStory(
 
   if (selectedRaw.length > 0) {
     const storyLines: string[] = selectedRaw.map((m, i) => {
-      const season = m.dimensions.temporal.season;
-      const emotion = getEmotionLabel(m.dimensions.emotional.primary);
-      const place = m.dimensions.spatial.landmark;
-      const dateType = m.dimensions.temporal.dateType;
+      const season = seasonT(lang, m.dimensions.temporal.season);
+      const emotion = getEmotionLabel(m.dimensions.emotional.primary, lang);
+      const place = contentT(lang, m.dimensions.spatial.landmark) || contentT(lang, m.dimensions.spatial.placeType);
+      const dateType = dateTypeT(lang, m.dimensions.temporal.dateType);
+      const label = memoryLabelT(lang, m.id, m.label);
+      const summary = memorySummaryT(lang, m.id, m.summary);
+      if (lang === 'en') {
+        if (i === 0) {
+          return `The story begins on a ${season ? season + ' ' : ''}${dateType} at ${place} — ${label}. That day he was ${emotion}, ${summary}`;
+        }
+        return `Later on a ${season ? season + ' ' : ''}${dateType}, at ${place}, ${label}. He was ${emotion} and satisfied, ${summary}`;
+      }
       if (i === 0) {
         return `故事从${season ? season + ' ' : ''}${dateType}的${place}开始——${m.label}。那天的他${emotion}极了，${m.summary}`;
       }
@@ -131,7 +179,7 @@ export function generateStory(
     });
 
     const citations: StoryCitation[][] = selectedRaw.map(m =>
-      [{ memoryId: m.id, shortDescription: citationLabel(m) }]
+      [{ memoryId: m.id, shortDescription: citationLabel(m, lang) }]
     );
 
     const images = selectedRaw
@@ -139,7 +187,7 @@ export function generateStory(
       .filter(Boolean);
 
     chapters.push({
-      title: '过去的脚印',
+      title: storyT(lang, 'pastFootprints'),
       type: 'past',
       text: storyLines.join('\n\n'),
       imageUrls: images,
@@ -154,20 +202,24 @@ export function generateStory(
       .slice(0, 3);
 
     const insightLines = topInsights.map(ins => {
-      const cat = CATEGORY_LABELS[ins.category];
-      return `在${cat}方面，${ins.statement}。${ins.description}`;
+      const cat = categoryT(lang, ins.category);
+      const statement = insightStatementT(lang, ins.id, ins.statement);
+      const description = insightDescriptionT(lang, ins.id, ins.description);
+      return lang === 'en'
+        ? `In terms of ${cat}, ${statement}. ${description}`
+        : `在${CATEGORY_LABELS[ins.category]}方面，${ins.statement}。${ins.description}`;
     });
 
     const citations: StoryCitation[][] = topInsights.map(ins =>
       ins.sourceRawMemoryIds
         .map(id => {
           const raw = rawMap.get(id);
-          return { memoryId: id, shortDescription: raw ? citationLabel(raw) : id };
+          return { memoryId: id, shortDescription: raw ? citationLabel(raw, lang) : id };
         })
     );
 
     chapters.push({
-      title: '未来的投射',
+      title: storyT(lang, 'futureProjection'),
       type: 'future',
       text: insightLines.join('\n\n'),
       imageUrls: [],
@@ -186,21 +238,10 @@ export interface DreamResult {
   sourceMemories: RawMemory[];
 }
 
-const DREAM_TEMPLATES = [
-  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
-    `你梦见${fragments[0].place}变成了${fragments[1]?.place || '一个陌生的地方'}，${fragments[0].person}正在${fragments[1]?.activity || '做着什么'}，而你${fragments[0].emotion}地${fragments[0].activity}。空气中弥漫着${fragments[1]?.emotion || '奇异'}的气息。`,
-
-  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
-    `在梦里，${fragments[0].person}和${fragments[1]?.person || '一个模糊的身影'}一起在${fragments[0].place}${fragments[0].activity}。你站在远处，感到${fragments[0].emotion}。突然，${fragments[1]?.place || '一切都'}开始旋转，你发现自己正在${fragments[1]?.activity || '飞翔'}。`,
-
-  (fragments: { place: string; person: string; activity: string; emotion: string }[]) =>
-    `你梦见时间倒流——${fragments[0].activity}的你回到了${fragments[0].place}。${fragments[0].person}对你微笑，说着你听不懂却感到${fragments[0].emotion}的话。远处，${fragments[1]?.person || '有人'}在${fragments[1]?.activity || '等待'}。`,
-];
-
-export function generateDream(memories: RawMemory[]): DreamResult {
+export function generateDream(memories: RawMemory[], lang: Language = 'zh-CN'): DreamResult {
   if (memories.length < 3) {
     return {
-      narrative: '记忆太少，无法编织梦境。请先记录更多记忆。',
+      narrative: storyT(lang, 'dreamTooFew'),
       sourceMemories: memories,
     };
   }
@@ -211,13 +252,35 @@ export function generateDream(memories: RawMemory[]): DreamResult {
   const selected = shuffled.slice(0, count);
 
   const fragments = selected.map(m => ({
-    place: m.dimensions.spatial.placeType,
-    person: m.dimensions.social.persons[0] || '某个人',
-    activity: m.dimensions.activity.detail || m.dimensions.activity.type,
-    emotion: m.dimensions.emotional.primary,
+    place: contentT(lang, m.dimensions.spatial.placeType),
+    person: contentT(lang, m.dimensions.social.persons[0]) || storyT(lang, 'someone'),
+    activity: contentT(lang, m.dimensions.activity.detail) || contentT(lang, m.dimensions.activity.type),
+    emotion: emotionNameT(lang, m.dimensions.emotional.primary),
   }));
 
-  const template = DREAM_TEMPLATES[Math.floor(Math.random() * DREAM_TEMPLATES.length)];
+  if (lang === 'en') {
+    const enTemplates = [
+      (f: typeof fragments) =>
+        `You dreamt that ${f[0].place} turned into ${f[1]?.place || 'a strange place'}, ${f[0].person} was ${f[1]?.activity || 'doing something'}, while you ${f[0].activity} feeling ${f[0].emotion}. The air was filled with a ${f[1]?.emotion || 'mysterious'} aura.`,
+      (f: typeof fragments) =>
+        `In the dream, ${f[0].person} and ${f[1]?.person || 'a blurred figure'} were ${f[0].activity} at ${f[0].place}. You stood at a distance, feeling ${f[0].emotion}. Suddenly, ${f[1]?.place || 'everything'} started spinning, and you found yourself ${f[1]?.activity || 'flying'}.`,
+      (f: typeof fragments) =>
+        `You dreamt time was reversed — you who were ${f[0].activity} returned to ${f[0].place}. ${f[0].person} smiled at you, saying words you couldn't understand but that made you feel ${f[0].emotion}. In the distance, ${f[1]?.person || 'someone'} was ${f[1]?.activity || 'waiting'}.`,
+    ];
+    const template = enTemplates[Math.floor(Math.random() * enTemplates.length)];
+    const narrative = template(fragments);
+    return { narrative, sourceMemories: selected };
+  }
+
+  const zhTemplates = [
+    (f: typeof fragments) =>
+      `你梦见${f[0].place}变成了${f[1]?.place || storyT(lang, 'strangerPlace')}，${f[0].person}正在${f[1]?.activity || storyT(lang, 'doingWhat')}，而你${f[0].emotion}地${f[0].activity}。空气中弥漫着${f[1]?.emotion || '奇异'}的气息。`,
+    (f: typeof fragments) =>
+      `在梦里，${f[0].person}和${f[1]?.person || storyT(lang, 'blurFigure')}一起在${f[0].place}${f[0].activity}。你站在远处，感到${f[0].emotion}。突然，${f[1]?.place || storyT(lang, 'everything')}开始旋转，你发现自己正在${f[1]?.activity || '飞翔'}。`,
+    (f: typeof fragments) =>
+      `你梦见时间倒流——${f[0].activity}的你回到了${f[0].place}。${f[0].person}对你微笑，说着你听不懂却感到${f[0].emotion}的话。远处，${f[1]?.person || '有人'}在${f[1]?.activity || '等待'}。`,
+  ];
+  const template = zhTemplates[Math.floor(Math.random() * zhTemplates.length)];
   const narrative = template(fragments);
 
   return {

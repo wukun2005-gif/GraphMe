@@ -4,14 +4,9 @@ import { useAppState } from '../store/AppContext';
 import { getSurpriseCandidate } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
-
-const WARM_MESSAGES = [
-  '这份记忆已经被遗忘太久了，让我们重新看看它',
-  '时光流逝，但这份记忆依然温暖',
-  '有些记忆值得被再次想起',
-  '让我们一起回忆这个特别的时刻',
-  '这份记忆正在等待你的重温',
-];
+import { useI18n } from '../i18n';
+import { joinContentT, emotionNameT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
 const STORAGE_KEY = 'graphme-surprise-last-date';
 
@@ -34,6 +29,8 @@ function setLastSurpriseDate(date: string) {
 
 export default function MemorySurprise() {
   const { rawMemories, selectMemory, reinforceMemory, addToast, theme } = useAppState();
+  const { t, language, tList } = useI18n();
+  const warmMessages = useMemo(() => tList('surprise.warmMessages'), [tList]);
   const isDark = theme === 'dark';
   const [isOpen, setIsOpen] = useState(false);
   const [showBox, setShowBox] = useState(false);
@@ -50,7 +47,7 @@ export default function MemorySurprise() {
     if (!c) return;
 
     setCandidate(c);
-    setWarmMessage(WARM_MESSAGES[Math.floor(Math.random() * WARM_MESSAGES.length)]);
+    setWarmMessage(warmMessages[Math.floor(Math.random() * warmMessages.length)]);
     setShowBox(true);
   }, [rawMemories]);
 
@@ -63,7 +60,7 @@ export default function MemorySurprise() {
   const handleReinforce = () => {
     if (candidate) {
       reinforceMemory(candidate.id);
-      addToast('已重温，记忆已刷新', 'success');
+      addToast(t('surprise.revisited'), 'success');
     }
     handleClose();
   };
@@ -85,7 +82,7 @@ export default function MemorySurprise() {
     const next = getSurpriseCandidate(rawMemories);
     if (next) {
       setCandidate(next);
-      setWarmMessage(WARM_MESSAGES[Math.floor(Math.random() * WARM_MESSAGES.length)]);
+      setWarmMessage(warmMessages[Math.floor(Math.random() * warmMessages.length)]);
     }
   };
 
@@ -149,10 +146,10 @@ export default function MemorySurprise() {
                     />
                   ))}
                   <p className={`text-center mt-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    今天，你收到一份记忆礼物
+                    {t('surprise.giftTitle')}
                   </p>
                   <p className={`text-center mt-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    点击打开
+                    {t('surprise.giftSubtitle')}
                   </p>
                 </div>
               </motion.div>
@@ -175,7 +172,7 @@ export default function MemorySurprise() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">✨</span>
                     <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                      记忆礼物
+                      {t('surprise.memoryGift')}
                     </span>
                   </div>
                   <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -191,22 +188,22 @@ export default function MemorySurprise() {
                       style={{ backgroundColor: emotionColor }}
                     />
                     <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {candidate.label}
+                      {memoryLabelT(language, candidate.id, candidate.label)}
                     </span>
                   </div>
                   <p className={`text-xs leading-relaxed mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {candidate.summary.length > 100
-                      ? candidate.summary.slice(0, 100) + '...'
-                      : candidate.summary}
+                    {memorySummaryT(language, candidate.id, candidate.summary).length > 100
+                      ? memorySummaryT(language, candidate.id, candidate.summary).slice(0, 100) + '...'
+                      : memorySummaryT(language, candidate.id, candidate.summary)}
                   </p>
                   <div className={`flex items-center gap-3 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <span>{candidate.dimensions.emotional.primary}</span>
+                    <span>{emotionNameT(language, candidate.dimensions.emotional.primary)}</span>
                     <span>·</span>
-                    <span>{daysAgo > 0 ? `${daysAgo} 天前` : '今天'}</span>
+                    <span>{daysAgo > 0 ? t('common.daysAgo', { count: daysAgo }) : t('common.today')}</span>
                     {candidate.dimensions.social.persons.length > 0 && (
                       <>
                         <span>·</span>
-                        <span>👤 {candidate.dimensions.social.persons.join('、')}</span>
+                        <span>👤 {joinContentT(language, candidate.dimensions.social.persons)}</span>
                       </>
                     )}
                   </div>
@@ -221,7 +218,7 @@ export default function MemorySurprise() {
                       isDark ? 'bg-[#ffb800]/15 text-[#ffb800] hover:bg-[#ffb800]/25' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                     }`}
                   >
-                    🔄 重温
+                    🔄 {t('surprise.revisit')}
                   </button>
                   <button
                     id="demo-surprise-detail"
@@ -230,7 +227,7 @@ export default function MemorySurprise() {
                       isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    📖 查看详情
+                    📖 {t('surprise.viewDetail')}
                   </button>
                   <button
                     id="demo-surprise-next"
@@ -238,7 +235,7 @@ export default function MemorySurprise() {
                     className={`px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer ${
                       isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                     }`}
-                    title="换一条"
+                    title={t('surprise.anotherOne')}
                   >
                     🎲
                   </button>

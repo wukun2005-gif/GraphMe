@@ -1,5 +1,7 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
 import { EMOTION_COLORS } from '../types';
+import { emotionNameT } from '../i18n/dataTranslations';
 
 export interface SocialNode {
   name: string;
@@ -22,7 +24,20 @@ export interface SocialGraphData {
   summaryText: string;
 }
 
-export function generateSocialGraph(memories: RawMemory[]): SocialGraphData {
+const SOCIAL_SUMMARY: Record<string, { zh: string; en: string }> = {
+  withData: { zh: '你的社交宇宙中有 {{count}} 个重要人物。{{name}} 出现最频繁（{{freq}} 次），你们在一起时最常的情绪是{{emotion}}。', en: 'Your social universe has {{count}} important people. {{name}} appears most frequently ({{freq}} times), and the most common emotion when you are together is {{emotion}}.' },
+  noData: { zh: '你的记忆中还没有出现过人物。', en: 'No people have appeared in your memories yet.' },
+};
+
+export function socialT(lang: Language, key: string, params?: Record<string, string | number>): string {
+  const template = SOCIAL_SUMMARY[key];
+  if (!template) return key;
+  const raw = lang === 'en' ? template.en : template.zh;
+  if (!params) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k) => k in params ? String(params[k]) : `{{${k}}}`);
+}
+
+export function generateSocialGraph(memories: RawMemory[], lang: Language = 'zh-CN'): SocialGraphData {
   const personMap = new Map<string, { count: number; intimacySum: number; emotions: Record<string, number>; ids: string[] }>();
 
   // Co-occurrence matrix
@@ -75,8 +90,8 @@ export function generateSocialGraph(memories: RawMemory[]): SocialGraphData {
 
   const topPerson = nodes[0];
   const summaryText = topPerson
-    ? `你的社交宇宙中有 ${nodes.length} 个重要人物。${topPerson.name} 出现最频繁（${topPerson.count} 次），你们在一起时最常的情绪是${topPerson.dominantEmotion}。`
-    : `你的记忆中还没有出现过人物。`;
+    ? socialT(lang, 'withData', { count: nodes.length, name: topPerson.name, freq: topPerson.count, emotion: emotionNameT(lang, topPerson.dominantEmotion) })
+    : socialT(lang, 'noData');
 
   return { nodes, edges, summaryText };
 }

@@ -7,6 +7,9 @@ import type { RawMemory, InsightMemory } from '../types';
 import { isMemoryInCategory } from '../utils/navUtils';
 import { computeDailyTrajectories, computeTideLevel } from '../utils/valueUtils';
 import { EMOTION_COLORS, Z_INDEX } from '../types';
+import { useI18n } from '../i18n';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
+import { emotionNameT } from '../i18n/dataTranslations';
 
 function createGlowTexture(): THREE.Texture {
   const size = 64;
@@ -70,6 +73,7 @@ type Theme = 'dark' | 'light';
 
 function ParticleCloud({ theme }: { theme: Theme }) {
   const { rawMemories, navCategory, navSubCategory, selectMemory, hideRawOnly, currentView, searchQuery, timeRangeFilter, tagFilter, similarMemoryIds, traceHighlightIds } = useAppState();
+  const { language } = useI18n();
   const visibleRef = useRef<RawMemory[]>([]);
   const isLight = theme === 'light';
 
@@ -126,7 +130,7 @@ function ParticleCloud({ theme }: { theme: Theme }) {
       }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const haystack = `${m.id} ${m.label} ${m.summary}`.toLowerCase();
+        const haystack = `${m.id} ${m.label} ${m.summary} ${memoryLabelT(language, m.id, m.label)} ${memorySummaryT(language, m.id, m.summary)}`.toLowerCase();
         const matches = q.split(/\s+/).filter(Boolean).every(kw => haystack.includes(kw));
         if (!matches) {
           col[i * 3] *= 0.2;
@@ -412,9 +416,10 @@ function RippleEffect({ theme }: { theme: Theme }) {
 
 function EmotionTrajectoryLines({ theme }: { theme: Theme }) {
   const { rawMemories, currentView } = useAppState();
+  const { language } = useI18n();
   const isLight = theme === 'light';
 
-  const trajectories = useMemo(() => computeDailyTrajectories(rawMemories), [rawMemories]);
+  const trajectories = useMemo(() => computeDailyTrajectories(rawMemories, language), [rawMemories, language]);
 
   // Limit to recent trajectories to avoid visual clutter
   const recentTrajectories = useMemo(() => trajectories.slice(-7), [trajectories]);
@@ -838,6 +843,7 @@ function CameraFlyTo() {
 function SearchFlyTo() {
   const { rawMemories, insightMemories, searchQuery, navCategory, navSubCategory, currentView } = useAppState();
   const { camera, invalidate } = useThree();
+  const { language } = useI18n();
   const isAnimating = useRef(false);
   const targetPos = useRef(new THREE.Vector3(0, 0, 0));
 
@@ -858,7 +864,7 @@ function SearchFlyTo() {
 
     rawMemories.forEach(m => {
       if (m.type !== 'raw') return;
-      const haystack = `${m.id} ${m.label} ${m.summary}`.toLowerCase();
+      const haystack = `${m.id} ${m.label} ${m.summary} ${memoryLabelT(language, m.id, m.label)} ${memorySummaryT(language, m.id, m.summary)}`.toLowerCase();
       if (!keywords.every(kw => haystack.includes(kw))) return;
       let pos: [number, number, number];
       if (navCategory) {
@@ -968,6 +974,7 @@ function ParticlePositionProjector() {
 
 function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: string | null }) {
   const { rawMemories, navCategory, navSubCategory, currentView } = useAppState();
+  const { language } = useI18n();
   const isLight = theme === 'light';
 
   const allRawMems = useMemo(() => {
@@ -1055,7 +1062,7 @@ function ClusterTags({ theme, heldMemoryId }: { theme: Theme; heldMemoryId: stri
               }}
             />
           )}
-          <span>{isMilestone && !isHeld ? '⭐ ' : ''}{mem.label.slice(0, isHeld ? 20 : 8)}</span>
+          <span>{isMilestone && !isHeld ? '⭐ ' : ''}{memoryLabelT(language, mem.id, mem.label).slice(0, isHeld ? 20 : 8)}</span>
         </div>
       </Html>
     );
@@ -1554,6 +1561,7 @@ interface MemCloud3DProps {
 
 export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
   const { rawMemories } = useAppState();
+  const { language } = useI18n();
   const isLight = theme === 'light';
   const [heldClusterId, setHeldClusterId] = useState<string | null>(null);
   const [hovered, setHovered] = useState<HoverInfo>(null);
@@ -1618,10 +1626,10 @@ export default function MemCloud3D({ bgColor, theme }: MemCloud3DProps) {
         >
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hoveredMem.color }} />
-            <span className="font-medium">{hoveredMem.label}</span>
+            <span className="font-medium">{memoryLabelT(language, hoveredMem.id, hoveredMem.label)}</span>
           </div>
           <div className={`mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            {hoveredMem.dimensions.emotional.primary} · {hoveredMem.id}
+            {emotionNameT(language, hoveredMem.dimensions.emotional.primary)} · {hoveredMem.id}
           </div>
         </div>
       )}

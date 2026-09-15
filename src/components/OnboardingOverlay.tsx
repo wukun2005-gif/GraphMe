@@ -1,39 +1,41 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Z_INDEX } from '../types';
+import { useI18n } from '../i18n';
 
 const STORAGE_KEY = 'graphme-onboarding-done';
 
-const STEPS = [
-  {
-    target: null,
-    title: '欢迎来到 GraphMe',
-    description: '这是你的记忆星云——每颗粒子是一条记忆。让我们一起探索。',
-    position: 'center' as const,
-  },
-  {
-    target: '.absolute.left-0.top-0',
-    title: '记忆分类',
-    description: '左侧是记忆分类面板，帮你按家庭、学习、情绪快速定位记忆。',
-    position: 'right' as const,
-  },
-  {
-    target: '#btn-auto-demo',
-    title: '一键演示',
-    description: '点击这里可以观看自动演示，了解 GraphMe 的核心功能。',
-    position: 'bottom' as const,
-  },
-  {
-    target: null,
-    title: '开始探索',
-    description: '按 1/2/3/4 切换视图，Ctrl+F 搜索记忆，🎲 发现隐藏连接。祝你探索愉快！',
-    position: 'center' as const,
-  },
-];
-
 export default function OnboardingOverlay() {
+  const { t } = useI18n();
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
+
+  const STEPS = useMemo(() => [
+    {
+      target: null,
+      title: t('onboarding.welcome.title'),
+      description: t('onboarding.welcome.desc'),
+      position: 'center' as const,
+    },
+    {
+      target: '.absolute.left-0.top-0',
+      title: t('onboarding.nav.title'),
+      description: t('onboarding.nav.desc'),
+      position: 'right' as const,
+    },
+    {
+      target: '#btn-auto-demo',
+      title: t('onboarding.demo.title'),
+      description: t('onboarding.demo.desc'),
+      position: 'bottom' as const,
+    },
+    {
+      target: null,
+      title: t('onboarding.explore.title'),
+      description: t('onboarding.explore.desc'),
+      position: 'center' as const,
+    },
+  ], [t]);
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -77,7 +79,7 @@ export default function OnboardingOverlay() {
             'bg-[#0d0d1a] border-[#ffffff15]'
           }`}>
             <div className={`text-xs mb-3 ${'text-[#00f2ff]/50'}`}>
-              步骤 {step + 1} / {STEPS.length}
+              {t('onboarding.step', { current: step + 1, total: STEPS.length })}
             </div>
             <h3 className="text-base font-medium text-white mb-2">
               {currentStep.title}
@@ -90,13 +92,13 @@ export default function OnboardingOverlay() {
                 onClick={handleSkip}
                 className="text-xs text-gray-600 hover:text-gray-400 cursor-pointer transition-colors"
               >
-                跳过
+                {t('onboarding.skip')}
               </button>
               <button
                 onClick={handleNext}
                 className="text-xs px-4 py-1.5 rounded-lg bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25 cursor-pointer transition-colors"
               >
-                {step < STEPS.length - 1 ? '下一步' : '开始探索'}
+                {step < STEPS.length - 1 ? t('onboarding.next') : t('onboarding.startExploring')}
               </button>
             </div>
           </div>

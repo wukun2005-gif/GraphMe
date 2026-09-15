@@ -2,19 +2,23 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useAppState } from '../store/AppContext';
 import { weaveStoryline, getStorylineNames, generateStory } from '../utils/storyUtils';
 import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import { emotionNameT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT, storylineNameT } from '../i18n/memoryData';
 
 export default function StoryWeaver({ onClose }: { onClose: () => void }) {
   const { rawMemories, insightMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const storylines = useMemo(() => getStorylineNames(rawMemories), [rawMemories]);
-  const storyChapters = useMemo(() => generateStory(rawMemories, insightMemories), [rawMemories, insightMemories]);
+  const storyChapters = useMemo(() => generateStory(rawMemories, insightMemories, language), [rawMemories, insightMemories, language]);
   const [selected, setSelected] = useState<string>(storylines[0] || '');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected) : null, [rawMemories, selected]);
+  const woven = useMemo(() => selected ? weaveStoryline(rawMemories, selected, language) : null, [rawMemories, selected, language]);
 
   const startPlay = useCallback(() => {
     if (!woven) return;
@@ -63,7 +67,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   ? isDark ? 'text-[#00f2ff]/70' : 'text-[#0088cc]/70'
                   : isDark ? 'text-[#ffb800]/70' : 'text-[#cc8800]/70'
               }`}>
-                {chapter.type === 'past' ? '🏃 过去' : '🔮 未来'} · {chapter.title}
+                {chapter.type === 'past' ? t('story.past') : t('story.future')} · {chapter.title}
               </div>
               {chapter.text.split('\n\n').map((paragraph, pi) => (
                 <p key={pi} className={`text-xs leading-relaxed mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -93,7 +97,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   : isDark ? 'bg-[#ffffff08] text-gray-500 hover:text-gray-300' : 'bg-gray-100 text-gray-500 hover:text-gray-700'
               }`}
             >
-              {name}
+              {storylineNameT(language, name)}
             </button>
           ))}
         </div>
@@ -101,7 +105,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
 
       {!woven ? (
         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          暂无线索记忆来编织故事
+          {t('story.noMemories')}
         </p>
       ) : (
         <>
@@ -123,7 +127,7 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                   : isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'
               }`}
             >
-              {playing ? '⏸ 暂停' : '▶ 播放'}
+              {playing ? t('story.pause') : t('story.play')}
             </button>
             {playing && (
               <span className={`text-xs font-mono ${isDark ? 'text-[#00f2ff]' : 'text-[#0088cc]'}`}>
@@ -215,17 +219,17 @@ export default function StoryWeaver({ onClose }: { onClose: () => void }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{node.memory.label}</span>
+                          <span className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{memoryLabelT(language, node.memory.id, node.memory.label)}</span>
                           {node.memory.dimensions.narrative.isMilestone && (
-                            <span className="text-[9px] px-1 py-0.5 rounded bg-[#ffb800]/15 text-[#ffb800]">里程碑</span>
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-[#ffb800]/15 text-[#ffb800]">{t('story.milestone')}</span>
                           )}
                         </div>
-                        <p className={`text-[10px] mt-0.5 line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{node.memory.summary}</p>
+                        <p className={`text-[10px] mt-0.5 line-clamp-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{memorySummaryT(language, node.memory.id, node.memory.summary)}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="w-2 h-2 rounded-full" style={{ background: nodeColor }} />
-                          <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{node.memory.dimensions.emotional.primary}</span>
+                          <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{emotionNameT(language, node.memory.dimensions.emotional.primary)}</span>
                           <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {new Date(node.memory.dimensions.temporal.timestamp).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                            {new Date(node.memory.dimensions.temporal.timestamp).toLocaleDateString(language, { month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                       </div>

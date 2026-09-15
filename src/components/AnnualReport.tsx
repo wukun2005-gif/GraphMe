@@ -3,14 +3,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { computeAnnualStats } from '../utils/valueUtils';
 import { EMOTION_COLORS } from '../types';
-
-const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+import { useI18n } from '../i18n';
+import { emotionT, contentT } from '../i18n/dataTranslations';
+import { memoryLabelT } from '../i18n/memoryData';
+import { sensoryWordT } from '../utils/sensoryUtils';
 
 export default function AnnualReport({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { rawMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
 
-  const stats = useMemo(() => computeAnnualStats(rawMemories), [rawMemories]);
+  const MONTH_LABELS = useMemo(() => [
+    t('annual.month.Jan'), t('annual.month.Feb'), t('annual.month.Mar'), t('annual.month.Apr'),
+    t('annual.month.May'), t('annual.month.Jun'), t('annual.month.Jul'), t('annual.month.Aug'),
+    t('annual.month.Sep'), t('annual.month.Oct'), t('annual.month.Nov'), t('annual.month.Dec'),
+  ], [t]);
+
+  const stats = useMemo(() => computeAnnualStats(rawMemories, language), [rawMemories, language]);
 
   const maxMonthly = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
   const emotionEntries = Object.entries(stats.emotionDistribution).sort(([, a], [, b]) => b - a);
@@ -39,7 +48,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
             <div className={`px-6 pt-6 pb-4 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
               <div className="flex items-center justify-between mb-2">
                 <h2 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  📊 记忆年报
+                  {t('annual.title')}
                 </h2>
                 <button
                   onClick={onClose}
@@ -49,7 +58,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
                 </button>
               </div>
               <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {rawMemories.length} 条记忆 · {stats.milestones.length} 个里程碑
+                {t('annual.summary', { memories: rawMemories.length, milestones: stats.milestones.length })}
               </p>
             </div>
 
@@ -65,7 +74,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
               {/* Emotion Pie Chart */}
               <section>
                 <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  情绪分布
+                  {t('annual.emotionDist')}
                 </h4>
                 <div className="flex items-center gap-4">
                   <svg viewBox="0 0 100 100" className="w-24 h-24 flex-shrink-0">
@@ -100,7 +109,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
                     {emotionEntries.slice(0, 6).map(([emotion, count]) => (
                       <div key={emotion} className="flex items-center gap-2 text-[10px]">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#888' }} />
-                        <span className={`flex-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{emotion}</span>
+                        <span className={`flex-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{emotionT(language, emotion)}</span>
                         <span className={`font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{count}</span>
                       </div>
                     ))}
@@ -111,7 +120,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
               {/* Monthly Activity */}
               <section>
                 <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  月度活跃
+                  {t('annual.monthlyActivity')}
                 </h4>
                 <div className="flex items-end gap-1 h-20">
                   {stats.monthlyActivity.map(m => (
@@ -136,14 +145,14 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
               {stats.topPersons.length > 0 && (
                 <section>
                   <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    👥 最常出现的人
+                    {t('annual.topPersons')}
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
                     {stats.topPersons.map(p => (
                       <span key={p.name} className={`text-[10px] px-2 py-1 rounded-full ${
                         isDark ? 'bg-[#ffffff08] text-gray-400' : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {p.name} · {p.count}
+                        {contentT(language, p.name)} · {p.count}
                       </span>
                     ))}
                   </div>
@@ -154,7 +163,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
               {stats.keywords.length > 0 && (
                 <section>
                   <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    🔤 年度关键词
+                    {t('annual.keywords')}
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
                     {stats.keywords.map(k => (
@@ -167,7 +176,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
                           fontSize: `${Math.min(10 + k.count, 14)}px`,
                         }}
                       >
-                        {k.word}
+                        {sensoryWordT(language, k.word)}
                       </span>
                     ))}
                   </div>
@@ -178,7 +187,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
               {stats.milestones.length > 0 && (
                 <section>
                   <h4 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    🏆 里程碑时刻
+                    {t('annual.milestoneMoments')}
                   </h4>
                   <div className="space-y-1.5">
                     {stats.milestones.slice(0, 3).map(m => (
@@ -190,7 +199,7 @@ export default function AnnualReport({ open, onClose }: { open: boolean; onClose
                         }`}
                       >
                         <span className="w-2.5 h-2.5 rounded-full" style={{ background: m.color }} />
-                        <span className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{m.label}</span>
+                        <span className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{memoryLabelT(language, m.id, m.label)}</span>
                       </button>
                     ))}
                   </div>

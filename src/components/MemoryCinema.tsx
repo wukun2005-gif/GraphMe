@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { RawMemory } from '../types';
 import { EMOTION_COLORS, Z_INDEX } from '../types';
 import { generateFirstPersonNarrative } from '../utils/narrativeUtils';
+import { useI18n } from '../i18n';
+import { emotionNameT, dateT } from '../i18n/dataTranslations';
 
 interface Props {
   open: boolean;
@@ -23,6 +25,7 @@ const STARS = Array.from({ length: 80 }, (_, i) => ({
 
 export default function MemoryCinema({ open, onClose, memories, theme }: Props) {
   const isDark = theme === 'dark';
+  const { t, language } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [source, setSource] = useState<'week' | 'month' | 'all'>('all');
@@ -132,7 +135,7 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
             }`}>
               <div className="flex items-center gap-3">
                 <h2 className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                  🎬 记忆微电影
+                  {t('cinema.title')}
                 </h2>
                 <select
                   value={source}
@@ -141,9 +144,9 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
                     isDark ? 'bg-[#0d1525] border-[#ffffff08] text-gray-400' : 'bg-white border-gray-200 text-gray-600'
                   }`}
                 >
-                  <option value="week">最近一周</option>
-                  <option value="month">最近一月</option>
-                  <option value="all">全部</option>
+                  <option value="week">{t('cinema.recentWeek')}</option>
+                  <option value="month">{t('cinema.recentMonth')}</option>
+                  <option value="all">{t('cinema.source.all')}</option>
                 </select>
               </div>
               <div className="flex items-center gap-2">
@@ -154,7 +157,7 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
                     isDark ? 'bg-[#ffffff08] text-gray-400' : 'bg-gray-100 text-gray-600'
                   }`}
                 >
-                  {isPlaying ? '⏸ 暂停' : '▶ 继续'}
+                  {isPlaying ? t('cinema.pause') : t('cinema.play')}
                 </button>
                 <button
                   id="cinema-close"
@@ -195,13 +198,11 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
                     )}
 
                     <p className={`text-[10px] mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {new Date(currentMemory.dimensions.temporal.timestamp).toLocaleDateString('zh-CN', {
-                        year: 'numeric', month: 'long', day: 'numeric',
-                      })}
+                      {dateT(language, currentMemory.dimensions.temporal.timestamp)}
                     </p>
 
                     <p className={`text-base leading-relaxed mb-3 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {generateFirstPersonNarrative(currentMemory)}
+                      {generateFirstPersonNarrative(currentMemory, language)}
                     </p>
 
                     <span
@@ -209,17 +210,17 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
                       style={{ backgroundColor: emotionColor + '20', color: emotionColor }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: emotionColor }} />
-                      {currentMemory.dimensions.emotional.primary}
+                      {emotionNameT(language, currentMemory.dimensions.emotional.primary)}
                     </span>
                   </motion.div>
                 </AnimatePresence>
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
                   <p className={`text-xl mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    这就是你最近的 {filteredMemories.length} 个瞬间
+                    {t('cinema.summary', { count: filteredMemories.length })}
                   </p>
                   <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    每一个都值得被记住
+                    {t('cinema.everyMoment')}
                   </p>
                 </motion.div>
               )}
@@ -236,7 +237,7 @@ export default function MemoryCinema({ open, onClose, memories, theme }: Props) 
                 />
               </div>
               <p className={`text-[9px] mt-1 text-center ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                {currentIndex + 1} / {filteredMemories.length} · 空格暂停 · →跳过
+                {currentIndex + 1} / {filteredMemories.length} · {t('cinema.progressHint')}
               </p>
             </div>
             </motion.div>

@@ -1,7 +1,18 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
 import { EMOTION_COLORS } from '../types';
+import { emotionNameT, joinContentT, dateT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
-export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
+const CARD_LABELS: Record<string, { zh: string; en: string }> = {
+  slogan: { zh: '记忆不是孤岛，而是星座', en: 'Memories are not islands, but constellations' },
+};
+
+export function cardT(lang: Language, key: string): string {
+  return lang === 'en' ? CARD_LABELS[key]?.en ?? key : CARD_LABELS[key]?.zh ?? key;
+}
+
+export async function renderMemoryCard(memory: RawMemory, lang: Language = 'zh-CN'): Promise<Blob> {
   const W = 600;
   const H = 400;
   const canvas = document.createElement('canvas');
@@ -55,18 +66,17 @@ export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
   // Label
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 22px sans-serif';
-  ctx.fillText(memory.label, 170, 70, W - 200);
+  ctx.fillText(memoryLabelT(lang, memory.id, memory.label), 170, 70, W - 200);
 
   // Summary
   ctx.fillStyle = '#aaaacc';
   ctx.font = '14px sans-serif';
-  wrapText(ctx, memory.summary, 170, 100, W - 210, 20);
+  wrapText(ctx, memorySummaryT(lang, memory.id, memory.summary), 170, 100, W - 210, 20);
 
   // Date
-  const date = new Date(memory.dimensions.temporal.timestamp);
   ctx.fillStyle = '#666688';
   ctx.font = '12px sans-serif';
-  ctx.fillText(`${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}`, 170, 155);
+  ctx.fillText(dateT(lang, memory.dimensions.temporal.timestamp), 170, 155);
 
   // Emotion badge
   ctx.fillStyle = `${emotionColor}30`;
@@ -74,13 +84,13 @@ export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
   ctx.fill();
   ctx.fillStyle = emotionColor;
   ctx.font = '12px sans-serif';
-  ctx.fillText(memory.dimensions.emotional.primary, 185, 182);
+  ctx.fillText(emotionNameT(lang, memory.dimensions.emotional.primary), 185, 182);
 
   // Persons
   if (memory.dimensions.social.persons.length > 0) {
     ctx.fillStyle = '#888899';
     ctx.font = '11px sans-serif';
-    ctx.fillText(`👥 ${memory.dimensions.social.persons.join('、')}`, 265, 182);
+    ctx.fillText(`👥 ${joinContentT(lang, memory.dimensions.social.persons)}`, 265, 182);
   }
 
   // Bottom bar
@@ -97,7 +107,7 @@ export async function renderMemoryCard(memory: RawMemory): Promise<Blob> {
 
   ctx.fillStyle = '#444466';
   ctx.font = '11px sans-serif';
-  ctx.fillText('记忆不是孤岛，而是星座', 30, H - 12);
+  ctx.fillText(cardT(lang, 'slogan'), 30, H - 12);
 
   return new Promise(resolve => {
     canvas.toBlob(blob => resolve(blob!), 'image/png');

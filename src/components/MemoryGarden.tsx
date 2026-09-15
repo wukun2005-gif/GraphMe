@@ -3,9 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { getGardenPlantData } from '../utils/valueUtils';
 import type { GardenPlant } from '../utils/valueUtils';
+import { useI18n } from '../i18n';
+import { emotionNameT } from '../i18n/dataTranslations';
+import { memoryLabelT, memorySummaryT } from '../i18n/memoryData';
 
 export default function MemoryGarden({ onClose }: { onClose: () => void }) {
   const { rawMemories, theme, selectMemory, reinforceMemory, addToast } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [selectedPlant, setSelectedPlant] = useState<GardenPlant | null>(null);
   const [wateringId, setWateringId] = useState<string | null>(null);
@@ -20,7 +24,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
   const handleWater = (plant: GardenPlant) => {
     setWateringId(plant.memory.id);
     reinforceMemory(plant.memory.id);
-    addToast('已浇水，记忆恢复活力', 'success');
+    addToast(t('garden.watered'), 'success');
     if (wateringTimerRef.current) clearTimeout(wateringTimerRef.current);
     wateringTimerRef.current = setTimeout(() => setWateringId(null), 1500);
   };
@@ -29,7 +33,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
     <div className={`h-full flex flex-col ${isDark ? 'bg-[#0a0f1a]' : 'bg-gradient-to-b from-sky-50 to-green-50'}`}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-inherit flex-shrink-0">
         <h2 className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-          🌻 记忆花园
+          {t('garden.title')}
         </h2>
         <button
           onClick={onClose}
@@ -99,7 +103,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
 
           {plants.length === 0 && (
             <div className={`text-center py-12 text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              花园空空如也，去创建一些记忆吧
+              {t('garden.empty')}
             </div>
           )}
         </div>
@@ -119,21 +123,21 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">{selectedPlant.emoji}</span>
                   <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {selectedPlant.memory.label}
+                    {memoryLabelT(language, selectedPlant.memory.id, selectedPlant.memory.label)}
                   </span>
                   <span className="text-xs" style={{ color: selectedPlant.color }}>
-                    {selectedPlant.memory.dimensions.emotional.primary}
+                    {emotionNameT(language, selectedPlant.memory.dimensions.emotional.primary)}
                   </span>
                 </div>
                 <p className={`text-xs mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {selectedPlant.memory.summary.length > 80
-                    ? selectedPlant.memory.summary.slice(0, 80) + '...'
-                    : selectedPlant.memory.summary}
+                  {memorySummaryT(language, selectedPlant.memory.id, selectedPlant.memory.summary).length > 80
+                    ? memorySummaryT(language, selectedPlant.memory.id, selectedPlant.memory.summary).slice(0, 80) + '...'
+                    : memorySummaryT(language, selectedPlant.memory.id, selectedPlant.memory.summary)}
                 </p>
                 <div className={`text-[10px] mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  {selectedPlant.plantType === 'wilting' && '⚠️ 这株记忆之花快枯萎了，需要浇水（重温）'}
-                  {selectedPlant.plantType === 'tree' && '🌳 这是一棵里程碑之树'}
-                  {selectedPlant.plantType === 'flower' && '🌸 这朵花正在盛开'}
+                  {selectedPlant.plantType === 'wilting' && t('garden.wilting')}
+                  {selectedPlant.plantType === 'tree' && t('garden.milestone')}
+                  {selectedPlant.plantType === 'flower' && t('garden.blooming')}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -143,7 +147,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
                       isDark ? 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                     }`}
                   >
-                    💧 浇水（重温）
+                    💧 {t('garden.water')}
                   </button>
                   <button
                     id="demo-garden-detail"
@@ -152,7 +156,7 @@ export default function MemoryGarden({ onClose }: { onClose: () => void }) {
                       isDark ? 'bg-[#ffffff08] text-gray-400 hover:bg-[#ffffff12]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    📖 查看详情
+                    📖 {t('garden.viewDetail')}
                   </button>
                 </div>
               </div>

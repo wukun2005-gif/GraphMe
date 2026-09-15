@@ -1,4 +1,5 @@
 import type { RawMemory } from '../types';
+import type { Language } from '../i18n';
 
 export interface HeatmapCell {
   day: number; // 0=Mon, 6=Sun
@@ -26,9 +27,28 @@ export interface RhythmData {
   peakHour: number;
 }
 
-const DAY_LABELS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+const DAY_LABELS_ZH = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+const DAY_LABELS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export function computeRhythm(memories: RawMemory[]): RhythmData {
+const RHYTHM_INSIGHTS: Record<string, { zh: string; en: string }> = {
+  peak: { zh: '你的记忆高峰在{{day}}，通常在{{hour}}:00 左右最为活跃', en: 'Your memory peak is on {{day}}, usually most active around {{hour}}:00' },
+  weekend: { zh: '你的周末记忆量比工作日多 30% 以上，周末是你最活跃的时光', en: 'Your weekend memory count is over 30% more than weekdays — weekends are your most active time' },
+  night: { zh: '你有不少晚间记忆，夜晚也是你记录生活的重要时段', en: 'You have quite a few evening memories — night is also an important time for recording life' },
+};
+
+export function rhythmT(lang: Language, key: string, params?: Record<string, string | number>): string {
+  const template = RHYTHM_INSIGHTS[key];
+  if (!template) return key;
+  const raw = lang === 'en' ? template.en : template.zh;
+  if (!params) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k) => k in params ? String(params[k]) : `{{${k}}}`);
+}
+
+export function rhythmDayLabel(lang: Language, index: number): string {
+  return lang === 'en' ? DAY_LABELS_EN[index] : DAY_LABELS_ZH[index];
+}
+
+export function computeRhythm(memories: RawMemory[], lang: Language = 'zh-CN'): RhythmData {
   // Heatmap: 7 days × 24 hours
   const grid: Map<string, { count: number; activities: Record<string, number>; emotions: Record<string, number> }> = new Map();
 
@@ -85,7 +105,7 @@ export function computeRhythm(memories: RawMemory[]): RhythmData {
   const insights: RhythmInsight[] = [];
   if (dayTotals[peakDayIdx] > 0) {
     insights.push({
-      text: `你的记忆高峰在${DAY_LABELS[peakDayIdx]}，通常在${peakHour}:00 左右最为活跃`,
+      text: rhythmT(lang, 'peak', { day: rhythmDayLabel(lang, peakDayIdx), hour: peakHour }),
       emoji: '📊',
     });
   }
@@ -94,21 +114,21 @@ export function computeRhythm(memories: RawMemory[]): RhythmData {
   const weekdayAvg = (dayTotals[0] + dayTotals[1] + dayTotals[2] + dayTotals[3] + dayTotals[4]) / 5;
   const weekendAvg = (dayTotals[5] + dayTotals[6]) / 2;
   if (weekendAvg > weekdayAvg * 1.3) {
-    insights.push({ text: '你的周末记忆量比工作日多 30% 以上，周末是你最活跃的时光', emoji: '🎉' });
+    insights.push({ text: rhythmT(lang, 'weekend'), emoji: '🎉' });
   }
 
   // Night vs day
   const nightCount = hourTotals.slice(20, 24).reduce((a, b) => a + b, 0) + hourTotals.slice(0, 6).reduce((a, b) => a + b, 0);
   const dayCount = hourTotals.slice(6, 20).reduce((a, b) => a + b, 0);
   if (nightCount > dayCount * 0.3) {
-    insights.push({ text: '你有不少晚间记忆，夜晚也是你记录生活的重要时段', emoji: '🌙' });
+    insights.push({ text: rhythmT(lang, 'night'), emoji: '🌙' });
   }
 
   return {
     heatmap,
     monthly,
     insights,
-    peakDay: DAY_LABELS[peakDayIdx],
+    peakDay: rhythmDayLabel(lang, peakDayIdx),
     peakHour,
   };
 }

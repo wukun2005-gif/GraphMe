@@ -8,6 +8,16 @@ import type { RawMemory } from '../types';
 const memories = rawMemories;
 const target = memories[0];
 
+// Mock translation function for tests
+const mockT = (key: string, params?: Record<string, string | number>): string => {
+  if (key === 'memoryBank.dateLocale') return 'zh-CN';
+  if (key === 'memoryBank.countUnit') return '条';
+  if (params) {
+    return Object.entries(params).reduce((str, [k, v]) => str.replace(`{{${k}}}`, String(v)), key);
+  }
+  return key;
+};
+
 describe('similarityUtils — findSimilarMemories', () => {
   it('returns similar memories sorted by score descending', () => {
     const results = findSimilarMemories(target, memories);
@@ -201,7 +211,7 @@ describe('memoryBankUtils — computeAssetStats', () => {
 
 describe('memoryBankUtils — computeTemperament', () => {
   it('returns valid temperament structure', () => {
-    const result = computeTemperament(memories);
+    const result = computeTemperament(memories, mockT);
     expect(result).toHaveProperty('type');
     expect(result).toHaveProperty('label');
     expect(result).toHaveProperty('confidence');
@@ -212,7 +222,7 @@ describe('memoryBankUtils — computeTemperament', () => {
   });
 
   it('returns default values for empty memories', () => {
-    const result = computeTemperament([]);
+    const result = computeTemperament([], mockT);
     expect(result.type).toBeTruthy();
     expect(result.confidence).toBe(0);
   });
@@ -229,7 +239,7 @@ describe('memoryBankUtils — computeHealthScore', () => {
 
 describe('memoryBankUtils — computeDimensionData', () => {
   it('returns 5 dimension items', () => {
-    const result = computeDimensionData(memories, '月');
+    const result = computeDimensionData(memories, '月', mockT);
     expect(result.length).toBe(5);
     result.forEach(item => {
       expect(item.value).toBeGreaterThanOrEqual(0);
@@ -241,7 +251,7 @@ describe('memoryBankUtils — computeDimensionData', () => {
 
 describe('memoryBankUtils — computeMemoryTypePotential', () => {
   it('returns potential items with valid star ratings', () => {
-    const result = computeMemoryTypePotential(memories);
+    const result = computeMemoryTypePotential(memories, mockT);
     expect(result.length).toBeGreaterThan(0);
     result.forEach(item => {
       expect(item.stars).toBeGreaterThanOrEqual(1);
@@ -251,6 +261,6 @@ describe('memoryBankUtils — computeMemoryTypePotential', () => {
   });
 
   it('returns empty array for empty memories', () => {
-    expect(computeMemoryTypePotential([])).toEqual([]);
+    expect(computeMemoryTypePotential([], mockT)).toEqual([]);
   });
 });

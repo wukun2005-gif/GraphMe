@@ -1,23 +1,25 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import { useI18n } from '../i18n';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const STAGES = [
-  { emoji: '🧩', label: '记忆积累', desc: '新的记忆原子加入星云' },
-  { emoji: '🔍', label: '模式发现', desc: 'AI 从记忆聚类中发现规律' },
-  { emoji: '💡', label: '洞察生成', desc: '推理生成洞察记忆' },
-  { emoji: '👆', label: '用户反馈', desc: '确认、纠正、重温' },
-  { emoji: '🎯', label: '理解加深', desc: '置信度提升，认知进化' },
-  { emoji: '🔄', label: '循环继续', desc: '新记忆触发新一轮推理' },
-];
-
 export default function FlywheelView({ open, onClose }: Props) {
   const { rawMemories, insightMemories, theme } = useAppState();
+  const { t } = useI18n();
+
+  const STAGES = useMemo(() => [
+    { emoji: '🧩', label: t('flywheel.stage.memoryAccumulation'), desc: t('flywheel.memoryAccumulationDesc') },
+    { emoji: '🔍', label: t('flywheel.stage.patternDiscovery'), desc: t('flywheel.patternDiscoveryDesc') },
+    { emoji: '💡', label: t('flywheel.stage.insightGeneration'), desc: t('flywheel.insightGenerationDesc') },
+    { emoji: '👆', label: t('flywheel.stage.userFeedback'), desc: t('flywheel.userFeedbackDesc') },
+    { emoji: '🎯', label: t('flywheel.stage.deeperUnderstanding'), desc: t('flywheel.deeperUnderstandingDesc') },
+    { emoji: '🔄', label: t('flywheel.stage.cycleContinues'), desc: t('flywheel.cycleContinuesDesc') },
+  ], [t]);
   const isDark = theme === 'dark';
 
   const stats = useMemo(() => {
@@ -56,7 +58,7 @@ export default function FlywheelView({ open, onClose }: Props) {
         <div className={`px-6 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
           <div className="flex items-center justify-between">
             <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              🔄 记忆飞轮
+              {t('flywheel.title')}
             </h2>
             <button
               id="flywheel-close"
@@ -75,8 +77,8 @@ export default function FlywheelView({ open, onClose }: Props) {
             <svg viewBox="0 0 300 300" className="w-64 h-64">
               {/* Center circle */}
               <circle cx="150" cy="150" r="40" fill={isDark ? '#ffb80020' : '#ffb80015'} stroke="#ffb800" strokeWidth="1.5" strokeOpacity="0.4" />
-              <text x="150" y="145" textAnchor="middle" fill={isDark ? '#ffb800' : '#b8860b'} fontSize="10" fontWeight="bold">飞轮</text>
-              <text x="150" y="160" textAnchor="middle" fill={isDark ? '#ffb800' : '#b8860b'} fontSize="10" fontWeight="bold">核心</text>
+              <text x="150" y="145" textAnchor="middle" fill={isDark ? '#ffb800' : '#b8860b'} fontSize="10" fontWeight="bold">{t('flywheel.title').replace('🔄 ', '')}</text>
+              <text x="150" y="160" textAnchor="middle" fill={isDark ? '#ffb800' : '#b8860b'} fontSize="10" fontWeight="bold">{t('flywheel.core')}</text>
 
               {/* Stage nodes arranged in circle */}
               {STAGES.map((stage, i) => {
@@ -157,26 +159,26 @@ export default function FlywheelView({ open, onClose }: Props) {
           {/* Stats */}
           <div className={`grid grid-cols-2 gap-3 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>记忆总数</span>
+              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flywheel.totalMemories')}</span>
               <div className="text-lg font-medium">{stats.totalMemories}</div>
             </div>
             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>活跃洞察</span>
+              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flywheel.activeInsights')}</span>
               <div className="text-lg font-medium">{stats.totalInsights}</div>
             </div>
             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>已确认洞察</span>
+              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flywheel.confirmedInsights')}</span>
               <div className="text-lg font-medium">{stats.confirmed}</div>
             </div>
             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>平均置信度</span>
+              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flywheel.avgConfidence')}</span>
               <div className="text-lg font-medium">{stats.avgConfidence}%</div>
             </div>
           </div>
 
           {/* Summary */}
           <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            每一次互动，都在让这个记忆星云更懂你。
+            {t('flywheel.interactionMessage')}
           </p>
         </div>
       </motion.div>

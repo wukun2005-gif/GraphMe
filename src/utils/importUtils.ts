@@ -1,5 +1,7 @@
 import type { RawMemory, InsightMemory, EmotionType } from '../types';
 import { EMOTION_COLORS } from '../types';
+import type { Language } from '../i18n';
+import { registerRuntimeMemoryEn } from '../i18n/memoryData';
 
 export interface ImportResult {
   rawMemories: RawMemory[];
@@ -33,6 +35,17 @@ function parseRawMemory(item: any, index: number): { memory: RawMemory | null; e
   const persons = Array.isArray(item.persons) ? item.persons.filter((p: any) => typeof p === 'string') : [];
 
   const id = item.id || `import_${importIdCounter++}`;
+
+  // 可选英文字段：导入 JSON 若携带 labelEn/summaryEn（以及 insight 的 statementEn 等），
+  // 注册到运行时翻译表，英文模式即可直接展示，无需依赖在线翻译。
+  if (typeof item.labelEn === 'string' || typeof item.summaryEn === 'string') {
+    registerRuntimeMemoryEn(
+      id,
+      typeof item.labelEn === 'string' ? item.labelEn : item.label,
+      typeof item.summaryEn === 'string' ? item.summaryEn : item.summary,
+    );
+  }
+
   const x = (Math.random() * 6 - 3);
   const y = (Math.random() * 3 - 1.5);
   const z = (Math.random() * 4 - 2);
@@ -110,7 +123,7 @@ function parseInsightMemory(item: any, index: number): { memory: InsightMemory |
   return { memory, error: null };
 }
 
-export function parseImportJSON(jsonString: string): ImportResult {
+export function parseImportJSON(jsonString: string, lang: Language = 'zh-CN'): ImportResult {
   const result: ImportResult = { rawMemories: [], insightMemories: [], errors: [] };
 
   let data: any;
@@ -118,7 +131,7 @@ export function parseImportJSON(jsonString: string): ImportResult {
     data = JSON.parse(jsonString);
   } catch (e) {
     console.debug?.('[ImportUtils] JSON parse failed:', e);
-    result.errors.push('无效的 JSON 格式');
+    result.errors.push(lang === 'en' ? 'Invalid JSON format' : '无效的 JSON 格式');
     return result;
   }
 
@@ -143,7 +156,11 @@ export function parseImportJSON(jsonString: string): ImportResult {
   }
 
   if (result.rawMemories.length === 0 && result.insightMemories.length === 0 && result.errors.length === 0) {
-    result.errors.push('JSON 中未找到有效的记忆数据（需要 rawMemories 或 insightMemories 数组）');
+    result.errors.push(
+      lang === 'en'
+        ? 'No valid memory data found in the JSON (a "rawMemories" or "insightMemories" array is required)'
+        : 'JSON 中未找到有效的记忆数据（需要 rawMemories 或 insightMemories 数组）'
+    );
   }
 
   return result;

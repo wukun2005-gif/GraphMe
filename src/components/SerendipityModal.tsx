@@ -4,17 +4,21 @@ import { useAppState } from '../store/AppContext';
 import { findHiddenConnection } from '../utils/navUtils';
 import { EMOTION_COLORS } from '../types';
 import type { RawMemory } from '../types';
+import { useI18n } from '../i18n';
+import { emotionNameT } from '../i18n/dataTranslations';
+import { memoryLabelT } from '../i18n/memoryData';
 
 export default function SerendipityModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { rawMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [seed, setSeed] = useState(0);
 
   const connection = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     seed; // trigger recalculation
-    return findHiddenConnection(rawMemories);
-  }, [rawMemories, seed]);
+    return findHiddenConnection(rawMemories, language);
+  }, [rawMemories, seed, language]);
 
   const handleRefresh = useCallback(() => {
     setSeed(s => s + 1);
@@ -49,7 +53,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
             <div className={`px-6 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
               <div className="flex items-center justify-between">
                 <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  🎲 记忆碰碰对
+                  {t('serendipity.title')}
                 </h2>
                 <button
                   onClick={onClose}
@@ -59,7 +63,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
                 </button>
               </div>
               <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                发现记忆之间隐藏的连接
+                {t('serendipity.subtitle')}
               </p>
             </div>
 
@@ -67,7 +71,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
             <div className="px-6 py-5">
               {!connection ? (
                 <p className={`text-sm text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  需要至少 2 条记忆才能发现机缘
+                  {t('serendipity.needMore')}
                 </p>
               ) : (
                 <>
@@ -108,12 +112,12 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
                             </div>
                           )}
                           <p className={`text-xs font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                            {mem.label}
+                            {memoryLabelT(language, mem.id, mem.label)}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             <span className="w-2 h-2 rounded-full" style={{ background: emoColor }} />
                             <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                              {mem.dimensions.emotional.primary}
+                              {emotionNameT(language, mem.dimensions.emotional.primary)}
                             </span>
                           </div>
                         </button>
@@ -140,7 +144,7 @@ export default function SerendipityModal({ open, onClose }: { open: boolean; onC
                   isDark ? 'bg-[#00f2ff]/15 text-[#00f2ff] hover:bg-[#00f2ff]/25' : 'bg-[#0088cc]/15 text-[#0088cc] hover:bg-[#0088cc]/25'
                 }`}
               >
-                🎲 换一组
+                🎲 {t('serendipity.refresh')}
               </button>
             </div>
           </motion.div>

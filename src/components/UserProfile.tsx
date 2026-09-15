@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { generateUserProfile } from '../utils/profileUtils';
 import { EMOTION_COLORS } from '../types';
+import { useI18n } from '../i18n';
+import { emotionT, placeT, emotionNameT, contentT } from '../i18n/dataTranslations';
+import { memoryLabelT } from '../i18n/memoryData';
 
 interface Props {
   open: boolean;
@@ -11,12 +14,13 @@ interface Props {
 
 export default function UserProfile({ open, onClose }: Props) {
   const { rawMemories, insightMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
   const [expandedPerson, setExpandedPerson] = useState<string | null>(null);
 
   const profile = useMemo(
-    () => generateUserProfile(rawMemories, insightMemories),
-    [rawMemories, insightMemories]
+    () => generateUserProfile(rawMemories, insightMemories, language),
+    [rawMemories, insightMemories, language]
   );
 
   return (
@@ -35,7 +39,7 @@ export default function UserProfile({ open, onClose }: Props) {
           <div className={`px-5 pt-5 pb-3 border-b ${isDark ? 'border-[#ffffff08]' : 'border-gray-100'}`}>
             <div className="flex items-center justify-between mb-2">
               <h2 className={`text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                👤 小哥眼中的你
+                {t('profile.title')}
               </h2>
               <button
                 onClick={onClose}
@@ -54,27 +58,27 @@ export default function UserProfile({ open, onClose }: Props) {
             {/* Basic Info */}
             <section>
               <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#00f2ff]' : 'text-blue-600'}`}>
-                📊 基本信息
+                {t('profile.basicInfo')}
               </h3>
               <div className={`grid grid-cols-2 gap-2 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>记忆总数</span>
+                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('profile.totalMemories')}</span>
                   <div className="text-lg font-medium">{profile.totalMemories}</div>
                 </div>
                 <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>时间跨度</span>
-                  <div className="text-lg font-medium">{profile.timeSpanDays} 天</div>
+                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('profile.timeSpan')}</span>
+                  <div className="text-lg font-medium">{profile.timeSpanDays} {t('profile.day')}</div>
                 </div>
                 <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>最常见情绪</span>
+                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('profile.topEmotion')}</span>
                   <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: EMOTION_COLORS[profile.topEmotion as keyof typeof EMOTION_COLORS] }} />
-                    {profile.topEmotion}
+                    {emotionT(language, profile.topEmotion)}
                   </div>
                 </div>
                 <div className={`p-2 rounded-lg ${isDark ? 'bg-[#ffffff05]' : 'bg-gray-50'}`}>
-                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>最常地点</span>
-                  <div>{profile.topPlace}</div>
+                  <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('profile.topPlace')}</span>
+                  <div>{placeT(language, profile.topPlace)}</div>
                 </div>
               </div>
             </section>
@@ -83,7 +87,7 @@ export default function UserProfile({ open, onClose }: Props) {
             {profile.persons.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#ffb800]' : 'text-amber-600'}`}>
-                  👥 人物关系 ({profile.persons.length})
+                  {t('profile.personRelations', { count: profile.persons.length })}
                 </h3>
                 <div className="space-y-1.5">
                   {profile.persons.map(p => {
@@ -103,12 +107,12 @@ export default function UserProfile({ open, onClose }: Props) {
                             <div className="flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: emoColor }} />
                               <span className={`text-xs font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                                {p.name}
+                                {contentT(language, p.name)}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                {p.count} 条记忆
+                                {t('profile.memories', { count: p.count })}
                               </span>
                               <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
                                 {isExpanded ? '▲' : '▼'}
@@ -124,7 +128,7 @@ export default function UserProfile({ open, onClose }: Props) {
                             className={`ml-4 mt-1 space-y-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
                           >
                             <p className="text-[10px]">
-                              主导情绪：{p.dominantEmotion} · 平均亲密度：{p.avgIntimacy}
+                              {t('profile.dominantEmotion')}：{emotionNameT(language, p.dominantEmotion)} · {t('profile.avgIntimacy')}：{p.avgIntimacy}
                             </p>
                             <div className="space-y-0.5">
                               {p.memoryIds.slice(0, 3).map(id => {
@@ -138,7 +142,7 @@ export default function UserProfile({ open, onClose }: Props) {
                                       isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
                                     }`}
                                   >
-                                    · {mem.label}
+                                    · {memoryLabelT(language, id, mem.label)}
                                   </button>
                                 );
                               })}
@@ -156,7 +160,7 @@ export default function UserProfile({ open, onClose }: Props) {
             {profile.habits.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#44ccaa]' : 'text-teal-600'}`}>
-                  🔄 习惯与节律 ({profile.habits.length})
+                  {t('profile.habits', { count: profile.habits.length })}
                 </h3>
                 <div className="space-y-1.5">
                   {profile.habits.map((h, i) => (
@@ -171,7 +175,7 @@ export default function UserProfile({ open, onClose }: Props) {
                         <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{h.frequency}</span>
                         <span className={isDark ? 'text-gray-600' : 'text-gray-300'}>·</span>
                         <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>
-                          置信度 {Math.round(h.confidence * 100)}%
+                          {t('profile.confidence', { percent: Math.round(h.confidence * 100) })}
                         </span>
                       </div>
                     </div>
@@ -184,7 +188,7 @@ export default function UserProfile({ open, onClose }: Props) {
             {profile.preferences.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#cc44ff]' : 'text-purple-600'}`}>
-                  ❤️ 偏好清单 ({profile.preferences.length})
+                  {t('profile.preferences', { count: profile.preferences.length })}
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {profile.preferences.slice(0, 10).map((p, i) => (
@@ -207,7 +211,7 @@ export default function UserProfile({ open, onClose }: Props) {
             {profile.growth.length > 0 && (
               <section>
                 <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-[#88aa44]' : 'text-green-600'}`}>
-                  🌱 成长轨迹 ({profile.growth.length})
+                  {t('profile.growth', { count: profile.growth.length })}
                 </h3>
                 <div className="space-y-1.5">
                   {profile.growth.map((g, i) => (
@@ -237,7 +241,7 @@ export default function UserProfile({ open, onClose }: Props) {
                                   isDark ? 'text-[#00f2ff] hover:underline' : 'text-blue-600 hover:underline'
                                 }`}
                               >
-                                · {mem.label}
+                                · {memoryLabelT(language, id, mem.label)}
                               </button>
                             );
                           })}

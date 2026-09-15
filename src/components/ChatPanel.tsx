@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
+import { useI18n } from '../i18n';
+import { memoryLabelT, insightStatementT } from '../i18n/memoryData';
 
-const QA_PAIRS = [
+const QA_PAIRS_ZH = [
   { q: '今天情绪怎么样？',
     a: "根据最近记忆，今天情绪总体积极。上午在编程课上表现得非常投入，情绪强度0.88。傍晚和机器人助手互动时也很快乐。最近30天的情绪主色调是快乐（占比45%）和好奇（占比30%）。",
     refs: ['mem_007', 'mem_015'] },
@@ -20,6 +22,24 @@ const QA_PAIRS = [
     refs: ['mem_020', 'mem_035', 'mem_007'] },
 ];
 
+const QA_PAIRS_EN = [
+  { q: 'How are you feeling today?',
+    a: "Based on recent memories, today's emotions are generally positive. Morning coding class was very engaging (intensity 0.88). Evening interaction with the robot assistant was also joyful. The dominant emotions in the last 30 days are Happy (45%) and Curious (30%).",
+    refs: ['mem_007', 'mem_015'] },
+  { q: 'What are you interested in lately?',
+    a: "Interest in programming continues to rise. The transition from manual coding to visual programming tools is clear, with 3 records of independently completing coding projects. Independent completion brings the highest satisfaction, averaging 0.92 emotion intensity.",
+    refs: ['mem_012', 'mem_020', 'insight_001'] },
+  { q: 'Who do you interact with most?',
+    a: "Your social circle centers on Mom and Dad, with 2-3 stable friends outside (Xiaohong, Xiaohua). Interactions with Dad focus on building/assembly games (65% of father-son interactions), while Mom interactions are more about learning and daily companionship.",
+    refs: ['mem_003', 'mem_025', 'insight_004'] },
+  { q: 'Any concerns to pay attention to?',
+    a: "While you tend to persist when facing difficulties, you still feel frustrated with particularly hard problems (like fraction division). The transition from concrete to abstract math still has gaps. Consider continuing encouragement and gamified math practice.",
+    refs: ['mem_031', 'insight_008'] },
+  { q: 'Important moments this month?',
+    a: "This month's highlights include: independently completing the programming robot square-drawing program (milestone), first successful two-wheel bicycle ride, and Children's Day amusement park trip. All these memories have emotion intensity above 0.88.",
+    refs: ['mem_020', 'mem_035', 'mem_007'] },
+];
+
 interface ChatMessage {
   role: 'user' | 'bot';
   text: string;
@@ -27,7 +47,8 @@ interface ChatMessage {
   suggestions?: string[];
 }
 
-function matchQuestion(input: string): { answer: string; refs?: string[] } | null {
+function matchQuestion(input: string, language: string): { answer: string; refs?: string[] } | null {
+  const QA_PAIRS = language === 'en' ? QA_PAIRS_EN : QA_PAIRS_ZH;
   const lower = input.toLowerCase();
   const keywords: Record<number, string[]> = {
     0: ['情绪', '心情', '今天', '怎么样', '开心', '难过'],
@@ -51,7 +72,8 @@ function matchQuestion(input: string): { answer: string; refs?: string[] } | nul
   return null;
 }
 
-function getSuggestedQuestions(input: string): string[] {
+function getSuggestedQuestions(input: string, language: string): string[] {
+  const QA_PAIRS = language === 'en' ? QA_PAIRS_EN : QA_PAIRS_ZH;
   const lower = input.toLowerCase();
   const scored = QA_PAIRS.map((qa, i) => {
     const qLower = qa.q.toLowerCase();
@@ -67,6 +89,7 @@ function getSuggestedQuestions(input: string): string[] {
 
 export default function ChatPanel() {
   const { chatOpen, toggleChat, selectMemory, rawMemories, insightMemories, detailOpen, theme, lastAction } = useAppState();
+  const { t, tQA, language } = useI18n();
   const isDark = theme === 'dark';
   const [activeQA, setActiveQA] = useState<number | null>(null);
   const [userInput, setUserInput] = useState('');
@@ -74,23 +97,24 @@ export default function ChatPanel() {
 
   // Dynamic greeting based on lastAction
   const greeting = useMemo(() => {
+    const QA_PAIRS = language === 'en' ? QA_PAIRS_EN : QA_PAIRS_ZH;
     if (!lastAction) {
-      return `你好，我是小哥。我记住了关于你的 ${rawMemories.length} 个瞬间，想从哪里开始？`;
+      return t('chat.greeting.noAction', { count: rawMemories.length });
     }
     const { type, context } = lastAction;
     switch (type) {
       case 'confirm':
-        return `谢谢你告诉我。我刚才重新看了"${context.statement?.slice(0, 15)}…"相关的所有记忆，更确信这个结论。`;
+        return t('chat.greeting.confirm', { statement: insightStatementT(language, context.id, context.statement || '').slice(0, 15) });
       case 'correct':
-        return `谢谢你纠正我。我会重新审视这个结论。你的反馈让我更准确了。`;
+        return t('chat.greeting.correct');
       case 'reinforce':
-        return `那条"${context.label}"已经等待你很久了。它现在重新亮起来了。`;
+        return t('chat.greeting.reinforce', { label: memoryLabelT(language, context.id, context.label || '') });
       case 'addTag':
-        return `你正在亲手编织自己的记忆星座。我会根据你的分类更精准地推荐相似记忆。`;
+        return t('chat.greeting.addTag');
       default:
-        return `你好，我是小哥。我记住了关于你的 ${rawMemories.length} 个瞬间，想从哪里开始？`;
+        return t('chat.greeting.noAction', { count: rawMemories.length });
     }
-  }, [lastAction, rawMemories.length]);
+  }, [lastAction, rawMemories.length, t, language]);
 
   useEffect(() => {
     if (!chatOpen) return;
@@ -104,11 +128,11 @@ export default function ChatPanel() {
   const handleSend = () => {
     const text = userInput.trim();
     if (!text) return;
-    const match = matchQuestion(text);
+    const match = matchQuestion(text, language);
     if (match) {
       setMessages(prev => [...prev, { role: 'user', text }, { role: 'bot', text: match.answer, refs: match.refs }]);
     } else {
-      const suggestions = getSuggestedQuestions(text);
+      const suggestions = getSuggestedQuestions(text, language);
       setMessages(prev => [...prev, { role: 'user', text }, { role: 'bot', text: 'suggestions', suggestions }]);
     }
     setUserInput('');
@@ -150,7 +174,7 @@ export default function ChatPanel() {
             }`}
           >
             <div className="flex justify-between items-center mb-3">
-              <h3 className={`font-medium text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>💬 问问 GraphMe</h3>
+              <h3 className={`font-medium text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>{t('chat.title')}</h3>
               <button id="chat-close" onClick={toggleChat} className={`text-lg leading-none ${isDark ? 'text-gray-600 hover:text-gray-300' : 'text-gray-400 hover:text-gray-700'}`}>✕</button>
             </div>
 
@@ -169,13 +193,13 @@ export default function ChatPanel() {
                     <div className={`px-3 py-2 rounded-lg text-xs leading-relaxed max-w-[85%] ${
                       isDark ? 'bg-[#0a0a0f]/80 border-l-2 border-[#00f2ff]/30 text-gray-400' : 'bg-gray-50 border-l-2 border-[#0088cc]/30 text-gray-600'
                     }`}>
-                      <p className="mb-2">您是否想问：</p>
+                          <p className="mb-2">{t('chat.youWantToAsk')}</p>
                       <div className="space-y-1">
                         {msg.suggestions.map((q, qi) => (
                           <button
                             key={qi}
                             onClick={() => {
-                              const match = matchQuestion(q);
+                              const match = matchQuestion(q, language);
                               if (match) {
                                 setMessages(prev => [...prev, { role: 'user', text: q }, { role: 'bot', text: match.answer, refs: match.refs }]);
                               }
@@ -223,7 +247,7 @@ export default function ChatPanel() {
                   )}
                 </div>
               ))}
-              {QA_PAIRS.map((qa, i) => (
+              {(language === 'en' ? QA_PAIRS_EN : QA_PAIRS_ZH).map((qa, i) => (
                 <div key={i}>
                   <button
                     id={`chat-qa-${i}`}
@@ -287,7 +311,7 @@ export default function ChatPanel() {
                   value={userInput}
                   onChange={e => setUserInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
-                  placeholder="输入你的问题..."
+                  placeholder={t('chat.placeholder')}
                   className={`flex-1 border rounded-lg px-3 py-1.5 text-xs focus:outline-none ${
                     isDark ? 'bg-[#1a1a2e]/50 border-[#ffffff08] text-gray-300 placeholder-gray-600 focus:border-[#00f2ff]/30' : 'bg-gray-100 border-gray-200 text-gray-700 placeholder-gray-400 focus:border-[#0088cc]/30'
                   }`}
@@ -298,7 +322,7 @@ export default function ChatPanel() {
                     isDark ? 'bg-[#00f2ff]/10 text-[#00f2ff] hover:bg-[#00f2ff]/20' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'
                   }`}
                 >
-                  发送
+                  {t('chat.send')}
                 </button>
               </div>
             </div>

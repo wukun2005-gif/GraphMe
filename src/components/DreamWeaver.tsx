@@ -2,15 +2,18 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppState } from '../store/AppContext';
 import { generateDream } from '../utils/storyUtils';
+import { useI18n } from '../i18n';
+import { memoryLabelT } from '../i18n/memoryData';
 
 export default function DreamWeaver({ onClose }: { onClose: () => void }) {
   const { rawMemories, theme, selectMemory } = useAppState();
+  const { t, language } = useI18n();
   const isDark = theme === 'dark';
-  const [dream, setDream] = useState(() => generateDream(rawMemories));
+  const [dream, setDream] = useState(() => generateDream(rawMemories, language));
   const [showSources, setShowSources] = useState(false);
 
   const handleRedream = () => {
-    setDream(generateDream(rawMemories));
+    setDream(generateDream(rawMemories, language));
     setShowSources(false);
   };
 
@@ -18,7 +21,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
     <div className={`h-full flex flex-col ${isDark ? 'bg-[#0a0a1f]' : 'bg-gradient-to-b from-indigo-950 to-purple-950'}`}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
         <h2 className="text-sm font-medium text-white/80">
-          🌙 梦境
+          {t('dream.title')}
         </h2>
         <button
           onClick={onClose}
@@ -64,7 +67,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
 
             <div className="text-center mb-4">
               <span className="text-white/30 text-[10px]">
-                灵感来源：{dream.sourceMemories.length} 条记忆
+                {t('dream.inspirationSources', { count: dream.sourceMemories.length })}
               </span>
             </div>
           </motion.div>
@@ -77,7 +80,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
             onClick={() => setShowSources(!showSources)}
             className="w-full text-center text-white/40 text-xs cursor-pointer hover:text-white/60 transition-colors mb-2"
           >
-            {showSources ? '隐藏灵感来源' : '查看灵感来源'} ↓
+            {showSources ? t('dream.hideSources') : t('dream.showSources')} ↓
           </button>
 
           <AnimatePresence>
@@ -97,7 +100,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
                     >
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
-                        <span className="text-xs text-white/60">{m.label}</span>
+                        <span className="text-xs text-white/60">{memoryLabelT(language, m.id, m.label)}</span>
                       </div>
                     </button>
                   ))}
@@ -114,7 +117,7 @@ export default function DreamWeaver({ onClose }: { onClose: () => void }) {
             onClick={handleRedream}
             className="px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 text-xs cursor-pointer hover:bg-purple-500/30 transition-colors"
           >
-            🔄 再做一个梦
+            🔄 {t('dream.redream')}
           </button>
         </div>
       </div>
